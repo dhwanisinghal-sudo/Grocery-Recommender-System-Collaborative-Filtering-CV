@@ -134,37 +134,6 @@ A **Smart Grocery Recommendation System** that combines **Collaborative Filterin
 
 ---
 
-## 🚀 How to Run
-
-**Step 1 — Clone the repo**
-```bash
-git clone https://github.com/dhwanisinghal-sudo/Grocery-Recommender-System-Collaborative-Filtering-CV.git
-```
-
-**Step 2 — Install dependencies**
-```bash
-pip install scikit-surprise tensorflow pandas numpy matplotlib seaborn wordcloud ipywidgets Pillow scikit-learn
-```
-
-**Step 3 — Download Dataset**
-
-Download from [Kaggle — Instacart](https://www.kaggle.com/c/instacart-market-basket-analysis) and place in `/content/`:
-- `orders.csv`
-- `order_products__prior.csv`
-- `products.csv`
-- `departments.csv`
-- `aisles.csv`
-
-**Step 4 — Open in Google Colab**
-
-Upload `Untitled11.ipynb` and run all 54 cells.
-
-**Step 5 — Upload Image**
-
-Upload any grocery item photo when prompted — system detects and recommends automatically!
-
----
-
 ## 📌 Key Results
 
 | Metric | Value |
@@ -182,12 +151,6 @@ Upload any grocery item photo when prompted — system detects and recommends au
 **Dhwani Singhal**
 
 [@dhwanisinghal-sudo](https://github.com/dhwanisinghal-sudo)
-
----
-
-## 📜 License
-
-MIT License
 
 ---
 
