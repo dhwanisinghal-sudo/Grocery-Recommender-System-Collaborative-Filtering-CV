@@ -112,48 +112,9 @@ The notebook includes an **interactive widget** (ipywidgets):
 
 ---
 
-## 8. How to Run
-
-### Google Colab (Recommended)
-
-```bash
-# 1. Open Smart_Grocery_Recommender_CV.ipynb in Google Colab
-# 2. Upload dataset files to /content/
-# 3. Run All Cells (Runtime → Run All)
-# 4. For CV: upload any grocery image when prompted
-```
-
-### Local Setup
-
-```bash
-git clone https://github.com/dhwanisinghal-sudo/Grocery-Recommender-System-Collaborative-Filtering-CV
-cd Grocery-Recommender-System-Collaborative-Filtering-CV
-pip install -r requirements.txt
-jupyter notebook Smart_Grocery_Recommender_CV.ipynb
-```
-
----
-
-## 9. Results Summary
+## 8. Results Summary
 
 - **Hybrid CF** outperforms all individual models (RMSE: 1.68)
 - **MobileNetV2** achieves 92.34% accuracy on real grocery images
 - **End-to-end pipeline** successfully detects item from image and returns Top 5 recommendations
 - Example: Upload banana image → detects "Banana" → recommends: Strawberry Yogurt, Lactose Free Milk, Banana, Greek Yogurt, Almond Milk
-
----
-
-## 10. Future Improvements
-
-- Deploy as a **Flask/Streamlit web app**
-- Train a custom CNN on grocery-specific dataset for higher CV accuracy
-- Add **content-based filtering** using product descriptions
-- Implement **real-time recommendations** via API
-- Use **deep learning** (Neural CF / AutoEncoders) for better CF
-
----
-
-## Author
-
-**Dhwani Singhal**  
-GitHub: [@dhwanisinghal-sudo](https://github.com/dhwanisinghal-sudo)
