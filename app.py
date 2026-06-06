@@ -1,450 +1,663 @@
-"""
-Smart Grocery Recommender - Single File Streamlit App
-Run: streamlit run smart_grocery_single.py
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np
-import hashlib
-import torch
-import torch.nn as nn
 from PIL import Image
-from torchvision import models, transforms
+import io
+import base64
+import requests
+import json
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics.pairwise import cosine_similarity as cs
-from surprise import SVD, KNNBasic, Dataset, Reader, accuracy
-from surprise.model_selection import train_test_split
-import plotly.express as px
-import plotly.graph_objects as go
-from pathlib import Path
+from sklearn.decomposition import TruncatedSVD
+import warnings
+warnings.filterwarnings("ignore")
 
-# ─── PAGE CONFIG ────────────────────────────────────────────────────────────
-st.set_page_config(page_title="Smart Grocery Recommender", page_icon="🛒", layout="wide")
+# ─────────────────────────────────────────────
+# PAGE CONFIG
+# ─────────────────────────────────────────────
+st.set_page_config(
+    page_title="🛒 Smart Grocery Recommender",
+    page_icon="🛒",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# ─────────────────────────────────────────────
+# CUSTOM CSS
+# ─────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-html,body,[class*="css"]{font-family:'Space Grotesk',sans-serif;}
-.hero{background:linear-gradient(135deg,#0d1b2a,#112240,#0a1628);border:1px solid #1e3a5f;border-radius:16px;padding:32px 40px;margin-bottom:24px;}
-.hero h1{font-size:2.2rem;font-weight:700;color:#00e5cc;margin:0 0 8px 0;}
-.hero p{color:#7ecfce;margin:0;}
-.badge{display:inline-block;background:rgba(0,229,204,0.12);color:#00e5cc;border:1px solid rgba(0,229,204,0.3);border-radius:6px;padding:3px 10px;font-size:.72rem;font-family:'JetBrains Mono',monospace;margin:4px 3px 4px 0;}
-.mcard{background:linear-gradient(135deg,#112240,#0d1b2a);border:1px solid #1e3a5f;border-radius:12px;padding:20px;text-align:center;}
-.mval{font-size:1.8rem;font-weight:700;color:#00e5cc;font-family:'JetBrains Mono',monospace;}
-.mlbl{font-size:.75rem;color:#7ecfce;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
-.pcard{background:linear-gradient(135deg,#112240,#0d1b2a);border:1px solid #1e3a5f;border-radius:12px;padding:16px 12px;text-align:center;}
-.pcard:hover{border-color:#00e5cc;}
-.pemoji{font-size:2rem;margin-bottom:6px;}
-.pname{font-size:.82rem;font-weight:600;color:#e0f7f4;margin-bottom:3px;}
-.pdept{font-size:.7rem;color:#7ecfce;margin-bottom:5px;}
-.pprice{font-size:.88rem;font-weight:700;color:#00e5cc;font-family:'JetBrains Mono',monospace;}
-.pscore{font-size:.7rem;color:#4db6ac;margin-top:3px;}
-.sechead{font-size:.7rem;font-weight:600;letter-spacing:2px;color:#00e5cc;text-transform:uppercase;border-bottom:1px solid #1e3a5f;padding-bottom:7px;margin:20px 0 14px 0;}
-.step{background:#112240;border-left:3px solid #00e5cc;border-radius:0 8px 8px 0;padding:13px 17px;margin-bottom:11px;}
-.stitle{font-weight:600;color:#00e5cc;margin-bottom:3px;}
-.sdesc{font-size:.87rem;color:#b0c4de;}
-.ibox{background:rgba(0,229,204,.07);border:1px solid rgba(0,229,204,.25);border-radius:10px;padding:13px 17px;margin:11px 0;font-size:.88rem;color:#b0e0e6;}
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .main-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #2ECC71, #27AE60, #1ABC9C);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+        color: #7f8c8d;
+        margin-top: 0;
+        font-weight: 300;
+        letter-spacing: 0.03em;
+    }
+
+    .card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid #0f3460;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 0.75rem 0;
+        color: white;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+    }
+
+    .product-card {
+        background: linear-gradient(145deg, #ffffff, #f8fffe);
+        border: 2px solid #d5f5e3;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(46,204,113,0.1);
+        transition: all 0.3s;
+    }
+
+    .product-card:hover {
+        border-color: #2ECC71;
+        box-shadow: 0 8px 25px rgba(46,204,113,0.25);
+        transform: translateY(-2px);
+    }
+
+    .product-emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-name {
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #1a1a2e;
+    }
+
+    .product-score {
+        font-size: 0.8rem;
+        color: #2ECC71;
+        font-weight: 500;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin: 0.25rem;
+    }
+
+    .badge-green { background: #d5f5e3; color: #1e8449; }
+    .badge-blue  { background: #d6eaf8; color: #1a5276; }
+    .badge-orange{ background: #fdebd0; color: #9c4e0c; }
+
+    .section-header {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        border-left: 4px solid #2ECC71;
+        padding-left: 0.75rem;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .stButton > button {
+        background: linear-gradient(135deg, #2ECC71, #27AE60);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.6rem 1.5rem;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #27AE60, #1e8449);
+        box-shadow: 0 5px 20px rgba(46,204,113,0.4);
+        transform: translateY(-2px);
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #2ECC71, #1ABC9C);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        color: white;
+    }
+
+    .stat-number {
+        font-family: 'Syne', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.85;
+    }
+
+    .detected-item {
+        background: linear-gradient(135deg, #eafaf1, #d5f5e3);
+        border: 2px solid #2ECC71;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin: 0.5rem 0;
+    }
+
+    div[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    div[data-testid="stSidebar"] * {
+        color: #ecf0f1 !important;
+    }
+
+    .sidebar-logo {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #2ECC71 !important;
+        text-align: center;
+        padding: 1rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── GROCERY CATALOG ────────────────────────────────────────────────────────
-CATALOG = {
-    "Produce":       [("Apple",1.29,"🍎"),("Banana",.59,"🍌"),("Orange",.99,"🍊"),("Broccoli",1.79,"🥦"),("Spinach",2.49,"🥬"),("Carrot",.89,"🥕"),("Tomato",1.19,"🍅"),("Avocado",1.49,"🥑"),("Strawberry",3.99,"🍓"),("Blueberry",4.49,"🫐"),("Mango",1.29,"🥭"),("Grape",2.99,"🍇"),("Lemon",.69,"🍋"),("Cucumber",.99,"🥒"),("Bell Pepper",1.29,"🫑")],
-    "Dairy":         [("Whole Milk",3.49,"🥛"),("Almond Milk",4.99,"🥛"),("Cheddar",4.99,"🧀"),("Mozzarella",3.99,"🧀"),("Greek Yogurt",5.49,"🫙"),("Butter",4.29,"🧈"),("Heavy Cream",2.99,"🫙"),("Sour Cream",1.99,"🫙"),("Cream Cheese",2.49,"🧀"),("Parmesan",6.99,"🧀"),("Oat Milk",4.49,"🥛")],
-    "Bakery":        [("White Bread",2.99,"🍞"),("Wheat Bread",3.49,"🍞"),("Sourdough",4.99,"🥖"),("Bagels",3.99,"🥯"),("Croissant",2.49,"🥐"),("Muffin",1.99,"🧁"),("Tortillas",2.99,"🫓"),("Pita",3.29,"🫓"),("Baguette",2.79,"🥖")],
-    "Meat & Seafood":[("Chicken Breast",6.99,"🍗"),("Ground Beef",5.99,"🥩"),("Salmon",9.99,"🐟"),("Pork Chops",5.49,"🥩"),("Shrimp",8.99,"🦐"),("Tuna Can",1.99,"🐟"),("Turkey",7.49,"🦃"),("Bacon",6.49,"🥓"),("Sausage",4.99,"🌭")],
-    "Beverages":     [("Orange Juice",3.99,"🍊"),("Apple Juice",2.99,"🍎"),("Green Tea",4.49,"🍵"),("Sparkling Water",1.99,"💧"),("Coffee",8.99,"☕"),("Coconut Water",2.49,"🥥"),("Sports Drink",1.79,"🏃"),("Soda",1.49,"🥤"),("Kombucha",3.49,"🫙")],
-    "Pantry":        [("Pasta",1.99,"🍝"),("Rice",3.49,"🍚"),("Olive Oil",7.99,"🫒"),("Canned Tomatoes",1.49,"🍅"),("Black Beans",1.29,"🫘"),("Oats",3.99,"🌾"),("Peanut Butter",4.49,"🥜"),("Honey",5.99,"🍯"),("Soy Sauce",2.99,"🫙"),("Flour",2.49,"🌾"),("Sugar",2.99,"🍬"),("Quinoa",5.99,"🌾"),("Chickpeas",1.49,"🫘")],
-    "Snacks":        [("Chips",3.49,"🥔"),("Granola Bar",4.99,"🌾"),("Dark Chocolate",3.99,"🍫"),("Trail Mix",5.49,"🥜"),("Popcorn",2.99,"🍿"),("Crackers",2.49,"🍘"),("Almonds",6.99,"🥜"),("Pretzels",2.99,"🥨"),("Cookies",3.99,"🍪")],
-    "Frozen":        [("Frozen Pizza",6.99,"🍕"),("Ice Cream",4.99,"🍨"),("Frozen Veg",2.99,"🥦"),("Frozen Burrito",3.49,"🌯"),("Fish Sticks",4.49,"🐟"),("Edamame",3.99,"🫛"),("Frozen Waffles",3.79,"🧇"),("Frozen Berries",4.49,"🍓")],
+
+# ─────────────────────────────────────────────
+# DATA GENERATION
+# ─────────────────────────────────────────────
+@st.cache_data
+def generate_data():
+    np.random.seed(42)
+
+    products = {
+        "P001": {"name": "Amul Full Cream Milk", "category": "Dairy", "emoji": "🥛", "price": 68, "tags": ["dairy", "protein", "breakfast"]},
+        "P002": {"name": "Britannia Bread",      "category": "Bakery", "emoji": "🍞", "price": 45, "tags": ["bakery", "breakfast", "carbs"]},
+        "P003": {"name": "Tata Salt",             "category": "Spices", "emoji": "🧂", "price": 25, "tags": ["spice", "essential", "cooking"]},
+        "P004": {"name": "Nestlé Maggi",          "category": "Noodles","emoji": "🍜", "price": 14, "tags": ["snack", "quick", "kids"]},
+        "P005": {"name": "Fortune Sunflower Oil", "category": "Oils",   "emoji": "🫙", "price": 145,"tags": ["oil", "cooking", "essential"]},
+        "P006": {"name": "Lay's Classic Chips",   "category": "Snacks", "emoji": "🥔", "price": 20, "tags": ["snack", "kids", "party"]},
+        "P007": {"name": "Aashirvaad Atta",       "category": "Grains", "emoji": "🌾", "price": 320,"tags": ["grain", "essential", "cooking"]},
+        "P008": {"name": "Tropicana Orange Juice","category": "Drinks", "emoji": "🍊", "price": 99, "tags": ["drink", "vitamin", "breakfast"]},
+        "P009": {"name": "Dabur Honey",           "category": "Health", "emoji": "🍯", "price": 215,"tags": ["health", "sweet", "breakfast"]},
+        "P010": {"name": "Mother Dairy Curd",     "category": "Dairy",  "emoji": "🥗", "price": 55, "tags": ["dairy", "protein", "probiotic"]},
+        "P011": {"name": "ITC Sunfeast Biscuit",  "category": "Bakery", "emoji": "🍪", "price": 30, "tags": ["bakery", "snack", "kids"]},
+        "P012": {"name": "Haldiram's Namkeen",    "category": "Snacks", "emoji": "🥜", "price": 50, "tags": ["snack", "Indian", "party"]},
+        "P013": {"name": "Parle-G Biscuit",       "category": "Bakery", "emoji": "🍪", "price": 10, "tags": ["bakery", "tea", "classic"]},
+        "P014": {"name": "Kissan Mixed Fruit Jam","category": "Condiment","emoji":"🍓","price": 110,"tags": ["sweet", "breakfast", "kids"]},
+        "P015": {"name": "Colgate Toothpaste",    "category": "Personal","emoji":"🪥", "price": 89, "tags": ["hygiene", "daily", "essential"]},
+        "P016": {"name": "Ariel Detergent",       "category": "Home",   "emoji": "🧼", "price": 215,"tags": ["cleaning", "home", "essential"]},
+        "P017": {"name": "Real Mango Juice",      "category": "Drinks", "emoji": "🥭", "price": 90, "tags": ["drink", "fruit", "summer"]},
+        "P018": {"name": "Epigamia Greek Yogurt", "category": "Dairy",  "emoji": "🍦", "price": 75, "tags": ["dairy", "protein", "healthy"]},
+        "P019": {"name": "Good Day Cashew Biscuit","category":"Bakery", "emoji": "🍘", "price": 35, "tags": ["bakery", "premium", "snack"]},
+        "P020": {"name": "Green Tea Lipton",      "category": "Drinks", "emoji": "🍵", "price": 130,"tags": ["drink", "health", "morning"]},
+    }
+
+    users = [f"U{str(i).zfill(3)}" for i in range(1, 51)]
+    product_ids = list(products.keys())
+
+    # Simulate purchase matrix (0-5 rating, 0 = not bought)
+    matrix = np.random.choice(
+        [0, 0, 0, 1, 2, 3, 4, 5],
+        size=(len(users), len(product_ids)),
+        p=[0.5, 0.1, 0.1, 0.1, 0.08, 0.06, 0.04, 0.02]
+    )
+    df = pd.DataFrame(matrix, index=users, columns=product_ids)
+    return products, df
+
+
+# ─────────────────────────────────────────────
+# COLLABORATIVE FILTERING MODEL
+# ─────────────────────────────────────────────
+@st.cache_resource
+def train_model(df):
+    # Matrix factorization via Truncated SVD
+    svd = TruncatedSVD(n_components=10, random_state=42)
+    user_factors = svd.fit_transform(df.values)
+    item_factors = svd.components_.T
+
+    # Reconstruct predicted ratings
+    predicted = np.dot(user_factors, svd.components_)
+    predicted_df = pd.DataFrame(predicted, index=df.index, columns=df.columns)
+
+    # Item-item cosine similarity
+    item_sim = cosine_similarity(item_factors)
+    item_sim_df = pd.DataFrame(item_sim, index=df.columns, columns=df.columns)
+
+    return predicted_df, item_sim_df
+
+
+def get_user_recommendations(user_id, df, predicted_df, products, n=6):
+    already_bought = df.loc[user_id][df.loc[user_id] > 0].index.tolist()
+    preds = predicted_df.loc[user_id].copy()
+    preds[already_bought] = -999  # Exclude already bought
+    top_items = preds.nlargest(n).index.tolist()
+    return top_items, already_bought
+
+
+def get_similar_products(product_id, item_sim_df, n=5):
+    if product_id not in item_sim_df.columns:
+        return []
+    sims = item_sim_df[product_id].drop(product_id).nlargest(n)
+    return list(sims.index), list(sims.values)
+
+
+# ─────────────────────────────────────────────
+# CV: IMAGE CLASSIFICATION (via Clarifai/free API or fallback)
+# ─────────────────────────────────────────────
+
+GROCERY_KEYWORDS = {
+    "milk": ["P001", "P010", "P018"],
+    "bread": ["P002", "P013", "P019"],
+    "biscuit": ["P011", "P013", "P019"],
+    "cookie": ["P011", "P013", "P019"],
+    "juice": ["P008", "P017"],
+    "fruit": ["P008", "P017", "P014"],
+    "oil": ["P005"],
+    "salt": ["P003"],
+    "noodle": ["P004"],
+    "pasta": ["P004"],
+    "chips": ["P006", "P012"],
+    "snack": ["P006", "P012", "P011"],
+    "flour": ["P007"],
+    "wheat": ["P007"],
+    "honey": ["P009"],
+    "yogurt": ["P010", "P018"],
+    "curd": ["P010", "P018"],
+    "jam": ["P014"],
+    "tea": ["P020"],
+    "detergent": ["P016"],
+    "soap": ["P016", "P015"],
+    "toothpaste": ["P015"],
+    "mango": ["P017"],
+    "orange": ["P008"],
+    "cashew": ["P019"],
+    "namkeen": ["P012"],
+    "atta": ["P007"],
+    "maggi": ["P004"],
 }
 
-# ─── DATA ───────────────────────────────────────────────────────────────────
-@st.cache_data(show_spinner=False)
-def get_products():
-    rows, pid = [], 1
-    for dept, items in CATALOG.items():
-        for name, price, emoji in items:
-            rows.append({"product_id":pid,"product_name":name,"department":dept,"price":price,"emoji":emoji})
-            pid += 1
-    return pd.DataFrame(rows)
+def classify_image_with_imagga(image_bytes):
+    """Uses Imagga free API for image tagging"""
+    try:
+        api_key = st.secrets.get("IMAGGA_API_KEY", "")
+        api_secret = st.secrets.get("IMAGGA_API_SECRET", "")
 
-@st.cache_data(show_spinner=False)
-def get_ratings(n_users=500):
-    rng = np.random.default_rng(42)
-    products = get_products()
-    n_prods  = len(products)
-    records  = []
-    for uid in range(1, n_users+1):
-        fav   = rng.choice(list(CATALOG.keys()))
-        fids  = products[products["department"]==fav]["product_id"].values
-        for _ in range(rng.integers(5,15)):
-            if rng.random()<.6 and len(fids):
-                basket = rng.choice(fids, size=rng.integers(2,6), replace=True)
-            else:
-                basket = rng.integers(1, n_prods+1, size=rng.integers(1,5))
-            records.extend({"user_id":uid,"product_id":int(p)} for p in basket)
-    df = pd.DataFrame(records)
-    r  = df.groupby(["user_id","product_id"]).size().reset_index(name="cnt")
-    r["rating"] = (np.clip(r["cnt"],1,10)/10*4+1).round(1)
-    allowed = r["user_id"].unique()[:n_users]
-    return r[r["user_id"].isin(allowed)][["user_id","product_id","rating"]]
+        if not api_key:
+            return None, "No API key"
 
-# ─── CF MODELS ──────────────────────────────────────────────────────────────
-class SVDRec:
-    def fit(self, df):
-        self.algo = SVD(n_factors=50, n_epochs=20, verbose=False)
-        r = Reader(rating_scale=(1,5))
-        d = Dataset.load_from_df(df[["user_id","product_id","rating"]], r)
-        self.algo.fit(d.build_full_trainset()); return self
-    def recommend(self, uid, all_pids, seen, top_n=10):
-        scores = [(p, self.algo.predict(uid,p).est) for p in all_pids if p not in seen]
-        return sorted(scores, key=lambda x:x[1], reverse=True)[:top_n]
+        b64 = base64.b64encode(image_bytes).decode()
+        response = requests.post(
+            "https://api.imagga.com/v2/tags",
+            auth=(api_key, api_secret),
+            data={"image_base64": b64},
+            timeout=15
+        )
+        if response.status_code == 200:
+            tags = response.json()["result"]["tags"]
+            return [t["tag"]["en"].lower() for t in tags[:15]], None
+        return None, f"API Error {response.status_code}"
+    except Exception as e:
+        return None, str(e)
 
-class KNNRec:
-    def fit(self, df):
-        self.ui  = df.pivot_table(index="user_id",columns="product_id",values="rating",fill_value=0)
-        self.idx = {uid:i for i,uid in enumerate(self.ui.index)}
-        self.sim = cs(self.ui.values); return self
-    def recommend(self, uid, seen, top_n=10):
-        if uid not in self.idx: return []
-        i    = self.idx[uid]; s = self.sim[i].copy(); s[i]=0
-        topk = np.argsort(s)[::-1][:20]
-        scores = {}
-        for ni,w in zip(topk, s[topk]):
-            if w<=0: continue
-            for pid,r in self.ui.iloc[ni].items():
-                if r>0 and pid not in seen: scores[pid] = scores.get(pid,0)+w*r
-        if scores:
-            mx = max(scores.values())
-            scores = {p:v/mx*5 for p,v in scores.items()}
-        return sorted(scores.items(), key=lambda x:x[1], reverse=True)[:top_n]
 
-class HybridRec:
-    def __init__(self): self.svd=SVDRec(); self.knn=KNNRec()
-    def fit(self, df): self.svd.fit(df); self.knn.fit(df); return self
-    def recommend(self, uid, all_pids, seen, top_n=10):
-        sv = dict(self.svd.recommend(uid,all_pids,seen,50))
-        kv = dict(self.knn.recommend(uid,seen,50))
-        bl = {p:.6*sv.get(p,2.5)+.4*kv.get(p,0) for p in set(sv)|set(kv)}
-        return sorted(bl.items(), key=lambda x:x[1], reverse=True)[:top_n]
+def mock_classify_image(image: Image.Image):
+    """Fallback: analyze image colors/properties as demo"""
+    img_array = np.array(image.resize((50, 50)))
+    avg_color = img_array.mean(axis=(0, 1))
+    r, g, b = avg_color[0], avg_color[1], avg_color[2]
 
-@st.cache_resource(show_spinner=False)
-def get_model(name, n_users):
-    df = get_ratings(n_users)
-    m  = {"SVD":SVDRec,"KNN":KNNRec,"Hybrid (SVD + KNN)":HybridRec}[name]()
-    return m.fit(df)
-
-# ─── CV MODEL ───────────────────────────────────────────────────────────────
-_TF = transforms.Compose([
-    transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(),
-    transforms.Normalize([.485,.456,.406],[.229,.224,.225]),
-])
-
-@st.cache_resource(show_spinner=False)
-def get_extractor():
-    bb = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
-    m  = nn.Sequential(bb.features, nn.AdaptiveAvgPool2d((1,1)), nn.Flatten())
-    m.eval(); return m
-
-def extract_feat(pil_img):
-    model = get_extractor()
-    with torch.no_grad():
-        t = _TF(pil_img.convert("RGB")).unsqueeze(0)
-        f = model(t).squeeze().numpy()
-    return f / (np.linalg.norm(f)+1e-8)
-
-@st.cache_data(show_spinner=False)
-def get_cat_embeddings():
-    products = get_products()
-    embs = []
-    for _, row in products.iterrows():
-        seed = int(hashlib.md5(row["product_name"].encode()).hexdigest(),16)%(2**31)
-        rng  = np.random.default_rng(seed)
-        v    = rng.standard_normal(1280).astype(np.float32)
-        embs.append(v/(np.linalg.norm(v)+1e-8))
-    return np.vstack(embs)
-
-def scan_image(pil_img, top_k=5):
-    products = get_products()
-    cat_embs = get_cat_embeddings()
-    q        = extract_feat(pil_img).reshape(1,-1)
-    sims     = cs(q, cat_embs)[0]
-    top      = np.argsort(sims)[::-1][:top_k]
-    return [{"product_id":int(products.iloc[i]["product_id"]),"product_name":products.iloc[i]["product_name"],
-             "department":products.iloc[i]["department"],"price":products.iloc[i]["price"],
-             "emoji":products.iloc[i]["emoji"],"similarity_score":float(sims[i])} for i in top]
-
-# ─── ANALYTICS ──────────────────────────────────────────────────────────────
-_L = dict(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font_color="#e0f7f4")
-
-def fig_dept(products, ratings):
-    c = ratings.merge(products,on="product_id")["department"].value_counts().reset_index()
-    c.columns=["Dept","N"]
-    return px.pie(c,names="Dept",values="N",title="Purchases by Department",
-                  color_discrete_sequence=px.colors.sequential.Teal,hole=.4).update_layout(**_L)
-
-def fig_top(products, ratings):
-    t = ratings.merge(products,on="product_id").groupby("product_name")["rating"].count().nlargest(12).reset_index()
-    t.columns=["Product","N"]
-    return px.bar(t,x="N",y="Product",orientation="h",title="Top 12 Products",
-                  color="N",color_continuous_scale="Teal").update_layout(yaxis=dict(autorange="reversed"),
-                  coloraxis_showscale=False,**_L)
-
-def fig_users(ratings):
-    a = ratings.groupby("user_id")["product_id"].count().reset_index(); a.columns=["u","n"]
-    return px.histogram(a,x="n",nbins=40,title="User Activity",
-                        color_discrete_sequence=["#00e5cc"]).update_layout(bargap=.05,**_L)
-
-def fig_ratings(ratings):
-    return px.histogram(ratings,x="rating",nbins=20,title="Rating Distribution",
-                        color_discrete_sequence=["#00bcd4"]).update_layout(bargap=.05,**_L)
-
-def fig_avg(products, ratings):
-    h = ratings.merge(products,on="product_id").groupby("department")["rating"].mean().reset_index()
-    h.columns=["Dept","Avg"]
-    return px.bar(h.sort_values("Avg",ascending=False),x="Dept",y="Avg",
-                  title="Avg Rating by Dept",color="Avg",color_continuous_scale="Teal").update_layout(
-                  coloraxis_showscale=False,**_L)
-
-def eval_models(ratings):
-    r = Reader(rating_scale=(1,5))
-    d = Dataset.load_from_df(ratings[["user_id","product_id","rating"]],r)
-    tr,te = train_test_split(d,test_size=.2,random_state=42)
-    out = {}
-    for name, algo in [("SVD",SVD(n_factors=50,n_epochs=20,verbose=False)),
-                       ("KNN",KNNBasic(sim_options={"name":"cosine","user_based":True}))]:
-        algo.fit(tr); preds=algo.test(te)
-        out[name]={"RMSE":round(accuracy.rmse(preds,verbose=False),4),
-                   "MAE": round(accuracy.mae(preds, verbose=False),4)}
-    return out
-
-# ─── SIDEBAR ────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("### ⚙️ Configuration")
-    n_users    = st.slider("Max users for training", 100, 2000, 400, 100)
-    top_n      = st.slider("Recommendations to show", 5, 20, 10)
-    model_name = st.selectbox("CF Model", ["Hybrid (SVD + KNN)","SVD","KNN"])
-    st.markdown("---")
-    st.markdown("### 🏷️ Category Filter")
-    products = get_products()
-    depts    = ["All"] + sorted(products["department"].unique().tolist())
-    sel_dept = st.selectbox("Department", depts)
-    st.markdown("---")
-    st.markdown("### 📊 Quick Stats")
-    ratings = get_ratings(n_users)
-    st.metric("Users",    f"{ratings['user_id'].nunique():,}")
-    st.metric("Products", f"{len(products):,}")
-    st.metric("Ratings",  f"{len(ratings):,}")
-
-# ─── HERO ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero">
-  <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
-    <span style="font-size:2.4rem;">🛒</span>
-    <h1>Smart Grocery Recommender</h1>
-  </div>
-  <p>Collaborative Filtering (SVD · KNN · Hybrid) + Computer Vision (MobileNetV2)</p>
-  <div style="margin-top:12px;">
-    <span class="badge">scikit-surprise</span><span class="badge">MobileNetV2</span>
-    <span class="badge">PyTorch</span><span class="badge">Instacart-style Data</span>
-    <span class="badge">CV + CF Pipeline</span><span class="badge">Python 3.8+</span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ─── TABS ───────────────────────────────────────────────────────────────────
-t1,t2,t3,t4,t5 = st.tabs(["🎯 CF Recommendations","📸 Image Scanner","🔗 CV+CF Pipeline","📊 Analytics","📖 How It Works"])
-
-# ════════════════════════ TAB 1 ═════════════════════════════════════════════
-with t1:
-    st.markdown('<div class="sechead">Collaborative Filtering Recommendations</div>', unsafe_allow_html=True)
-    c1,c2 = st.columns([3,1])
-    with c1: uid = st.number_input("Enter User ID", min_value=1, max_value=n_users, value=1, step=1)
-    with c2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        go_cf = st.button("⚡ Get Recommendations", use_container_width=True, type="primary")
-
-    if go_cf:
-        with st.spinner("Generating recommendations…"):
-            model = get_model(model_name, n_users)
-            seen  = set(ratings[ratings["user_id"]==uid]["product_id"].tolist())
-            pids  = products["product_id"].tolist()
-            if model_name=="KNN":
-                recs = model.recommend(uid, seen, top_n)
-            else:
-                recs = model.recommend(uid, pids, seen, top_n)
-            if sel_dept!="All":
-                dpids = set(products[products["department"]==sel_dept]["product_id"])
-                recs  = [(p,s) for p,s in recs if p in dpids]
-
-        cols = st.columns(4)
-        for col,(lbl,val) in zip(cols,[
-            ("CF Score #1", f"{recs[0][1]:.4f}" if recs else "—"),
-            ("CF Score #2", f"{recs[1][1]:.4f}" if len(recs)>1 else "—"),
-            ("CF Score #3", f"{recs[2][1]:.4f}" if len(recs)>2 else "—"),
-            ("Total Recs",  str(len(recs))),
-        ]):
-            col.markdown(f'<div class="mcard"><div class="mval">{val}</div><div class="mlbl">{lbl}</div></div>', unsafe_allow_html=True)
-
-        pid_map = products.set_index("product_id").to_dict("index")
-        st.markdown('<div class="sechead">Recommended Products</div>', unsafe_allow_html=True)
-        for rs in range(0, len(recs), 5):
-            row = recs[rs:rs+5]
-            cols = st.columns(len(row))
-            for col,(pid,score) in zip(cols,row):
-                if pid in pid_map:
-                    info = pid_map[pid]
-                    col.markdown(f"""<div class="pcard">
-                      <div class="pemoji">{info['emoji']}</div>
-                      <div class="pname">{info['product_name']}</div>
-                      <div class="pdept">{info['department']}</div>
-                      <div class="pprice">${info['price']:.2f}</div>
-                      <div class="pscore">Score: {score:.4f}</div>
-                    </div>""", unsafe_allow_html=True)
-
-        with st.expander(f"📋 Purchase History — User {uid}"):
-            hist = products[products["product_id"].isin(seen)]
-            st.dataframe(hist[["product_name","department","price"]], use_container_width=True, hide_index=True)
+    # Color-based heuristic demo mapping
+    if g > r and g > b and g > 100:
+        labels = ["vegetable", "fresh produce", "green grocery"]
+        matched = ["P007", "P003", "P005"]
+    elif r > g and r > b and r > 150:
+        labels = ["fruit", "tomato", "red food"]
+        matched = ["P008", "P014", "P017"]
+    elif b > r and b > g:
+        labels = ["packaged drink", "bottle", "juice"]
+        matched = ["P008", "P017", "P020"]
+    elif abs(r-g) < 30 and abs(g-b) < 30 and r > 180:
+        labels = ["dairy", "milk", "white product"]
+        matched = ["P001", "P010", "P018"]
+    elif r > 150 and g > 120 and b < 100:
+        labels = ["snack", "chips", "packaged food"]
+        matched = ["P006", "P012", "P011"]
     else:
-        st.markdown('<div class="ibox">Enter a User ID and click <strong>Get Recommendations</strong>.</div>', unsafe_allow_html=True)
+        labels = ["grocery item", "food product", "packaged goods"]
+        matched = ["P002", "P004", "P013"]
 
-# ════════════════════════ TAB 2 ═════════════════════════════════════════════
-with t2:
-    st.markdown('<div class="sechead">Computer Vision — Product Image Scanner</div>', unsafe_allow_html=True)
-    st.markdown('<div class="ibox">Upload a grocery photo. MobileNetV2 extracts a 1280-D feature vector and matches it against our catalogue via cosine similarity.</div>', unsafe_allow_html=True)
+    return labels, matched
 
-    up  = st.file_uploader("Upload grocery image", type=["jpg","jpeg","png","webp"])
-    kk  = st.slider("Top matches", 3, 10, 5)
 
-    if up:
-        img = Image.open(up)
-        ca, cb = st.columns([1,2])
-        with ca: st.image(img, caption="Uploaded", use_column_width=True)
-        with cb:
-            with st.spinner("Running MobileNetV2…"):
-                matches = scan_image(img, top_k=kk)
-            st.markdown('<div class="sechead">Identified Products</div>', unsafe_allow_html=True)
-            for i,m in enumerate(matches,1):
-                st.markdown(f"""<div class="step">
-                  <div class="stitle">#{i} {m['emoji']} {m['product_name']}
-                    <span style="float:right;font-family:monospace;color:#00e5cc;">{m['similarity_score']*100:.1f}%</span>
-                  </div>
-                  <div class="sdesc">{m['department']} · ${m['price']:.2f}</div>
+def find_products_from_tags(tags, products):
+    matched = set()
+    for tag in tags:
+        for keyword, pids in GROCERY_KEYWORDS.items():
+            if keyword in tag or tag in keyword:
+                matched.update(pids)
+    return list(matched)[:6]
+
+
+# ─────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────
+with st.sidebar:
+    st.markdown('<div class="sidebar-logo">🛒 GrocerAI</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("### 🧭 Navigation")
+    page = st.radio(
+        "",
+        ["🏠 Home Dashboard", "🤖 CF Recommendations", "📸 Image Scanner", "📊 Analytics"],
+        label_visibility="collapsed"
+    )
+    st.markdown("---")
+    st.markdown("### ⚙️ Settings")
+    n_recs = st.slider("Number of Recommendations", 3, 10, 6)
+    st.markdown("---")
+    st.markdown(
+        '<p style="font-size:0.75rem;opacity:0.5;text-align:center;">Built with ❤️ using Streamlit<br>ML + CV Domain Project</p>',
+        unsafe_allow_html=True
+    )
+
+
+# ─────────────────────────────────────────────
+# LOAD DATA
+# ─────────────────────────────────────────────
+products, ratings_df = generate_data()
+predicted_df, item_sim_df = train_model(ratings_df)
+
+users = ratings_df.index.tolist()
+product_ids = list(products.keys())
+
+
+# ─────────────────────────────────────────────
+# PAGE: HOME
+# ─────────────────────────────────────────────
+if page == "🏠 Home Dashboard":
+    st.markdown('<h1 class="main-title">🛒 Smart Grocery Recommender</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Collaborative Filtering + Computer Vision — ML/CV Domain Project</p>', unsafe_allow_html=True)
+    st.markdown("---")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("""
+        <div class="stat-box">
+            <div class="stat-number">50</div>
+            <div class="stat-label">Users</div>
+        </div>""", unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div class="stat-box">
+            <div class="stat-number">20</div>
+            <div class="stat-label">Products</div>
+        </div>""", unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div class="stat-box">
+            <div class="stat-number">SVD</div>
+            <div class="stat-label">CF Model</div>
+        </div>""", unsafe_allow_html=True)
+    with col4:
+        st.markdown("""
+        <div class="stat-box">
+            <div class="stat-number">CV</div>
+            <div class="stat-label">Vision Module</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown('<div class="section-header">📦 Product Catalog</div>', unsafe_allow_html=True)
+
+    cats = list(set(v["category"] for v in products.values()))
+    sel_cat = st.multiselect("Filter by Category", cats, default=cats[:4])
+
+    cols = st.columns(4)
+    for i, (pid, pdata) in enumerate(products.items()):
+        if pdata["category"] in sel_cat:
+            with cols[i % 4]:
+                badges = "".join([f'<span class="badge badge-green">{t}</span>' for t in pdata["tags"][:2]])
+                st.markdown(f"""
+                <div class="product-card">
+                    <span class="product-emoji">{pdata['emoji']}</span>
+                    <div class="product-name">{pdata['name']}</div>
+                    <div style="color:#e74c3c;font-weight:700;margin:0.25rem 0;">₹{pdata['price']}</div>
+                    <div>{badges}</div>
                 </div>""", unsafe_allow_html=True)
 
-            fig = go.Figure(go.Bar(
-                x=[m["similarity_score"] for m in matches],
-                y=[f"{m['emoji']} {m['product_name']}" for m in matches],
-                orientation="h", marker_color="#00e5cc",
-            ))
-            fig.update_layout(title="Cosine Similarity",**_L,xaxis_title="Score",
-                              height=280, margin=dict(l=0,r=0,t=40,b=0))
-            fig.update_yaxes(autorange="reversed")
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.markdown('<div class="ibox">📸 Upload any grocery image to start scanning.</div>', unsafe_allow_html=True)
 
-# ════════════════════════ TAB 3 ═════════════════════════════════════════════
-with t3:
-    st.markdown('<div class="sechead">CV + CF Two-Stage Pipeline</div>', unsafe_allow_html=True)
-    st.markdown('<div class="ibox"><strong>Stage 1 (CV):</strong> MobileNetV2 identifies the product.<br><strong>Stage 2 (CF):</strong> CF finds users who bought it and recommends what they also purchased.</div>', unsafe_allow_html=True)
+# ─────────────────────────────────────────────
+# PAGE: COLLABORATIVE FILTERING
+# ─────────────────────────────────────────────
+elif page == "🤖 CF Recommendations":
+    st.markdown('<h1 class="main-title">🤖 Collaborative Filtering</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">SVD-based Matrix Factorization • Cosine Similarity</p>', unsafe_allow_html=True)
+    st.markdown("---")
 
-    pipe_up = st.file_uploader("Upload image for pipeline", type=["jpg","jpeg","png","webp"], key="pipe")
+    tab1, tab2 = st.tabs(["👤 User-Based Recommendations", "🔗 Item Similarity"])
 
-    if pipe_up:
-        img = Image.open(pipe_up)
-        st.image(img, caption="Input Image", width=250)
+    with tab1:
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.markdown('<div class="section-header">Select User</div>', unsafe_allow_html=True)
+            sel_user = st.selectbox("Choose a User ID", users)
 
-        with st.spinner("Running CV + CF pipeline…"):
-            identified = scan_image(img, top_k=3)
-            seed_pids  = {p["product_id"] for p in identified}
-            neighbours = (ratings[ratings["product_id"].isin(seed_pids)]
-                          ["user_id"].value_counts().head(20).index.tolist())
-            model = get_model(model_name, n_users)
-            try:
-                cf_scores = model.recommend(
-                    neighbours[0] if neighbours else 1,
-                    products["product_id"].tolist(), seed_pids, top_n
-                )
-            except Exception:
-                avg = (ratings[ratings["user_id"].isin(neighbours)]
-                       .groupby("product_id")["rating"].mean()
-                       .sort_values(ascending=False).head(top_n))
-                cf_scores = list(avg.items())
+            if st.button("🎯 Get Recommendations"):
+                st.session_state["cf_user"] = sel_user
+                st.session_state["cf_done"] = True
 
-        st.markdown('<div class="sechead">Stage 1 — Visual Identification</div>', unsafe_allow_html=True)
-        ic = st.columns(min(len(identified),3))
-        for col,p in zip(ic,identified):
-            col.markdown(f"""<div class="pcard" style="border-color:#00e5cc;">
-              <div class="pemoji">{p['emoji']}</div>
-              <div class="pname">{p['product_name']}</div>
-              <div class="pdept">{p['department']}</div>
-              <div class="pprice">${p['price']:.2f}</div>
-              <div class="pscore">Sim: {p['similarity_score']:.3f}</div>
-            </div>""", unsafe_allow_html=True)
+        with col2:
+            if st.session_state.get("cf_done"):
+                u = st.session_state["cf_user"]
+                recs, bought = get_user_recommendations(u, ratings_df, predicted_df, products, n_recs)
 
-        st.markdown('<div class="sechead">Stage 2 — CF Recommendations</div>', unsafe_allow_html=True)
-        pid_map = products.set_index("product_id").to_dict("index")
-        for rs in range(0, len(cf_scores), 5):
-            row  = cf_scores[rs:rs+5]
-            cols = st.columns(len(row))
-            for col,(pid,score) in zip(cols,row):
-                if pid in pid_map:
-                    info = pid_map[pid]
-                    col.markdown(f"""<div class="pcard">
-                      <div class="pemoji">{info['emoji']}</div>
-                      <div class="pname">{info['product_name']}</div>
-                      <div class="pdept">{info['department']}</div>
-                      <div class="pprice">${info['price']:.2f}</div>
-                      <div class="pscore">CF: {float(score):.4f}</div>
+                st.markdown(f'<div class="section-header">✅ Already Purchased by {u}</div>', unsafe_allow_html=True)
+                bought_html = "".join([f'<span class="badge badge-blue">{products[p]["emoji"]} {products[p]["name"]}</span>' for p in bought[:8]])
+                st.markdown(f'<div style="margin-bottom:1rem;">{bought_html}</div>', unsafe_allow_html=True)
+
+                st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
+                rcols = st.columns(3)
+                for i, pid in enumerate(recs):
+                    p = products[pid]
+                    score = predicted_df.loc[u, pid]
+                    with rcols[i % 3]:
+                        st.markdown(f"""
+                        <div class="product-card">
+                            <span class="product-emoji">{p['emoji']}</span>
+                            <div class="product-name">{p['name']}</div>
+                            <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
+                            <div class="product-score">⭐ Score: {score:.2f}</div>
+                        </div>""", unsafe_allow_html=True)
+
+    with tab2:
+        st.markdown('<div class="section-header">🔗 Item-Item Similarity</div>', unsafe_allow_html=True)
+        sel_product = st.selectbox(
+            "Select a product to find similar items",
+            product_ids,
+            format_func=lambda x: f"{products[x]['emoji']} {products[x]['name']}"
+        )
+
+        if st.button("🔍 Find Similar Products"):
+            sim_pids, sim_scores = get_similar_products(sel_product, item_sim_df, n_recs)
+            st.markdown(f'<div class="section-header">Products similar to {products[sel_product]["name"]}</div>', unsafe_allow_html=True)
+            scols = st.columns(3)
+            for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
+                p = products[pid]
+                with scols[i % 3]:
+                    st.markdown(f"""
+                    <div class="product-card">
+                        <span class="product-emoji">{p['emoji']}</span>
+                        <div class="product-name">{p['name']}</div>
+                        <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
+                        <div class="product-score">🔗 Similarity: {score:.3f}</div>
                     </div>""", unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="ibox">Upload an image to run the full CV → CF pipeline.</div>', unsafe_allow_html=True)
 
-# ════════════════════════ TAB 4 ═════════════════════════════════════════════
-with t4:
-    st.markdown('<div class="sechead">Dataset & Model Analytics</div>', unsafe_allow_html=True)
-    ca,cb = st.columns(2)
-    with ca: st.plotly_chart(fig_dept(products,ratings), use_container_width=True)
-    with cb: st.plotly_chart(fig_top(products,ratings),  use_container_width=True)
-    cc,cd = st.columns(2)
-    with cc: st.plotly_chart(fig_users(ratings),   use_container_width=True)
-    with cd: st.plotly_chart(fig_ratings(ratings), use_container_width=True)
-    st.plotly_chart(fig_avg(products,ratings), use_container_width=True)
 
-    st.markdown('<div class="sechead">Model Evaluation (20% Test Split)</div>', unsafe_allow_html=True)
-    with st.spinner("Evaluating SVD & KNN…"):
-        metrics = eval_models(ratings)
-    cols = st.columns(4)
-    for col,(lbl,val) in zip(cols,[
-        ("SVD RMSE", metrics["SVD"]["RMSE"]),("SVD MAE", metrics["SVD"]["MAE"]),
-        ("KNN RMSE", metrics["KNN"]["RMSE"]),("KNN MAE", metrics["KNN"]["MAE"]),
-    ]):
-        col.markdown(f'<div class="mcard"><div class="mval">{val}</div><div class="mlbl">{lbl}</div></div>', unsafe_allow_html=True)
+# ─────────────────────────────────────────────
+# PAGE: IMAGE SCANNER (CV)
+# ─────────────────────────────────────────────
+elif page == "📸 Image Scanner":
+    st.markdown('<h1 class="main-title">📸 Product Image Scanner</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Upload a grocery item photo → CV identifies it → Recommends similar products</p>', unsafe_allow_html=True)
+    st.markdown("---")
 
-    total    = products["product_id"].nunique() * ratings["user_id"].nunique()
-    sparsity = (1 - len(ratings)/total)*100
-    st.markdown(f'<div class="ibox"><strong>Matrix Sparsity:</strong> {sparsity:.1f}% &nbsp;|&nbsp; <strong>Filled:</strong> {len(ratings):,} / {total:,}</div>', unsafe_allow_html=True)
+    st.info("📌 **How it works:** Upload any grocery/food product image. The CV module analyzes it and maps it to products in our catalog, then uses Collaborative Filtering to suggest related items.")
 
-# ════════════════════════ TAB 5 ═════════════════════════════════════════════
-with t5:
-    st.markdown('<div class="sechead">System Architecture</div>', unsafe_allow_html=True)
-    for title,desc in [
-        ("1️⃣  Data Layer",         "Synthetic Instacart-style dataset · 8 departments · 80+ products · up to 2000 users · purchase-frequency implicit ratings"),
-        ("2️⃣  SVD",               "Funk matrix factorisation via scikit-surprise · 50 latent factors · 20 epochs"),
-        ("3️⃣  KNN",               "User-based cosine similarity · top-20 neighbours · weighted rating aggregation · normalised 1-5"),
-        ("4️⃣  Hybrid",            "Weighted blend: 60% SVD + 40% KNN · full catalogue scoring · merged re-ranking"),
-        ("5️⃣  MobileNetV2 (CV)",  "Pre-trained ImageNet backbone · adaptive avg pool → 1280-D feature vector · cosine similarity matching against catalogue"),
-        ("6️⃣  CV + CF Pipeline",  "Stage 1: CV identifies product → Stage 2: buyers of that product act as virtual neighbours → CF recommendations"),
-        ("7️⃣  Frontend",          "Streamlit · department filter · product cards · Plotly charts · real-time image uploader"),
-    ]:
-        st.markdown(f'<div class="step"><div class="stitle">{title}</div><div class="sdesc">{desc}</div></div>', unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
 
-    st.markdown('<div class="sechead">Tech Stack</div>', unsafe_allow_html=True)
-    rows = "".join(f"<tr><td style='color:#7ecfce;padding:5px 12px;'>{k}</td><td style='color:#e0f7f4;padding:5px 12px;'>{v}</td></tr>"
-                   for k,v in [("Framework","Streamlit 1.28+"),("CF","scikit-surprise (SVD, KNNBasic)"),
-                                ("CV","MobileNetV2 · PyTorch · torchvision"),("Data","pandas · numpy · scikit-learn"),
-                                ("Viz","Plotly Express / Graph Objects"),("Python","3.8+")])
-    st.markdown(f'<table style="border-collapse:collapse;width:100%;background:#112240;border-radius:10px;overflow:hidden;">{rows}</table>', unsafe_allow_html=True)
+    with col1:
+        st.markdown('<div class="section-header">📤 Upload Image</div>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader(
+            "Upload a grocery product image",
+            type=["jpg", "jpeg", "png", "webp"],
+            help="Upload a photo of any grocery item"
+        )
+
+        if uploaded_file:
+            image = Image.open(uploaded_file).convert("RGB")
+            st.image(image, caption="Uploaded Image", use_column_width=True)
+
+            img_bytes = uploaded_file.getvalue()
+
+            if st.button("🔍 Analyze & Recommend"):
+                with st.spinner("🧠 Running Computer Vision analysis..."):
+                    # Try Imagga API first, fall back to color analysis
+                    tags, err = classify_image_with_imagga(img_bytes)
+
+                    if tags:
+                        matched_pids = find_products_from_tags(tags, products)
+                        method = "🌐 Imagga Vision API"
+                    else:
+                        tags, matched_pids = mock_classify_image(image)
+                        method = "🎨 Color-based CV Analysis (Demo Mode)"
+
+                    st.session_state["cv_tags"] = tags
+                    st.session_state["cv_pids"] = matched_pids if matched_pids else ["P001", "P002", "P004"]
+                    st.session_state["cv_method"] = method
+                    st.session_state["cv_done"] = True
+
+    with col2:
+        if st.session_state.get("cv_done"):
+            method = st.session_state["cv_method"]
+            tags = st.session_state["cv_tags"]
+            matched = st.session_state["cv_pids"]
+
+            st.markdown(f'<div class="section-header">🏷️ Detected Labels</div>', unsafe_allow_html=True)
+            st.markdown(f'<small style="color:#7f8c8d;">Method: {method}</small>', unsafe_allow_html=True)
+            tags_html = "".join([f'<span class="badge badge-orange">{t}</span>' for t in tags[:10]])
+            st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
+            if matched:
+                for pid in matched:
+                    p = products.get(pid, {})
+                    if p:
+                        st.markdown(f"""
+                        <div class="detected-item">
+                            <b>{p['emoji']} {p['name']}</b>
+                            <span style="float:right;color:#2ECC71;font-weight:600;">₹{p['price']}</span><br>
+                            <small style="color:#7f8c8d;">Category: {p['category']}</small>
+                        </div>""", unsafe_allow_html=True)
+
+                # CF-based extension: find similar to first matched product
+                if matched:
+                    st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
+                    sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, 4)
+                    sc = st.columns(2)
+                    for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
+                        p = products[pid]
+                        with sc[i % 2]:
+                            st.markdown(f"""
+                            <div class="product-card">
+                                <span class="product-emoji">{p['emoji']}</span>
+                                <div class="product-name">{p['name']}</div>
+                                <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
+                                <div class="product-score">🔗 {score:.3f}</div>
+                            </div>""", unsafe_allow_html=True)
+            else:
+                st.warning("No matching products found. Try a different image.")
+
+    st.markdown("---")
+    st.markdown("### 🔧 Want Real CV Power?")
+    st.markdown("""
+    To enable production-grade image classification, add your **Imagga API** credentials in Streamlit secrets:
+    ```toml
+    # .streamlit/secrets.toml
+    IMAGGA_API_KEY = "your_key_here"
+    IMAGGA_API_SECRET = "your_secret_here"
+    ```
+    Get a **free API key** at [imagga.com](https://imagga.com) — 1000 free requests/month.
+    """)
+
+
+# ─────────────────────────────────────────────
+# PAGE: ANALYTICS
+# ─────────────────────────────────────────────
+elif page == "📊 Analytics":
+    st.markdown('<h1 class="main-title">📊 Analytics Dashboard</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Purchase patterns, model insights, and catalog stats</p>', unsafe_allow_html=True)
+    st.markdown("---")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown('<div class="section-header">🏆 Most Popular Products</div>', unsafe_allow_html=True)
+        popularity = ratings_df.astype(bool).sum(axis=0).sort_values(ascending=False).head(10)
+        pop_df = pd.DataFrame({
+            "Product": [f"{products[p]['emoji']} {products[p]['name']}" for p in popularity.index],
+            "Buyers": popularity.values
+        })
+        st.bar_chart(pop_df.set_index("Product"))
+
+    with col2:
+        st.markdown('<div class="section-header">📂 Category Distribution</div>', unsafe_allow_html=True)
+        cat_counts = {}
+        for p in products.values():
+            cat_counts[p["category"]] = cat_counts.get(p["category"], 0) + 1
+        cat_df = pd.DataFrame({"Category": list(cat_counts.keys()), "Count": list(cat_counts.values())})
+        st.bar_chart(cat_df.set_index("Category"))
+
+    st.markdown('<div class="section-header">📈 User Purchase Heatmap (Sample)</div>', unsafe_allow_html=True)
+    sample = ratings_df.iloc[:15, :10]
+    sample.columns = [f"{products[c]['emoji']}{products[c]['name'][:8]}" for c in sample.columns]
+    st.dataframe(
+        sample.style.background_gradient(cmap="Greens"),
+        use_container_width=True
+    )
+
+    st.markdown('<div class="section-header">🔬 Model: SVD Explained Variance</div>', unsafe_allow_html=True)
+    from sklearn.decomposition import TruncatedSVD
+    svd_test = TruncatedSVD(n_components=10, random_state=42)
+    svd_test.fit(ratings_df.values)
+    var_df = pd.DataFrame({
+        "Component": [f"C{i+1}" for i in range(10)],
+        "Explained Variance (%)": (svd_test.explained_variance_ratio_ * 100).round(2)
+    })
+    st.bar_chart(var_df.set_index("Component"))
+    st.caption(f"Total variance explained: {svd_test.explained_variance_ratio_.sum()*100:.1f}%")
