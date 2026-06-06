@@ -512,7 +512,8 @@ elif page == "🤖 CF Recommendations":
 
                     st.markdown(f'<div class="section-header">✅ Already Purchased by {u}</div>', unsafe_allow_html=True)
                     bought_html = "".join([f'<span class="badge badge-blue">{products[p]["emoji"]} {products[p]["name"]}</span>' for p in bought[:8]])
-                    st.markdown(f'<div style="margin-bottom:1rem;">{bought_html if bought_html else "<i style=\'color:#aaa\'>No purchases yet</i>"}</div>', unsafe_allow_html=True)
+                    no_purchase_msg = "<i style='color:#aaa'>No purchases yet</i>"
+                    st.markdown(f'<div style="margin-bottom:1rem;">{bought_html if bought_html else no_purchase_msg}</div>', unsafe_allow_html=True)
 
                     st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
                     rcols = st.columns(3)
