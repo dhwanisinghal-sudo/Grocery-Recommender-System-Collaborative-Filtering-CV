@@ -342,64 +342,39 @@ elif page == "🤖 CF Recommendations":
     with tab1:
         col1, col2 = st.columns([1, 2])
         with col1:
-            st.markdown('<div class="section-header">Enter User</div>', unsafe_allow_html=True)
-            input_mode = st.radio("Mode", ["📋 Existing User", "✏️ Any Custom User ID"], horizontal=True)
-            if input_mode == "📋 Existing User":
-                sel_user = st.selectbox("Choose from existing users", users)
-            else:
-                sel_user = st.text_input(
-                    "Type any User ID", placeholder="e.g. U999, Alice, john123...",
-                    help="New users get popular item recommendations!"
-                ).strip()
-            if st.button("🎯 Get Recommendations") and sel_user:
+            st.markdown('<div class="section-header">Select User</div>', unsafe_allow_html=True)
+            sel_user = st.selectbox("Choose a user", users)
+            if st.button("🎯 Get Recommendations"):
                 st.session_state["cf_user"] = sel_user
                 st.session_state["cf_done"] = True
 
         with col2:
             if st.session_state.get("cf_done"):
-                u          = st.session_state["cf_user"]
-                is_new     = u not in ratings_df.index
+                u = st.session_state["cf_user"]
 
-                if is_new:
-                    st.markdown(f'<div class="detected-item">🆕 <b>New User: {u}</b> — No purchase history. Showing <b>trending popular picks</b>!</div>', unsafe_allow_html=True)
-                    popularity = ratings_df.astype(bool).sum(axis=0).sort_values(ascending=False)
-                    recs       = popularity.head(n_recs).index.tolist()
-                    st.markdown(f'<div class="section-header">🔥 Trending Recommendations for {u}</div>', unsafe_allow_html=True)
-                    rcols = st.columns(3)
-                    for i, pid in enumerate(recs):
-                        p = products[pid]
-                        with rcols[i % 3]:
-                            st.markdown(f"""
-                            <div class="product-card">
-                                <span class="product-emoji">{p['emoji']}</span>
-                                <div class="product-name">{p['name']}</div>
-                                <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                                <div class="product-score">🔥 {int(popularity[pid])} buyers</div>
-                            </div>""", unsafe_allow_html=True)
-                else:
-                    recs, bought = get_user_recommendations(u, ratings_df, predicted_df, n_recs)
-                    st.markdown(f'<div class="section-header">✅ Already Purchased by {u}</div>', unsafe_allow_html=True)
-                    bought_html = "".join([
-                        f'<span class="badge badge-blue">{products[p]["emoji"]} {products[p]["name"]}</span>'
-                        for p in bought[:8] if p in products
-                    ])
-                    st.markdown(f'<div style="margin-bottom:1rem;">{bought_html or "<i style=color:#aaa>No purchases yet</i>"}</div>', unsafe_allow_html=True)
+                recs, bought = get_user_recommendations(u, ratings_df, predicted_df, n_recs)
+                st.markdown(f'<div class="section-header">✅ Already Purchased by {u}</div>', unsafe_allow_html=True)
+                bought_html = "".join([
+                    f'<span class="badge badge-blue">{products[p]["emoji"]} {products[p]["name"]}</span>'
+                    for p in bought[:8] if p in products
+                ])
+                st.markdown(f'<div style="margin-bottom:1rem;">{bought_html or "<i style=color:#aaa>No purchases yet</i>"}</div>', unsafe_allow_html=True)
 
-                    st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
-                    rcols = st.columns(3)
-                    for i, pid in enumerate(recs):
-                        if pid not in products:
-                            continue
-                        p     = products[pid]
-                        score = predicted_df.loc[u, pid]
-                        with rcols[i % 3]:
-                            st.markdown(f"""
-                            <div class="product-card">
-                                <span class="product-emoji">{p['emoji']}</span>
-                                <div class="product-name">{p['name']}</div>
-                                <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                                <div class="product-score">⭐ Score: {score:.2f}</div>
-                            </div>""", unsafe_allow_html=True)
+                st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
+                rcols = st.columns(3)
+                for i, pid in enumerate(recs):
+                    if pid not in products:
+                        continue
+                    p     = products[pid]
+                    score = predicted_df.loc[u, pid]
+                    with rcols[i % 3]:
+                        st.markdown(f"""
+                        <div class="product-card">
+                            <span class="product-emoji">{p['emoji']}</span>
+                            <div class="product-name">{p['name']}</div>
+                            <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
+                            <div class="product-score">⭐ Score: {score:.2f}</div>
+                        </div>""", unsafe_allow_html=True)
 
     with tab2:
         st.markdown('<div class="section-header">🔗 Item-Item Similarity</div>', unsafe_allow_html=True)
