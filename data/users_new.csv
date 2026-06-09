@@ -1,0 +1,101 @@
+user_id,name,age,gender,location,preferred_categories,cluster
+U051,Rahul Reddy,33,M,Bangalore,"Spices,Grains,Condiments,Dairy",home_chef
+U052,Karan Iyer,52,M,Delhi,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U053,Sneha Sharma,31,F,Bangalore,"Health,Grains,Beverages,Dairy",health_conscious
+U054,Gaurav Singh,59,M,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U055,Riya Shah,35,F,Mumbai,"Bakery,Dairy,Home Care,Health",family_shopper
+U056,Pankaj Joshi,27,M,Bangalore,"Spices,Grains,Condiments,Dairy",home_chef
+U057,Neha Verma,24,F,Hyderabad,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U058,Simran Kumar,47,F,Jaipur,"Health,Grains,Beverages,Dairy",health_conscious
+U059,Ankit Verma,36,M,Surat,"Bakery,Dairy,Home Care,Health",family_shopper
+U060,Ananya Reddy,20,F,Bangalore,"Health,Grains,Beverages,Dairy",health_conscious
+U061,Pooja Singh,42,F,Chennai,"Health,Grains,Beverages,Dairy",health_conscious
+U062,Nisha Patel,40,F,Bangalore,"Spices,Grains,Condiments,Dairy",home_chef
+U063,Pooja Nair,28,F,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U064,Suresh Shah,35,M,Jaipur,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U065,Rajesh Kumar,32,M,Mumbai,"Health,Grains,Beverages,Dairy",health_conscious
+U066,Aisha Gupta,31,F,Surat,"Health,Grains,Beverages,Dairy",health_conscious
+U067,Ananya Iyer,43,F,Ahmedabad,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U068,Arjun Patel,53,M,Jaipur,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U069,Tanya Nair,41,F,Bangalore,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U070,Tushar Shah,21,M,Delhi,"Health,Grains,Beverages,Dairy",health_conscious
+U071,Suresh Kumar,45,M,Surat,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U072,Ankit Mehta,47,M,Jaipur,"Bakery,Dairy,Home Care,Health",family_shopper
+U073,Komal Sharma,25,F,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U074,Shreya Verma,45,F,Pune,"Spices,Grains,Condiments,Dairy",home_chef
+U075,Priya Reddy,34,F,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U076,Tushar Verma,37,M,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U077,Vikas Joshi,52,M,Jaipur,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U078,Rajesh Shah,25,M,Hyderabad,"Health,Grains,Beverages,Dairy",health_conscious
+U079,Riya Sharma,54,F,Delhi,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U080,Akash Verma,26,M,Pune,"Bakery,Dairy,Home Care,Health",family_shopper
+U081,Komal Patel,51,F,Surat,"Spices,Grains,Condiments,Dairy",home_chef
+U082,Ananya Rao,30,F,Chennai,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U083,Nisha Shah,46,F,Delhi,"Bakery,Dairy,Home Care,Health",family_shopper
+U084,Nikhil Verma,19,M,Surat,"Spices,Grains,Condiments,Dairy",home_chef
+U085,Nikhil Sharma,58,M,Mumbai,"Health,Grains,Beverages,Dairy",health_conscious
+U086,Rohit Sharma,22,M,Jaipur,"Spices,Grains,Condiments,Dairy",home_chef
+U087,Arjun Iyer,31,M,Jaipur,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U088,Akash Singh,44,M,Bangalore,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U089,Karan Iyer,40,M,Kolkata,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U090,Swati Reddy,59,F,Delhi,"Health,Grains,Beverages,Dairy",health_conscious
+U091,Ankit Reddy,24,M,Bangalore,"Spices,Grains,Condiments,Dairy",home_chef
+U092,Deepak Rao,26,M,Kolkata,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U093,Arjun Shah,22,M,Ahmedabad,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U094,Amit Iyer,18,M,Delhi,"Bakery,Dairy,Home Care,Health",family_shopper
+U095,Suresh Mehta,48,M,Bangalore,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U096,Sneha Patel,18,F,Kolkata,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U097,Swati Gupta,53,F,Ahmedabad,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U098,Deepak Gupta,21,M,Surat,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U099,Rajesh Sharma,55,M,Ahmedabad,"Health,Grains,Beverages,Dairy",health_conscious
+U100,Amit Rao,29,M,Delhi,"Health,Grains,Beverages,Dairy",health_conscious
+U101,Nikhil Mehta,54,M,Bangalore,"Health,Grains,Beverages,Dairy",health_conscious
+U102,Rohit Mehta,55,M,Surat,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U103,Simran Singh,38,F,Bangalore,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U104,Aisha Patel,59,F,Chennai,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U105,Shreya Kumar,18,F,Ahmedabad,"Health,Grains,Beverages,Dairy",health_conscious
+U106,Rohit Rao,50,M,Chennai,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U107,Sanjay Verma,41,M,Chennai,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U108,Vivek Rao,37,M,Surat,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U109,Gaurav Gupta,24,M,Pune,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U110,Neha Verma,53,F,Pune,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U111,Meera Nair,39,F,Bangalore,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U112,Bhavna Shah,21,F,Delhi,"Spices,Grains,Condiments,Dairy",home_chef
+U113,Simran Sharma,39,F,Pune,"Health,Grains,Beverages,Dairy",health_conscious
+U114,Kavya Reddy,53,F,Kolkata,"Noodles,Frozen,Drinks,Snacks",busy_professional
+U115,Karan Verma,27,M,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U116,Sanjay Nair,27,M,Kolkata,"Bakery,Dairy,Home Care,Health",family_shopper
+U117,Amit Gupta,20,M,Hyderabad,"Spices,Grains,Condiments,Dairy",home_chef
+U118,Nikhil Iyer,40,M,Jaipur,"Health,Grains,Beverages,Dairy",health_conscious
+U119,Divya Singh,29,F,Kolkata,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U120,Suresh Reddy,44,M,Bangalore,"Spices,Grains,Condiments,Dairy",home_chef
+U121,Kavya Kumar,24,F,Kolkata,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U122,Akash Singh,47,M,Hyderabad,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U123,Riya Singh,60,F,Bangalore,"Health,Grains,Beverages,Dairy",health_conscious
+U124,Shreya Gupta,35,F,Hyderabad,"Health,Grains,Beverages,Dairy",health_conscious
+U125,Komal Joshi,25,F,Chennai,"Health,Grains,Beverages,Dairy",health_conscious
+U126,Arjun Sharma,56,M,Kolkata,"Health,Grains,Beverages,Dairy",health_conscious
+U127,Shreya Mehta,50,F,Delhi,"Bakery,Dairy,Home Care,Health",family_shopper
+U128,Ananya Gupta,45,F,Mumbai,"Health,Grains,Beverages,Dairy",health_conscious
+U129,Sanjay Mehta,60,M,Hyderabad,"Health,Grains,Beverages,Dairy",health_conscious
+U130,Neha Reddy,50,F,Chennai,"Spices,Grains,Condiments,Dairy",home_chef
+U131,Shreya Mehta,36,F,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U132,Deepak Mehta,42,M,Pune,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U133,Aisha Rao,37,F,Chennai,"Health,Grains,Beverages,Dairy",health_conscious
+U134,Pankaj Kumar,56,M,Hyderabad,"Bakery,Dairy,Home Care,Health",family_shopper
+U135,Swati Shah,31,F,Jaipur,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U136,Kavya Iyer,36,F,Jaipur,"Health,Grains,Beverages,Dairy",health_conscious
+U137,Pooja Kumar,37,F,Bangalore,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U138,Vikas Sharma,33,M,Ahmedabad,"Health,Grains,Beverages,Dairy",health_conscious
+U139,Vivek Mehta,54,M,Bangalore,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U140,Anjali Mehta,27,F,Mumbai,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U141,Pankaj Singh,51,M,Ahmedabad,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U142,Gaurav Singh,47,M,Pune,"Health,Grains,Beverages,Dairy",health_conscious
+U143,Bhavna Rao,38,F,Ahmedabad,"Bakery,Dairy,Home Care,Health",family_shopper
+U144,Komal Shah,48,F,Ahmedabad,"Snacks,Bakery,Drinks,Frozen",snack_lover
+U145,Riya Iyer,51,F,Ahmedabad,"Spices,Grains,Condiments,Dairy",home_chef
+U146,Arjun Shah,36,M,Bangalore,"Health,Grains,Beverages,Dairy",health_conscious
+U147,Shreya Joshi,23,F,Pune,"Bakery,Dairy,Home Care,Health",family_shopper
+U148,Nikhil Mehta,27,M,Bangalore,"Beverages,Bakery,Snacks,Dairy",tea_coffee_fan
+U149,Pankaj Mehta,52,M,Ahmedabad,"Spices,Grains,Condiments,Dairy",home_chef
+U150,Sneha Singh,42,F,Surat,"Noodles,Frozen,Drinks,Snacks",busy_professional
