@@ -307,7 +307,7 @@ GROCERY_KEYWORDS = {
 }
 
 # FIX 1: Confidence threshold — only accept tags above this % confidence
-CONFIDENCE_THRESHOLD = 40.0
+CONFIDENCE_THRESHOLD = 55.0
 
 # Non-food / irrelevant keywords to ignore even if API returns them
 IGNORE_KEYWORDS = {
@@ -680,10 +680,6 @@ elif page == "📸 Image Scanner":
                 base_cat = products.get(matched[0], {}).get("category", "")
                 allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
                 sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, 4, filter_categories=allowed)
-
-                if not sim_pids:
-                    # Fallback: no filter if nothing found
-                    sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, 4)
 
                 sc = st.columns(2)
                 for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
