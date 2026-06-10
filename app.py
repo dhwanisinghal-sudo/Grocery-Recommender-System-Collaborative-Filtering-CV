@@ -109,8 +109,8 @@ CATEGORY_EMOJI = {
 # RELATED CATEGORIES — for CF filter
 # When a CV detects a product from category X, only suggest CF results from these categories
 RELATED_CATEGORIES = {
-    "Drinks":        ["Drinks", "Beverages", "Snacks", "Health"],
-    "Beverages":     ["Beverages", "Drinks", "Snacks", "Health"],
+    "Drinks":        ["Drinks", "Beverages", "Health"],
+    "Beverages":     ["Beverages", "Drinks", "Health"],
     "Snacks":        ["Snacks", "Bakery", "Drinks", "Beverages"],
     "Bakery":        ["Bakery", "Snacks", "Dairy", "Condiments"],
     "Dairy":         ["Dairy", "Bakery", "Health", "Beverages"],
@@ -351,27 +351,47 @@ def mock_classify_image(image: Image.Image):
     img_array = np.array(image.resize((50, 50)))
     avg_color = img_array.mean(axis=(0, 1))
     r, g, b   = avg_color[0], avg_color[1], avg_color[2]
-    if g > r and g > b and g > 100:
-        tags = [{"tag": "vegetable", "confidence": 82}, {"tag": "fresh produce", "confidence": 74}, {"tag": "green grocery", "confidence": 65}]
-        pids = ["P035","P041","P049"]
-    elif r > g and r > b and r > 150:
-        tags = [{"tag": "fruit", "confidence": 88}, {"tag": "tomato", "confidence": 79}, {"tag": "red food", "confidence": 71}]
-        pids = ["P061","P071","P062"]
-    elif abs(r-g) < 40 and g > r and r > 180:
-        # Yellow-ish (banana)
-        tags = [{"tag": "banana", "confidence": 91}, {"tag": "fruit", "confidence": 85}, {"tag": "yellow", "confidence": 78}, {"tag": "ripe", "confidence": 72}]
+
+    # Yellow = high R, high G, low B (banana, mango, lemon)
+    is_yellow = r > 160 and g > 140 and b < 120 and abs(r - g) < 60
+    # Green = G dominates
+    is_green  = g > r and g > b and g > 100
+    # Red = R dominates clearly
+    is_red    = r > g + 30 and r > b + 30 and r > 150
+    # White/grey = all channels similar and high
+    is_white  = abs(r-g) < 30 and abs(g-b) < 30 and r > 180
+    # Blue = B dominates
+    is_blue   = b > r and b > g
+    # Orange-brown (snacks) = high R, medium G, low B
+    is_orange = r > 150 and g > 100 and g < 160 and b < 100 and not is_yellow
+
+    if is_yellow:
+        tags = [{"tag": "banana", "confidence": 91}, {"tag": "fruit", "confidence": 86},
+                {"tag": "yellow", "confidence": 80}, {"tag": "ripe", "confidence": 73}]
         pids = ["P061","P062","P063"]
-    elif b > r and b > g:
-        tags = [{"tag": "packaged drink", "confidence": 85}, {"tag": "bottle", "confidence": 76}, {"tag": "juice", "confidence": 68}]
-        pids = ["P061","P062","P125"]
-    elif abs(r-g) < 30 and abs(g-b) < 30 and r > 180:
-        tags = [{"tag": "dairy", "confidence": 83}, {"tag": "milk", "confidence": 77}, {"tag": "white product", "confidence": 70}]
+    elif is_green:
+        tags = [{"tag": "vegetable", "confidence": 82}, {"tag": "fresh produce", "confidence": 74},
+                {"tag": "green grocery", "confidence": 65}]
+        pids = ["P035","P041","P049"]
+    elif is_red:
+        tags = [{"tag": "fruit", "confidence": 85}, {"tag": "tomato", "confidence": 77},
+                {"tag": "red food", "confidence": 68}]
+        pids = ["P061","P071","P062"]
+    elif is_white:
+        tags = [{"tag": "dairy", "confidence": 83}, {"tag": "milk", "confidence": 77},
+                {"tag": "white product", "confidence": 70}]
         pids = ["P021","P023","P029"]
-    elif r > 150 and g > 120 and b < 100:
-        tags = [{"tag": "snack", "confidence": 80}, {"tag": "chips", "confidence": 73}, {"tag": "packaged food", "confidence": 65}]
+    elif is_blue:
+        tags = [{"tag": "packaged drink", "confidence": 85}, {"tag": "bottle", "confidence": 76},
+                {"tag": "juice", "confidence": 68}]
+        pids = ["P061","P062","P125"]
+    elif is_orange:
+        tags = [{"tag": "snack", "confidence": 80}, {"tag": "chips", "confidence": 73},
+                {"tag": "packaged food", "confidence": 65}]
         pids = ["P011","P015","P016"]
     else:
-        tags = [{"tag": "grocery item", "confidence": 75}, {"tag": "food product", "confidence": 67}, {"tag": "packaged goods", "confidence": 60}]
+        tags = [{"tag": "grocery item", "confidence": 75}, {"tag": "food product", "confidence": 67},
+                {"tag": "packaged goods", "confidence": 60}]
         pids = ["P001","P051","P121"]
     return tags, pids
 
