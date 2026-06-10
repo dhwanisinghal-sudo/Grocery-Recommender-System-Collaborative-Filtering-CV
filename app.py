@@ -530,3 +530,4 @@ elif page == "📊 Analytics":
     })
     st.bar_chart(var_df.set_index("Component"))
     st.caption(f"Total variance explained: {svd_test.explained_variance_ratio_.sum()*100:.1f}%")
+ 
