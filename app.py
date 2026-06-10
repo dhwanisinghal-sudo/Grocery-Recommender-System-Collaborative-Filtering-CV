@@ -636,22 +636,16 @@ elif page == "📸 Image Scanner":
                     matched_pids = find_products_from_tags(tags_raw, products)
                     method = "🌐 Imagga Vision API"
                     tags = tags_raw
+                    progress_bar.progress(100, text="✅ Analysis complete!")
+                    time.sleep(0.3)
+                    progress_bar.empty()
+                    st.session_state["cv_tags"]   = tags
+                    st.session_state["cv_pids"]   = matched_pids
+                    st.session_state["cv_method"] = method
+                    st.session_state["cv_done"]   = True
                 else:
-                    tags_raw_mock, matched_pids = mock_classify_image(image)
-                    method = "🎨 Color-based CV (Demo Mode)"
-                    tags = tags_raw_mock
-
-                if not matched_pids:
-                    matched_pids = ["P001","P051","P121"]
-
-                progress_bar.progress(100, text="✅ Analysis complete!")
-                time.sleep(0.3)
-                progress_bar.empty()
-
-                st.session_state["cv_tags"]   = tags
-                st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = method
-                st.session_state["cv_done"]   = True
+                    progress_bar.empty()
+                    st.error(f"❌ Imagga API Error: {err}. Please check your API credentials in Streamlit Secrets.")
 
     with col2:
         if st.session_state.get("cv_done"):
