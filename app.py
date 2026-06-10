@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
 import warnings
 warnings.filterwarnings("ignore")
-
+ 
 # ─────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────
@@ -18,7 +18,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+ 
 # ─────────────────────────────────────────────
 # CUSTOM CSS (unchanged from original)
 # ─────────────────────────────────────────────
@@ -76,8 +76,8 @@ st.markdown("""
     .sidebar-logo { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: #2ECC71 !important; text-align: center; padding: 1rem 0; }
 </style>
 """, unsafe_allow_html=True)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # CATEGORY → EMOJI MAPPING
 # ─────────────────────────────────────────────
@@ -87,11 +87,11 @@ CATEGORY_EMOJI = {
     "Personal Care": "🧴", "Health": "💊", "Home Care": "🧹",
     "Frozen": "🧊", "Beverages": "☕",
 }
-
+ 
 def get_emoji(category):
     return CATEGORY_EMOJI.get(category, "🛒")
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # LOAD DATA FROM CSV
 # ─────────────────────────────────────────────
@@ -103,21 +103,24 @@ def load_data():
     except FileNotFoundError:
         st.error("❌ data/products.csv not found! Please upload it to the data/ folder.")
         st.stop()
-
+ 
     # Build products dict (same structure as before so rest of app works)
     products = {}
     for _, row in products_df.iterrows():
         pid = row["product_id"]
         tags = [t.strip() for t in str(row.get("tags", "")).split(",") if t.strip()]
+        emoji = str(row.get("emoji", "")).strip()
+        if not emoji or emoji == "nan":
+            emoji = get_emoji(row["category"])
         products[pid] = {
             "name":     row["name"],
             "category": row["category"],
-            "emoji":    get_emoji(row["category"]),
+            "emoji":    emoji,
             "price":    int(row["price"]),
             "tags":     tags,
             "rating":   float(row.get("rating", 4.0)),
         }
-
+ 
     # ── Users ─────────────────────────────────
     # Load existing users (U001–U050) + new users (U051–U150)
     user_ids_existing = [f"U{str(i).zfill(3)}" for i in range(1, 51)]
@@ -126,10 +129,10 @@ def load_data():
         user_ids_new = new_users_df["user_id"].tolist()
     except FileNotFoundError:
         user_ids_new = []
-
+ 
     all_user_ids = user_ids_existing + user_ids_new
     product_ids  = list(products.keys())
-
+ 
     # ── Ratings ───────────────────────────────
     try:
         ratings_raw = pd.read_csv("data/ratings.csv")
@@ -148,10 +151,10 @@ def load_data():
             p=[0.5, 0.1, 0.1, 0.1, 0.08, 0.06, 0.04, 0.02]
         )
         matrix = pd.DataFrame(raw, index=all_user_ids, columns=product_ids)
-
+ 
     return products, matrix
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # COLLABORATIVE FILTERING MODEL
 # ─────────────────────────────────────────────
@@ -166,23 +169,23 @@ def train_model(_df):
     item_sim     = cosine_similarity(item_factors)
     item_sim_df  = pd.DataFrame(item_sim, index=_df.columns, columns=_df.columns)
     return predicted_df, item_sim_df
-
-
+ 
+ 
 def get_user_recommendations(user_id, df, predicted_df, n=6):
     already_bought = df.loc[user_id][df.loc[user_id] > 0].index.tolist()
     preds = predicted_df.loc[user_id].copy()
     preds[already_bought] = -999
     top_items = preds.nlargest(n).index.tolist()
     return top_items, already_bought
-
-
+ 
+ 
 def get_similar_products(product_id, item_sim_df, n=5):
     if product_id not in item_sim_df.columns:
         return [], []
     sims = item_sim_df[product_id].drop(product_id).nlargest(n)
     return list(sims.index), list(sims.values)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # CV: IMAGE CLASSIFICATION
 # ─────────────────────────────────────────────
@@ -205,7 +208,7 @@ GROCERY_KEYWORDS = {
     "dal": ["P033","P034"], "ghee": ["P025"],
     "butter": ["P021"], "masala": ["P041","P042","P047"],
 }
-
+ 
 def classify_image_with_imagga(image_bytes):
     try:
         api_key    = st.secrets.get("IMAGGA_API_KEY", "")
@@ -225,8 +228,8 @@ def classify_image_with_imagga(image_bytes):
         return None, f"API Error {response.status_code}"
     except Exception as e:
         return None, str(e)
-
-
+ 
+ 
 def mock_classify_image(image: Image.Image):
     img_array = np.array(image.resize((50, 50)))
     avg_color = img_array.mean(axis=(0, 1))
@@ -243,8 +246,8 @@ def mock_classify_image(image: Image.Image):
         return ["snack", "chips", "packaged food"], ["P011","P015","P016"]
     else:
         return ["grocery item", "food product", "packaged goods"], ["P001","P051","P121"]
-
-
+ 
+ 
 def find_products_from_tags(tags, products):
     matched = set()
     for tag in tags:
@@ -254,8 +257,8 @@ def find_products_from_tags(tags, products):
                     if pid in products:
                         matched.add(pid)
     return list(matched)[:6]
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # SIDEBAR
 # ─────────────────────────────────────────────
@@ -276,20 +279,20 @@ with st.sidebar:
         '<p style="font-size:0.75rem;opacity:0.5;text-align:center;">Built with ❤️ using Streamlit<br>ML + CV Domain Project</p>',
         unsafe_allow_html=True
     )
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # LOAD DATA + TRAIN MODEL
 # ─────────────────────────────────────────────
 products, ratings_df = load_data()
 predicted_df, item_sim_df = train_model(ratings_df)
-
+ 
 users       = ratings_df.index.tolist()
 product_ids = list(products.keys())
 n_users     = len(users)
 n_products  = len(products)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # PAGE: HOME DASHBOARD
 # ─────────────────────────────────────────────
@@ -297,7 +300,7 @@ if page == "🏠 Home Dashboard":
     st.markdown('<h1 class="main-title">🛒 Smart Grocery Recommender</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Collaborative Filtering + Computer Vision — ML/CV Domain Project</p>', unsafe_allow_html=True)
     st.markdown("---")
-
+ 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f"""<div class="stat-box"><div class="stat-number">{n_users}</div><div class="stat-label">Users</div></div>""", unsafe_allow_html=True)
@@ -307,15 +310,15 @@ if page == "🏠 Home Dashboard":
         st.markdown("""<div class="stat-box"><div class="stat-number">SVD</div><div class="stat-label">CF Model</div></div>""", unsafe_allow_html=True)
     with col4:
         st.markdown("""<div class="stat-box"><div class="stat-number">CV</div><div class="stat-label">Vision Module</div></div>""", unsafe_allow_html=True)
-
+ 
     st.markdown("---")
     st.markdown('<div class="section-header">📦 Product Catalog</div>', unsafe_allow_html=True)
-
+ 
     cats     = sorted(set(v["category"] for v in products.values()))
     sel_cats = st.multiselect("Filter by Category", cats, default=cats[:4])
-
+ 
     filtered = {pid: pdata for pid, pdata in products.items() if pdata["category"] in sel_cats}
-
+ 
     cols = st.columns(4)
     for i, (pid, pdata) in enumerate(filtered.items()):
         with cols[i % 4]:
@@ -327,8 +330,8 @@ if page == "🏠 Home Dashboard":
                 <div style="color:#e74c3c;font-weight:700;margin:0.25rem 0;">₹{pdata['price']}</div>
                 <div>{badges}</div>
             </div>""", unsafe_allow_html=True)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # PAGE: CF RECOMMENDATIONS
 # ─────────────────────────────────────────────
@@ -336,9 +339,9 @@ elif page == "🤖 CF Recommendations":
     st.markdown('<h1 class="main-title">🤖 Collaborative Filtering</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">SVD-based Matrix Factorization • Cosine Similarity</p>', unsafe_allow_html=True)
     st.markdown("---")
-
+ 
     tab1, tab2 = st.tabs(["👤 User-Based Recommendations", "🔗 Item Similarity"])
-
+ 
     with tab1:
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -347,11 +350,11 @@ elif page == "🤖 CF Recommendations":
             if st.button("🎯 Get Recommendations"):
                 st.session_state["cf_user"] = sel_user
                 st.session_state["cf_done"] = True
-
+ 
         with col2:
             if st.session_state.get("cf_done"):
                 u = st.session_state["cf_user"]
-
+ 
                 recs, bought = get_user_recommendations(u, ratings_df, predicted_df, n_recs)
                 st.markdown(f'<div class="section-header">✅ Already Purchased by {u}</div>', unsafe_allow_html=True)
                 bought_html = "".join([
@@ -359,7 +362,7 @@ elif page == "🤖 CF Recommendations":
                     for p in bought[:8] if p in products
                 ])
                 st.markdown(f'<div style="margin-bottom:1rem;">{bought_html or "<i style=color:#aaa>No purchases yet</i>"}</div>', unsafe_allow_html=True)
-
+ 
                 st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
                 rcols = st.columns(3)
                 for i, pid in enumerate(recs):
@@ -375,7 +378,7 @@ elif page == "🤖 CF Recommendations":
                             <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
                             <div class="product-score">⭐ Score: {score:.2f}</div>
                         </div>""", unsafe_allow_html=True)
-
+ 
     with tab2:
         st.markdown('<div class="section-header">🔗 Item-Item Similarity</div>', unsafe_allow_html=True)
         sel_product = st.selectbox(
@@ -399,8 +402,8 @@ elif page == "🤖 CF Recommendations":
                         <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
                         <div class="product-score">🔗 Similarity: {score:.3f}</div>
                     </div>""", unsafe_allow_html=True)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # PAGE: IMAGE SCANNER
 # ─────────────────────────────────────────────
@@ -409,17 +412,17 @@ elif page == "📸 Image Scanner":
     st.markdown('<p class="subtitle">Upload a grocery photo → CV identifies it → Recommends similar products</p>', unsafe_allow_html=True)
     st.markdown("---")
     st.info("📌 Upload any grocery/food product image. The CV module analyzes it and maps it to products in our catalog, then uses CF to suggest related items.")
-
+ 
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown('<div class="section-header">📤 Upload Image</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Upload a grocery product image", type=["jpg","jpeg","png","webp"])
-
+ 
         if uploaded_file:
             image = Image.open(uploaded_file).convert("RGB")
             st.image(image, caption="Uploaded Image", use_column_width=True)
             img_bytes = uploaded_file.getvalue()
-
+ 
             if st.button("🔍 Analyze & Recommend"):
                 with st.spinner("🧠 Running Computer Vision analysis..."):
                     tags, err = classify_image_with_imagga(img_bytes)
@@ -429,23 +432,23 @@ elif page == "📸 Image Scanner":
                     else:
                         tags, matched_pids = mock_classify_image(image)
                         method = "🎨 Color-based CV Analysis (Demo Mode)"
-
+ 
                     st.session_state["cv_tags"]   = tags
                     st.session_state["cv_pids"]   = matched_pids if matched_pids else ["P001","P051","P121"]
                     st.session_state["cv_method"] = method
                     st.session_state["cv_done"]   = True
-
+ 
     with col2:
         if st.session_state.get("cv_done"):
             method  = st.session_state["cv_method"]
             tags    = st.session_state["cv_tags"]
             matched = st.session_state["cv_pids"]
-
+ 
             st.markdown('<div class="section-header">🏷️ Detected Labels</div>', unsafe_allow_html=True)
             st.markdown(f'<small style="color:#7f8c8d;">Method: {method}</small>', unsafe_allow_html=True)
             tags_html = "".join([f'<span class="badge badge-orange">{t}</span>' for t in tags[:10]])
             st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
-
+ 
             st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
             for pid in matched:
                 p = products.get(pid)
@@ -456,7 +459,7 @@ elif page == "📸 Image Scanner":
                         <span style="float:right;color:#2ECC71;font-weight:600;">₹{p['price']}</span><br>
                         <small style="color:#7f8c8d;">Category: {p['category']}</small>
                     </div>""", unsafe_allow_html=True)
-
+ 
             if matched:
                 st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
                 sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, 4)
@@ -473,7 +476,7 @@ elif page == "📸 Image Scanner":
                             <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
                             <div class="product-score">🔗 {score:.3f}</div>
                         </div>""", unsafe_allow_html=True)
-
+ 
     st.markdown("---")
     st.markdown("### 🔧 Want Real CV Power?")
     st.markdown("""
@@ -484,8 +487,8 @@ elif page == "📸 Image Scanner":
     ```
     Get a free key at [imagga.com](https://imagga.com) — 1000 free requests/month.
     """)
-
-
+ 
+ 
 # ─────────────────────────────────────────────
 # PAGE: ANALYTICS
 # ─────────────────────────────────────────────
@@ -493,7 +496,7 @@ elif page == "📊 Analytics":
     st.markdown('<h1 class="main-title">📊 Analytics Dashboard</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Purchase patterns, model insights, and catalog stats</p>', unsafe_allow_html=True)
     st.markdown("---")
-
+ 
     col1, col2 = st.columns(2)
     with col1:
         st.markdown('<div class="section-header">🏆 Most Popular Products</div>', unsafe_allow_html=True)
@@ -503,7 +506,7 @@ elif page == "📊 Analytics":
             "Buyers":  [popularity[p] for p in popularity.index if p in products]
         })
         st.bar_chart(pop_df.set_index("Product"))
-
+ 
     with col2:
         st.markdown('<div class="section-header">📂 Category Distribution</div>', unsafe_allow_html=True)
         cat_counts = {}
@@ -511,12 +514,12 @@ elif page == "📊 Analytics":
             cat_counts[p["category"]] = cat_counts.get(p["category"], 0) + 1
         cat_df = pd.DataFrame({"Category": list(cat_counts.keys()), "Count": list(cat_counts.values())})
         st.bar_chart(cat_df.set_index("Category"))
-
+ 
     st.markdown('<div class="section-header">📈 User Purchase Heatmap (Sample — first 15 users, 10 products)</div>', unsafe_allow_html=True)
     sample = ratings_df.iloc[:15, :10].copy()
     sample.columns = [f"{products[c]['emoji']}{products[c]['name'][:8]}" for c in sample.columns if c in products]
     st.dataframe(sample.style.background_gradient(cmap="Greens"), use_container_width=True)
-
+ 
     st.markdown('<div class="section-header">🔬 SVD Explained Variance</div>', unsafe_allow_html=True)
     n_comp   = min(10, ratings_df.shape[0]-1, ratings_df.shape[1]-1)
     svd_test = TruncatedSVD(n_components=n_comp, random_state=42)
@@ -527,3 +530,4 @@ elif page == "📊 Analytics":
     })
     st.bar_chart(var_df.set_index("Component"))
     st.caption(f"Total variance explained: {svd_test.explained_variance_ratio_.sum()*100:.1f}%")
+ 
