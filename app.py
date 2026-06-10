@@ -98,10 +98,18 @@ def get_emoji(category):
 @st.cache_data(ttl=0)
 def load_data():
     # ── Products ──────────────────────────────
-    try:
-        products_df = pd.read_csv("data/products.csv")
-    except FileNotFoundError:
-        st.error("❌ data/products.csv not found! Please upload it to the data/ folder.")
+    import os
+    # Try multiple possible paths (local vs Streamlit Cloud)
+    possible_paths = ["data/products.csv", "./data/products.csv", "products.csv"]
+    products_df = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            products_df = pd.read_csv(path)
+            break
+    if products_df is None:
+        st.error("❌ products.csv not found! Paths tried: " + str(possible_paths))
+        st.write("📁 Current directory:", os.getcwd())
+        st.write("📂 Files here:", os.listdir("."))
         st.stop()
  
     # Build products dict (same structure as before so rest of app works)
@@ -125,17 +133,25 @@ def load_data():
     # Load existing users (U001–U050) + new users (U051–U150)
     user_ids_existing = [f"U{str(i).zfill(3)}" for i in range(1, 51)]
     try:
-        new_users_df = pd.read_csv("data/users_new.csv")
-        user_ids_new = new_users_df["user_id"].tolist()
-    except FileNotFoundError:
+        users_paths = ["data/users_new.csv", "./data/users_new.csv", "users_new.csv"]
+        new_users_df = None
+        for p in users_paths:
+            if os.path.exists(p):
+                new_users_df = pd.read_csv(p)
+                break
+        user_ids_new = new_users_df["user_id"].tolist() if new_users_df is not None else []
+    except Exception:
         user_ids_new = []
  
     all_user_ids = user_ids_existing + user_ids_new
     product_ids  = list(products.keys())
  
     # ── Ratings ───────────────────────────────
+    ratings_paths = ["data/ratings.csv", "./data/ratings.csv", "ratings.csv"]
+    ratings_path = next((p for p in ratings_paths if os.path.exists(p)), None)
     try:
-        ratings_raw = pd.read_csv("data/ratings.csv")
+        ratings_raw = pd.read_csv(ratings_path) if ratings_path else None
+        if ratings_raw is None: raise FileNotFoundError
         # Pivot into user × product matrix
         matrix = ratings_raw.pivot_table(
             index="user_id", columns="product_id", values="rating", aggfunc="mean"
