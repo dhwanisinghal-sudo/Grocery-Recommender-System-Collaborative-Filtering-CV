@@ -95,7 +95,7 @@ def get_emoji(category):
 # ─────────────────────────────────────────────
 # LOAD DATA FROM CSV
 # ─────────────────────────────────────────────
-@st.cache_data
+@st.cache_data(ttl=0)
 def load_data():
     # ── Products ──────────────────────────────
     try:
@@ -530,4 +530,3 @@ elif page == "📊 Analytics":
     })
     st.bar_chart(var_df.set_index("Component"))
     st.caption(f"Total variance explained: {svd_test.explained_variance_ratio_.sum()*100:.1f}%")
- 
