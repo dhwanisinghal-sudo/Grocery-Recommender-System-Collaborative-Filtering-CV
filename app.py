@@ -314,13 +314,19 @@ IGNORE_KEYWORDS = {
 }
 
 
+def get_secret(key):
+    """Safely get a secret from st.secrets. Returns empty string if not found."""
+    try:
+        val = st.secrets[key]
+        return str(val).strip() if val else ""
+    except Exception:
+        return ""
+
+
 def classify_image_with_imagga(image_bytes):
     """Call Imagga API. Returns (tags, None) on success or (None, error_code) on failure."""
-    try:
-        api_key    = st.secrets.get("IMAGGA_API_KEY", "")
-        api_secret = st.secrets.get("IMAGGA_API_SECRET", "")
-    except Exception:
-        api_key, api_secret = "", ""
+    api_key    = get_secret("IMAGGA_API_KEY")
+    api_secret = get_secret("IMAGGA_API_SECRET")
 
     if not api_key or not api_secret:
         return None, "NO_CREDS"
@@ -348,75 +354,29 @@ def classify_image_with_imagga(image_bytes):
 
 
 def fallback_color_analysis(image: Image.Image):
-    """
-    Heuristic fallback when Imagga API is unavailable.
-    Analyzes dominant color + brightness to guess product category.
-    """
+    """Heuristic fallback — dominant color → product category."""
     img_small = image.resize((50, 50)).convert("RGB")
     pixels = np.array(img_small).reshape(-1, 3).astype(float)
     avg = pixels.mean(axis=0)
     r, g, b = avg
-
     brightness = (r + g + b) / 3
-    tags = []
 
-    # Yellow-ish → banana / mango / fruit
     if r > 180 and g > 150 and b < 100:
-        tags += [
-            {"tag": "banana", "confidence": 72.0},
-            {"tag": "fruit",  "confidence": 68.0},
-            {"tag": "food",   "confidence": 65.0},
-        ]
-    # Orange-ish → mango / orange fruit
+        return [{"tag": "banana", "confidence": 72.0}, {"tag": "fruit", "confidence": 68.0}, {"tag": "food", "confidence": 65.0}]
     elif r > 200 and g > 100 and b < 80:
-        tags += [
-            {"tag": "mango",  "confidence": 70.0},
-            {"tag": "orange", "confidence": 67.0},
-            {"tag": "fruit",  "confidence": 65.0},
-        ]
-    # Green-dominant → vegetable / food
+        return [{"tag": "mango", "confidence": 70.0}, {"tag": "orange", "confidence": 67.0}, {"tag": "fruit", "confidence": 65.0}]
     elif g > r and g > b and g > 120:
-        tags += [
-            {"tag": "vegetable", "confidence": 70.0},
-            {"tag": "food",      "confidence": 65.0},
-        ]
-    # Red-dominant → tomato / masala / fruit
+        return [{"tag": "vegetable", "confidence": 70.0}, {"tag": "food", "confidence": 65.0}]
     elif r > g * 1.4 and r > b * 1.4:
-        tags += [
-            {"tag": "fruit",  "confidence": 67.0},
-            {"tag": "masala", "confidence": 62.0},
-            {"tag": "food",   "confidence": 60.0},
-        ]
-    # Blue-dominant → dairy / milk / beverage
+        return [{"tag": "fruit", "confidence": 67.0}, {"tag": "masala", "confidence": 62.0}, {"tag": "food", "confidence": 60.0}]
     elif b > r and b > g:
-        tags += [
-            {"tag": "milk",     "confidence": 66.0},
-            {"tag": "dairy",    "confidence": 63.0},
-            {"tag": "beverage", "confidence": 60.0},
-        ]
-    # Very bright (white-ish) → flour / dairy / bread
+        return [{"tag": "milk", "confidence": 66.0}, {"tag": "dairy", "confidence": 63.0}, {"tag": "beverage", "confidence": 60.0}]
     elif brightness > 200:
-        tags += [
-            {"tag": "flour", "confidence": 65.0},
-            {"tag": "dairy", "confidence": 62.0},
-            {"tag": "bread", "confidence": 60.0},
-        ]
-    # Dark → tea / coffee / chocolate
+        return [{"tag": "flour", "confidence": 65.0}, {"tag": "dairy", "confidence": 62.0}, {"tag": "bread", "confidence": 60.0}]
     elif brightness < 80:
-        tags += [
-            {"tag": "coffee",    "confidence": 68.0},
-            {"tag": "tea",       "confidence": 65.0},
-            {"tag": "chocolate", "confidence": 62.0},
-        ]
-    # Medium neutral → snack / packet food
+        return [{"tag": "coffee", "confidence": 68.0}, {"tag": "tea", "confidence": 65.0}, {"tag": "chocolate", "confidence": 62.0}]
     else:
-        tags += [
-            {"tag": "snack", "confidence": 63.0},
-            {"tag": "food",  "confidence": 60.0},
-            {"tag": "chips", "confidence": 58.0},
-        ]
-
-    return tags[:6]
+        return [{"tag": "snack", "confidence": 63.0}, {"tag": "food", "confidence": 60.0}, {"tag": "chips", "confidence": 58.0}]
 
 
 def find_products_from_tags(tag_dicts, products):
@@ -619,7 +579,7 @@ elif page == "📸 Image Scanner":
                 import time
                 progress_bar = st.progress(0, text="🧠 Initializing CV analysis...")
                 time.sleep(0.3)
-                progress_bar.progress(30, text="📡 Sending to Vision API...")
+                progress_bar.progress(30, text="📡 Checking Vision API...")
                 time.sleep(0.3)
 
                 tags_raw, err = classify_image_with_imagga(img_bytes)
@@ -628,7 +588,6 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.2)
 
                 if tags_raw:
-                    # ── Imagga API success ──
                     matched_pids = find_products_from_tags(tags_raw, products)
                     progress_bar.progress(100, text="✅ Analysis complete!")
                     time.sleep(0.3)
@@ -638,35 +597,15 @@ elif page == "📸 Image Scanner":
                     st.session_state["cv_method"] = "🌐 Imagga Vision API"
                     st.session_state["cv_done"]   = True
 
-                elif err == "NO_CREDS":
-                    # ── Fallback: color heuristic ──
-                    progress_bar.progress(80, text="🎨 Using color-based fallback analysis...")
-                    time.sleep(0.3)
-                    fallback_tags = fallback_color_analysis(image)
-                    matched_pids  = find_products_from_tags(fallback_tags, products)
-                    progress_bar.progress(100, text="✅ Done (fallback mode)!")
-                    time.sleep(0.3)
-                    progress_bar.empty()
-                    st.warning(
-                        "⚠️ Imagga API credentials not configured. "
-                        "Using **color-based fallback** analysis. "
-                        "For accurate results, add `IMAGGA_API_KEY` & `IMAGGA_API_SECRET` in Streamlit Secrets."
-                    )
-                    st.session_state["cv_tags"]   = fallback_tags
-                    st.session_state["cv_pids"]   = matched_pids
-                    st.session_state["cv_method"] = "🎨 Color-Based Fallback"
-                    st.session_state["cv_done"]   = True
-
                 else:
-                    # ── API error (wrong creds, network, etc.) ──
-                    progress_bar.progress(80, text="🎨 API failed, using fallback...")
+                    # NO_CREDS or any other error → always use fallback
+                    progress_bar.progress(80, text="🎨 Using color-based fallback...")
                     time.sleep(0.3)
                     fallback_tags = fallback_color_analysis(image)
                     matched_pids  = find_products_from_tags(fallback_tags, products)
-                    progress_bar.progress(100, text="✅ Done (fallback mode)!")
+                    progress_bar.progress(100, text="✅ Done!")
                     time.sleep(0.3)
                     progress_bar.empty()
-                    st.warning(f"⚠️ Imagga API Error: `{err}`. Using color-based fallback analysis instead.")
                     st.session_state["cv_tags"]   = fallback_tags
                     st.session_state["cv_pids"]   = matched_pids
                     st.session_state["cv_method"] = "🎨 Color-Based Fallback"
@@ -720,7 +659,6 @@ elif page == "📸 Image Scanner":
                 sim_pids, sim_scores = get_similar_products(
                     matched[0], item_sim_df, products, 4, filter_categories=allowed
                 )
-
                 sc = st.columns(2)
                 for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
                     if pid not in products:
