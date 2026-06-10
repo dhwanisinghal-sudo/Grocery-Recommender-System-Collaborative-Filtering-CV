@@ -106,8 +106,6 @@ CATEGORY_EMOJI = {
     "Frozen": "🧊", "Beverages": "☕",
 }
 
-# RELATED CATEGORIES — for CF filter
-# When a CV detects a product from category X, only suggest CF results from these categories
 RELATED_CATEGORIES = {
     "Drinks":        ["Drinks", "Beverages", "Health"],
     "Beverages":     ["Beverages", "Drinks", "Health"],
@@ -223,19 +221,12 @@ def get_user_recommendations(user_id, df, predicted_df, n=6):
 
 
 def get_similar_products(product_id, item_sim_df, products, n=5, filter_categories=None):
-    """
-    FIX: Added category filter so CF doesn't suggest irrelevant products.
-    filter_categories — list of allowed categories. If None, no filter applied.
-    """
     if product_id not in item_sim_df.columns:
         return [], []
     sims = item_sim_df[product_id].drop(product_id).sort_values(ascending=False)
-
     if filter_categories:
-        # Only keep product IDs whose category is in allowed list
         allowed_pids = [pid for pid in sims.index if products.get(pid, {}).get("category") in filter_categories]
         sims = sims[allowed_pids]
-
     top = sims.head(n)
     return list(top.index), list(top.values)
 
@@ -245,7 +236,7 @@ def get_similar_products(product_id, item_sim_df, products, n=5, filter_categori
 # ─────────────────────────────────────────────
 def init_cart():
     if "cart" not in st.session_state:
-        st.session_state["cart"] = {}  # {pid: {"name": ..., "price": ..., "emoji": ..., "qty": ...}}
+        st.session_state["cart"] = {}
 
 def add_to_cart(pid, products):
     init_cart()
@@ -306,23 +297,20 @@ GROCERY_KEYWORDS = {
     "ripe": ["P061","P062","P137"],
 }
 
-# FIX 1: Confidence threshold — only accept tags above this % confidence
 CONFIDENCE_THRESHOLD = 55.0
 
-# Non-food / irrelevant keywords to ignore even if API returns them
 IGNORE_KEYWORDS = {
     "sweet pepper", "pepper", "capsicum", "paprika", "chili",
     "spice", "seasoning", "herb", "ingredient",
 }
 
 def classify_image_with_imagga(image_bytes):
-    """
-    FIX: Returns (tags_with_confidence, error) where tags are filtered by
-    CONFIDENCE_THRESHOLD and IGNORE_KEYWORDS.
-    """
     try:
-        api_key    = st.secrets.get("IMAGGA_API_KEY", "")
-        api_secret = st.secrets.get("IMAGGA_API_SECRET", "")
+        try:
+            api_key    = st.secrets["IMAGGA_API_KEY"]
+            api_secret = st.secrets["IMAGGA_API_SECRET"]
+        except KeyError:
+            return None, "API keys not found in Streamlit Secrets"
         if not api_key:
             return None, "No API key"
         b64 = base64.b64encode(image_bytes).decode()
@@ -334,7 +322,6 @@ def classify_image_with_imagga(image_bytes):
         )
         if response.status_code == 200:
             raw_tags = response.json()["result"]["tags"]
-            # Filter by confidence threshold + ignore list
             filtered = [
                 {"tag": t["tag"]["en"].lower(), "confidence": round(t["confidence"], 1)}
                 for t in raw_tags
@@ -347,57 +334,7 @@ def classify_image_with_imagga(image_bytes):
         return None, str(e)
 
 
-def mock_classify_image(image: Image.Image):
-    img_array = np.array(image.resize((50, 50)))
-    avg_color = img_array.mean(axis=(0, 1))
-    r, g, b   = avg_color[0], avg_color[1], avg_color[2]
-
-    # Yellow = high R, high G, low B (banana, mango, lemon)
-    is_yellow = r > 160 and g > 140 and b < 120 and abs(r - g) < 60
-    # Green = G dominates
-    is_green  = g > r and g > b and g > 100
-    # Red = R dominates clearly
-    is_red    = r > g + 30 and r > b + 30 and r > 150
-    # White/grey = all channels similar and high
-    is_white  = abs(r-g) < 30 and abs(g-b) < 30 and r > 180
-    # Blue = B dominates
-    is_blue   = b > r and b > g
-    # Orange-brown (snacks) = high R, medium G, low B
-    is_orange = r > 150 and g > 100 and g < 160 and b < 100 and not is_yellow
-
-    if is_yellow:
-        tags = [{"tag": "banana", "confidence": 91}, {"tag": "fruit", "confidence": 86},
-                {"tag": "yellow", "confidence": 80}, {"tag": "ripe", "confidence": 73}]
-        pids = ["P061","P062","P063"]
-    elif is_green:
-        tags = [{"tag": "vegetable", "confidence": 82}, {"tag": "fresh produce", "confidence": 74},
-                {"tag": "green grocery", "confidence": 65}]
-        pids = ["P035","P041","P049"]
-    elif is_red:
-        tags = [{"tag": "fruit", "confidence": 85}, {"tag": "tomato", "confidence": 77},
-                {"tag": "red food", "confidence": 68}]
-        pids = ["P061","P071","P062"]
-    elif is_white:
-        tags = [{"tag": "dairy", "confidence": 83}, {"tag": "milk", "confidence": 77},
-                {"tag": "white product", "confidence": 70}]
-        pids = ["P021","P023","P029"]
-    elif is_blue:
-        tags = [{"tag": "packaged drink", "confidence": 85}, {"tag": "bottle", "confidence": 76},
-                {"tag": "juice", "confidence": 68}]
-        pids = ["P061","P062","P125"]
-    elif is_orange:
-        tags = [{"tag": "snack", "confidence": 80}, {"tag": "chips", "confidence": 73},
-                {"tag": "packaged food", "confidence": 65}]
-        pids = ["P011","P015","P016"]
-    else:
-        tags = [{"tag": "grocery item", "confidence": 75}, {"tag": "food product", "confidence": 67},
-                {"tag": "packaged goods", "confidence": 60}]
-        pids = ["P001","P051","P121"]
-    return tags, pids
-
-
 def find_products_from_tags(tag_dicts, products):
-    """Works with new tag format: list of {"tag": ..., "confidence": ...}"""
     matched = set()
     for item in tag_dicts:
         tag = item["tag"] if isinstance(item, dict) else item
@@ -446,27 +383,6 @@ n_products  = len(products)
 
 
 # ─────────────────────────────────────────────
-# HELPER: Product Card with Add to Cart
-# ─────────────────────────────────────────────
-def render_product_card_with_cart(pid, p, score_label=None, col=None):
-    """Renders a product card. col is the st.column context."""
-    ctx = col if col else st
-    tags_html = "".join([f'<span class="badge badge-green">{t}</span>' for t in p["tags"][:2]])
-    score_html = f'<div class="product-score">{score_label}</div>' if score_label else ""
-    ctx.markdown(f"""
-    <div class="product-card">
-        <span class="product-emoji">{p['emoji']}</span>
-        <div class="product-name">{p['name']}</div>
-        <div style="color:#e74c3c;font-weight:700;margin:0.3rem 0;">₹{p['price']}</div>
-        <div style="margin-bottom:0.4rem;">{tags_html}</div>
-        {score_html}
-    </div>""", unsafe_allow_html=True)
-    if ctx.button(f"🛒 Add to Cart", key=f"cart_{pid}_{id(score_label)}"):
-        add_to_cart(pid, products)
-        st.toast(f"✅ {p['name']} added to cart!", icon="🛒")
-
-
-# ─────────────────────────────────────────────
 # PAGE: HOME DASHBOARD
 # ─────────────────────────────────────────────
 if page == "🏠 Home Dashboard":
@@ -489,7 +405,6 @@ if page == "🏠 Home Dashboard":
 
     cats     = sorted(set(v["category"] for v in products.values()))
     sel_cats = st.multiselect("Filter by Category", cats, default=cats[:4])
-
     filtered = {pid: pdata for pid, pdata in products.items() if pdata["category"] in sel_cats}
 
     cols = st.columns(4)
@@ -565,7 +480,6 @@ elif page == "🤖 CF Recommendations":
             format_func=lambda x: f"{products[x]['emoji']} {products[x]['name']}"
         )
         if st.button("🔍 Find Similar Products"):
-            # FIX: Filter CF results to same/related category
             base_cat = products[sel_product]["category"]
             allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
             sim_pids, sim_scores = get_similar_products(sel_product, item_sim_df, products, n_recs, filter_categories=allowed)
@@ -606,13 +520,10 @@ elif page == "📸 Image Scanner":
 
         if uploaded_file:
             image = Image.open(uploaded_file).convert("RGB")
-
-            # FIX: Proper bounded image preview instead of full-width
             st.markdown('<div class="image-preview-box">', unsafe_allow_html=True)
             st.image(image, caption="📷 Uploaded Image", width=300)
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Change image button
             if st.button("🔄 Change Image"):
                 st.session_state["cv_done"] = False
                 st.rerun()
@@ -620,7 +531,6 @@ elif page == "📸 Image Scanner":
             img_bytes = uploaded_file.getvalue()
 
             if st.button("🔍 Analyze & Recommend"):
-                # FIX: Proper progress feedback
                 progress_bar = st.progress(0, text="🧠 Initializing CV analysis...")
                 import time
                 time.sleep(0.3)
@@ -656,7 +566,6 @@ elif page == "📸 Image Scanner":
             st.markdown('<div class="section-header">🏷️ Detected Labels</div>', unsafe_allow_html=True)
             st.markdown(f'<small style="color:#7f8c8d;">Method: {method}</small>', unsafe_allow_html=True)
 
-            # FIX: Show confidence scores with progress bars
             tags_html = ""
             for item in tags[:10]:
                 if isinstance(item, dict):
@@ -689,8 +598,6 @@ elif page == "📸 Image Scanner":
 
             if matched:
                 st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
-
-                # FIX: Category-filtered CF suggestions
                 base_cat = products.get(matched[0], {}).get("category", "")
                 allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
                 sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, 4, filter_categories=allowed)
@@ -711,17 +618,6 @@ elif page == "📸 Image Scanner":
                         if st.button("🛒 Add to Cart", key=f"cv_cf_{pid}_{i}"):
                             add_to_cart(pid, products)
                             st.toast(f"✅ {p['name']} added!", icon="🛒")
-
-    st.markdown("---")
-    st.markdown("### 🔧 Want Real CV Power?")
-    st.markdown("""
-    Add your **Imagga API** credentials in Streamlit secrets:
-    ```toml
-    IMAGGA_API_KEY = "your_key_here"
-    IMAGGA_API_SECRET = "your_secret_here"
-    ```
-    Get a free key at [imagga.com](https://imagga.com) — 1000 free requests/month.
-    """)
 
 
 # ─────────────────────────────────────────────
