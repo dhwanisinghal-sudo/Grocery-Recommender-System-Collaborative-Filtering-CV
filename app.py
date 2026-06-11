@@ -307,28 +307,99 @@ def classify_image_with_imagga(image_bytes):
         return None, str(e)
 
 
+# ── FIX: Improved color-based fallback ──
 def fallback_color_analysis(image: Image.Image):
-    img_small = image.resize((50, 50)).convert("RGB")
+    img_small = image.resize((100, 100)).convert("RGB")
     pixels = np.array(img_small).reshape(-1, 3).astype(float)
-    avg = pixels.mean(axis=0)
+
+    # Step 1: Remove white/near-white background pixels
+    non_white_mask = ~(
+        (pixels[:, 0] > 220) &
+        (pixels[:, 1] > 220) &
+        (pixels[:, 2] > 220)
+    )
+    fg_pixels = pixels[non_white_mask]
+
+    # Agar foreground pixels bahut kam hain toh sab use karo
+    if len(fg_pixels) < 50:
+        fg_pixels = pixels
+
+    avg = fg_pixels.mean(axis=0)
     r, g, b = avg
     brightness = (r + g + b) / 3
-    if r > 180 and g > 150 and b < 100:
-        return [{"tag": "banana", "confidence": 72.0}, {"tag": "fruit", "confidence": 68.0}, {"tag": "food", "confidence": 65.0}]
-    elif r > 200 and g > 100 and b < 80:
-        return [{"tag": "mango", "confidence": 70.0}, {"tag": "orange", "confidence": 67.0}, {"tag": "fruit", "confidence": 65.0}]
-    elif g > r and g > b and g > 120:
-        return [{"tag": "vegetable", "confidence": 70.0}, {"tag": "food", "confidence": 65.0}]
-    elif r > g * 1.4 and r > b * 1.4:
-        return [{"tag": "fruit", "confidence": 67.0}, {"tag": "masala", "confidence": 62.0}, {"tag": "food", "confidence": 60.0}]
-    elif b > r and b > g:
-        return [{"tag": "milk", "confidence": 66.0}, {"tag": "dairy", "confidence": 63.0}, {"tag": "beverage", "confidence": 60.0}]
-    elif brightness > 200:
-        return [{"tag": "flour", "confidence": 65.0}, {"tag": "dairy", "confidence": 62.0}, {"tag": "bread", "confidence": 60.0}]
+
+    # ── Yellow (banana, lemon) — PEHLE CHECK KARO brightness se pehle ──
+    # Yellow = high R, high G, low B, aur ratio-based check
+    if r > 160 and g > 130 and b < 110 and r > b * 1.7 and g > b * 1.4:
+        return [
+            {"tag": "banana", "confidence": 74.0},
+            {"tag": "fruit",  "confidence": 70.0},
+            {"tag": "food",   "confidence": 65.0},
+        ]
+
+    # ── Orange/deep-orange (mango, orange fruit) ──
+    elif r > 190 and g > 90 and g < 170 and b < 90 and r > g * 1.2:
+        return [
+            {"tag": "mango",  "confidence": 70.0},
+            {"tag": "orange", "confidence": 67.0},
+            {"tag": "fruit",  "confidence": 65.0},
+        ]
+
+    # ── Green dominant (vegetables, greens) ──
+    elif g > r and g > b and g > 100 and g > r * 1.1:
+        return [
+            {"tag": "vegetable", "confidence": 70.0},
+            {"tag": "food",      "confidence": 65.0},
+        ]
+
+    # ── Red dominant (tomato, apple, masala) ──
+    elif r > g * 1.4 and r > b * 1.4 and r > 140:
+        return [
+            {"tag": "fruit",  "confidence": 67.0},
+            {"tag": "masala", "confidence": 62.0},
+            {"tag": "food",   "confidence": 60.0},
+        ]
+
+    # ── Blue dominant (packaged products, milk carton) ──
+    elif b > r * 1.1 and b > g * 1.1:
+        return [
+            {"tag": "milk",     "confidence": 66.0},
+            {"tag": "dairy",    "confidence": 63.0},
+            {"tag": "beverage", "confidence": 60.0},
+        ]
+
+    # ── Truly white/very bright (actual white product like flour, sugar) ──
+    # Sirf tab trigger ho jab foreground bhi white ho, not just background
+    elif brightness > 215 and r > 205 and g > 205 and b > 205:
+        return [
+            {"tag": "flour", "confidence": 65.0},
+            {"tag": "dairy", "confidence": 62.0},
+            {"tag": "bread", "confidence": 60.0},
+        ]
+
+    # ── Dark (coffee, tea, chocolate) ──
     elif brightness < 80:
-        return [{"tag": "coffee", "confidence": 68.0}, {"tag": "tea", "confidence": 65.0}, {"tag": "chocolate", "confidence": 62.0}]
+        return [
+            {"tag": "coffee",    "confidence": 68.0},
+            {"tag": "tea",       "confidence": 65.0},
+            {"tag": "chocolate", "confidence": 62.0},
+        ]
+
+    # ── Brown/beige (biscuits, bread, atta) ──
+    elif r > 130 and g > 90 and b < 90 and r > g and r > b * 1.5:
+        return [
+            {"tag": "bread",   "confidence": 66.0},
+            {"tag": "biscuit", "confidence": 63.0},
+            {"tag": "snack",   "confidence": 60.0},
+        ]
+
+    # ── Default fallback ──
     else:
-        return [{"tag": "snack", "confidence": 63.0}, {"tag": "food", "confidence": 60.0}, {"tag": "chips", "confidence": 58.0}]
+        return [
+            {"tag": "snack", "confidence": 63.0},
+            {"tag": "food",  "confidence": 60.0},
+            {"tag": "chips", "confidence": 58.0},
+        ]
 
 
 def find_products_from_tags(tag_dicts, products):
