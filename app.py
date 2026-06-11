@@ -80,19 +80,19 @@ CATEGORY_EMOJI = {
 }
 
 RELATED_CATEGORIES = {
-    "Drinks":        ["Drinks", "Beverages"],
-    "Beverages":     ["Beverages", "Drinks"],
-    "Snacks":        ["Snacks", "Bakery", "Drinks", "Beverages"],
+    "Drinks":        ["Drinks"],
+    "Beverages":     ["Beverages"],
+    "Snacks":        ["Snacks", "Bakery"],
     "Bakery":        ["Bakery", "Snacks", "Dairy", "Condiments"],
-    "Dairy":         ["Dairy", "Bakery", "Beverages"],
+    "Dairy":         ["Dairy", "Bakery"],
     "Grains":        ["Grains", "Spices", "Condiments", "Noodles"],
     "Spices":        ["Spices", "Grains", "Condiments", "Noodles"],
     "Noodles":       ["Noodles", "Grains", "Spices", "Condiments"],
     "Condiments":    ["Condiments", "Spices", "Grains", "Noodles"],
     "Personal Care": ["Personal Care", "Home Care"],
-    "Health":        ["Health", "Beverages"],
+    "Health":        ["Health"],
     "Home Care":     ["Home Care", "Personal Care"],
-    "Frozen":        ["Frozen", "Snacks", "Dairy"],
+    "Frozen":        ["Frozen", "Snacks"],
 }
 
 def get_emoji(category):
@@ -372,7 +372,7 @@ def fallback_color_analysis(image: Image.Image):
         return [{"tag": "snack", "confidence": 63.0}, {"tag": "food", "confidence": 60.0}]
 
 
-LOW_PRIORITY_TAGS = {"food", "packet", "bottle", "yellow", "ripe", "grain", "cereal", "beverage", "drink"}
+LOW_PRIORITY_TAGS = {"food", "packet", "bottle", "yellow", "ripe", "grain", "cereal", "beverage", "drink", "juice", "sweet"}
 
 def find_products_from_tags(tag_dicts, products):
     matched_high = set()
@@ -634,7 +634,8 @@ elif page == "📸 Image Scanner":
             st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
             base_cat = products.get(matched[0], {}).get("category", "")
             allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
-            sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, n_recs, filter_categories=allowed)
+            # Sirf same category ke products dikhao CF mein
+            sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, n_recs, filter_categories=[base_cat])
             if not sim_pids:
                 st.info("No CF suggestions found.")
             else:
