@@ -274,134 +274,116 @@ IGNORE_KEYWORDS = {
 }
 
 
-def get_secret(key):
-    try:
-        val = st.secrets[key]
-        return str(val).strip() if val else ""
-    except Exception:
-        return ""
-
-
-def classify_image_with_imagga(image_bytes):
-    api_key    = get_secret("IMAGGA_API_KEY")
-    api_secret = get_secret("IMAGGA_API_SECRET")
-    if not api_key or not api_secret:
-        return None, "NO_CREDS"
+def classify_image_with_claude(image_bytes):
+    """Claude Vision se image classify karo — koi bhi product accurately detect hoga."""
+    import io, json
     try:
         b64 = base64.b64encode(image_bytes).decode()
+        img_check = Image.open(io.BytesIO(image_bytes))
+        fmt = img_check.format or "JPEG"
+        media_type_map = {
+            "JPEG": "image/jpeg", "JPG": "image/jpeg",
+            "PNG":  "image/png",  "WEBP": "image/webp",
+            "GIF":  "image/gif",
+        }
+        media_type = media_type_map.get(fmt.upper(), "image/jpeg")
+
+        prompt = """You are a grocery product identifier. Look at this image and identify what grocery/food product(s) are visible.
+
+Return ONLY a JSON array (no markdown, no explanation) like this:
+[
+  {"tag": "banana", "confidence": 92.0},
+  {"tag": "fruit", "confidence": 88.0},
+  {"tag": "fresh produce", "confidence": 75.0}
+]
+
+Rules:
+- Use simple lowercase English words for tags
+- First tag = most specific product name (e.g. "banana", "biscuit", "milk", "noodles", "chips", "tea", "coffee", "rice", "dal", "ghee", "atta", "masala", "juice", "soap", "detergent")
+- Second tag = general category (e.g. "fruit", "dairy", "snack", "grain", "spice", "beverage", "personal care")
+- Third tag = broader category (e.g. "food", "drink", "household")
+- confidence = how sure you are (0-100)
+- Include 3-5 tags total
+- If branded product visible, include brand in first tag (e.g. "parle-g biscuit", "amul milk", "maggi noodles", "tata salt")
+- Return ONLY the JSON array, nothing else"""
+
         response = requests.post(
-            "https://api.imagga.com/v2/tags",
-            auth=(api_key, api_secret),
-            data={"image_base64": b64},
-            timeout=15
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 300,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": media_type,
+                                    "data": b64,
+                                },
+                            },
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ],
+            },
+            timeout=30,
         )
+
         if response.status_code == 200:
-            raw_tags = response.json()["result"]["tags"]
-            filtered = [
-                {"tag": t["tag"]["en"].lower(), "confidence": round(t["confidence"], 1)}
-                for t in raw_tags
-                if t["confidence"] >= CONFIDENCE_THRESHOLD
-                and t["tag"]["en"].lower() not in IGNORE_KEYWORDS
-            ]
-            return filtered[:12], None
-        return None, f"API Error {response.status_code}"
+            raw_text = response.json()["content"][0]["text"].strip()
+            raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+            tags = json.loads(raw_text)
+            result = []
+            for t in tags:
+                if isinstance(t, dict) and "tag" in t and "confidence" in t:
+                    result.append({
+                        "tag": str(t["tag"]).lower().strip(),
+                        "confidence": float(t["confidence"])
+                    })
+            return result[:8] if result else None, None
+        else:
+            return None, f"Claude API Error {response.status_code}"
+
     except Exception as e:
         return None, str(e)
 
 
-# ── FIX: Improved color-based fallback ──
 def fallback_color_analysis(image: Image.Image):
+    """Last resort fallback agar Claude API bhi fail ho jaye"""
     img_small = image.resize((100, 100)).convert("RGB")
     pixels = np.array(img_small).reshape(-1, 3).astype(float)
-
-    # Step 1: Remove white/near-white background pixels
-    non_white_mask = ~(
-        (pixels[:, 0] > 220) &
-        (pixels[:, 1] > 220) &
-        (pixels[:, 2] > 220)
-    )
+    non_white_mask = ~((pixels[:, 0] > 220) & (pixels[:, 1] > 220) & (pixels[:, 2] > 220))
     fg_pixels = pixels[non_white_mask]
-
-    # Agar foreground pixels bahut kam hain toh sab use karo
     if len(fg_pixels) < 50:
         fg_pixels = pixels
-
     avg = fg_pixels.mean(axis=0)
     r, g, b = avg
     brightness = (r + g + b) / 3
-
-    # ── Yellow (banana, lemon) — PEHLE CHECK KARO brightness se pehle ──
-    # Yellow = high R, high G, low B, aur ratio-based check
     if r > 160 and g > 130 and b < 110 and r > b * 1.7 and g > b * 1.4:
-        return [
-            {"tag": "banana", "confidence": 74.0},
-            {"tag": "fruit",  "confidence": 70.0},
-            {"tag": "food",   "confidence": 65.0},
-        ]
-
-    # ── Orange/deep-orange (mango, orange fruit) ──
+        return [{"tag": "banana", "confidence": 74.0}, {"tag": "fruit", "confidence": 70.0}]
     elif r > 190 and g > 90 and g < 170 and b < 90 and r > g * 1.2:
-        return [
-            {"tag": "mango",  "confidence": 70.0},
-            {"tag": "orange", "confidence": 67.0},
-            {"tag": "fruit",  "confidence": 65.0},
-        ]
-
-    # ── Green dominant (vegetables, greens) ──
+        return [{"tag": "mango", "confidence": 70.0}, {"tag": "fruit", "confidence": 65.0}]
     elif g > r and g > b and g > 100 and g > r * 1.1:
-        return [
-            {"tag": "vegetable", "confidence": 70.0},
-            {"tag": "food",      "confidence": 65.0},
-        ]
-
-    # ── Red dominant (tomato, apple, masala) ──
+        return [{"tag": "vegetable", "confidence": 70.0}, {"tag": "food", "confidence": 65.0}]
     elif r > g * 1.4 and r > b * 1.4 and r > 140:
-        return [
-            {"tag": "fruit",  "confidence": 67.0},
-            {"tag": "masala", "confidence": 62.0},
-            {"tag": "food",   "confidence": 60.0},
-        ]
-
-    # ── Blue dominant (packaged products, milk carton) ──
+        return [{"tag": "fruit", "confidence": 67.0}, {"tag": "masala", "confidence": 62.0}]
     elif b > r * 1.1 and b > g * 1.1:
-        return [
-            {"tag": "milk",     "confidence": 66.0},
-            {"tag": "dairy",    "confidence": 63.0},
-            {"tag": "beverage", "confidence": 60.0},
-        ]
-
-    # ── Truly white/very bright (actual white product like flour, sugar) ──
-    # Sirf tab trigger ho jab foreground bhi white ho, not just background
+        return [{"tag": "milk", "confidence": 66.0}, {"tag": "dairy", "confidence": 63.0}]
     elif brightness > 215 and r > 205 and g > 205 and b > 205:
-        return [
-            {"tag": "flour", "confidence": 65.0},
-            {"tag": "dairy", "confidence": 62.0},
-            {"tag": "bread", "confidence": 60.0},
-        ]
-
-    # ── Dark (coffee, tea, chocolate) ──
+        return [{"tag": "flour", "confidence": 65.0}, {"tag": "dairy", "confidence": 62.0}]
     elif brightness < 80:
-        return [
-            {"tag": "coffee",    "confidence": 68.0},
-            {"tag": "tea",       "confidence": 65.0},
-            {"tag": "chocolate", "confidence": 62.0},
-        ]
-
-    # ── Brown/beige (biscuits, bread, atta) ──
+        return [{"tag": "coffee", "confidence": 68.0}, {"tag": "tea", "confidence": 65.0}]
     elif r > 130 and g > 90 and b < 90 and r > g and r > b * 1.5:
-        return [
-            {"tag": "bread",   "confidence": 66.0},
-            {"tag": "biscuit", "confidence": 63.0},
-            {"tag": "snack",   "confidence": 60.0},
-        ]
-
-    # ── Default fallback ──
+        return [{"tag": "bread", "confidence": 66.0}, {"tag": "biscuit", "confidence": 63.0}]
     else:
-        return [
-            {"tag": "snack", "confidence": 63.0},
-            {"tag": "food",  "confidence": 60.0},
-            {"tag": "chips", "confidence": 58.0},
-        ]
+        return [{"tag": "snack", "confidence": 63.0}, {"tag": "food", "confidence": 60.0}]
 
 
 LOW_PRIORITY_TAGS = {"food", "packet", "bottle", "yellow", "ripe", "grain", "cereal", "beverage", "drink"}
@@ -594,10 +576,9 @@ elif page == "📸 Image Scanner":
             import time
             pb = st.progress(0, text="🧠 Initializing...")
             time.sleep(0.3)
-            pb.progress(30, text="📡 Checking Vision API...")
-            time.sleep(0.3)
-            tags_raw, err = classify_image_with_imagga(img_bytes)
-            pb.progress(60, text="🔍 Matching products...")
+            pb.progress(25, text="🤖 Claude Vision analyzing image...")
+            tags_raw, err = classify_image_with_claude(img_bytes)
+            pb.progress(70, text="🔍 Matching products in catalog...")
             time.sleep(0.2)
             if tags_raw:
                 matched_pids = find_products_from_tags(tags_raw, products)
@@ -605,10 +586,10 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "🌐 Imagga Vision API"
+                st.session_state["cv_method"] = "🤖 Claude Vision AI"
                 st.session_state["cv_done"]   = True
             else:
-                pb.progress(80, text="🎨 Using color-based fallback...")
+                pb.progress(85, text="🎨 Using color-based fallback...")
                 time.sleep(0.3)
                 fallback_tags = fallback_color_analysis(image)
                 matched_pids  = find_products_from_tags(fallback_tags, products)
@@ -618,6 +599,8 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_pids"]   = matched_pids
                 st.session_state["cv_method"] = "🎨 Color-Based Fallback"
                 st.session_state["cv_done"]   = True
+                if err:
+                    st.warning(f"⚠️ Claude Vision error: {err}. Color fallback used.")
 
     if st.session_state.get("cv_done"):
         method  = st.session_state["cv_method"]
