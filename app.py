@@ -84,7 +84,7 @@ RELATED_CATEGORIES = {
     "Beverages":     ["Beverages", "Drinks", "Health"],
     "Snacks":        ["Snacks", "Bakery", "Drinks", "Beverages"],
     "Bakery":        ["Bakery", "Snacks", "Dairy", "Condiments"],
-    "Dairy":         ["Dairy", "Bakery", "Health", "Beverages"],
+    "Dairy":         ["Dairy", "Bakery", "Beverages"],
     "Grains":        ["Grains", "Spices", "Condiments", "Noodles"],
     "Spices":        ["Spices", "Grains", "Condiments", "Noodles"],
     "Noodles":       ["Noodles", "Grains", "Spices", "Condiments"],
