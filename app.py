@@ -80,8 +80,8 @@ CATEGORY_EMOJI = {
 }
 
 RELATED_CATEGORIES = {
-    "Drinks":        ["Drinks", "Beverages", "Health"],
-    "Beverages":     ["Beverages", "Drinks", "Health"],
+    "Drinks":        ["Drinks", "Beverages"],
+    "Beverages":     ["Beverages", "Drinks"],
     "Snacks":        ["Snacks", "Bakery", "Drinks", "Beverages"],
     "Bakery":        ["Bakery", "Snacks", "Dairy", "Condiments"],
     "Dairy":         ["Dairy", "Bakery", "Beverages"],
@@ -89,8 +89,8 @@ RELATED_CATEGORIES = {
     "Spices":        ["Spices", "Grains", "Condiments", "Noodles"],
     "Noodles":       ["Noodles", "Grains", "Spices", "Condiments"],
     "Condiments":    ["Condiments", "Spices", "Grains", "Noodles"],
-    "Personal Care": ["Personal Care", "Health", "Home Care"],
-    "Health":        ["Health", "Dairy", "Beverages", "Personal Care"],
+    "Personal Care": ["Personal Care", "Home Care"],
+    "Health":        ["Health", "Beverages"],
     "Home Care":     ["Home Care", "Personal Care"],
     "Frozen":        ["Frozen", "Snacks", "Dairy"],
 }
