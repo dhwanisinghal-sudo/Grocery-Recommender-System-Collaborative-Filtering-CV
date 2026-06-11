@@ -636,7 +636,7 @@ elif page == "📸 Image Scanner":
             def is_relevant(pid):
                 p = products.get(pid, {})
                 name = p.get("name", "").lower()
-                blocked = ["energy", "water", "soda", "cola", "aerated", "bisleri", "sting", "paper boat", "rooh afza"]
+                blocked = ["energy", "water", "soda", "cola", "aerated", "bisleri", "sting", "paper boat", "rooh afza", "limca", "soft drink"]
                 return not any(b in name for b in blocked)
             sim_pids_all, sim_scores_all = get_similar_products(matched[0], item_sim_df, products, n_recs * 2, filter_categories=[base_cat])
             sim_pids   = [p for p in sim_pids_all if is_relevant(p)][:n_recs]
