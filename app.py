@@ -285,7 +285,10 @@ def classify_image_with_hf(image_bytes):
 
         # ✅ FIXED URL — router endpoint use karo
         API_URL = "https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224"
-        headers = {"Authorization": f"Bearer {hf_key}"}
+        headers = {
+            "Authorization": f"Bearer {hf_key}",
+            "Content-Type": "image/jpeg"
+        }
 
         response = requests.post(
             API_URL,
