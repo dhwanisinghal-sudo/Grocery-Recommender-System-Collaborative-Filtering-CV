@@ -633,9 +633,14 @@ elif page == "📸 Image Scanner":
         if matched:
             st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
             base_cat = products.get(matched[0], {}).get("category", "")
-            allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
-            # Sirf same category ke products dikhao CF mein
-            sim_pids, sim_scores = get_similar_products(matched[0], item_sim_df, products, n_recs, filter_categories=[base_cat])
+            def is_relevant(pid):
+                p = products.get(pid, {})
+                name = p.get("name", "").lower()
+                blocked = ["energy", "water", "soda", "cola", "aerated", "bisleri", "sting", "paper boat", "rooh afza"]
+                return not any(b in name for b in blocked)
+            sim_pids_all, sim_scores_all = get_similar_products(matched[0], item_sim_df, products, n_recs * 2, filter_categories=[base_cat])
+            sim_pids   = [p for p in sim_pids_all if is_relevant(p)][:n_recs]
+            sim_scores = [sim_scores_all[sim_pids_all.index(p)] for p in sim_pids]
             if not sim_pids:
                 st.info("No CF suggestions found.")
             else:
