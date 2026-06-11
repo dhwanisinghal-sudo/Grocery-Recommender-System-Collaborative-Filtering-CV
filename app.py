@@ -274,82 +274,71 @@ IGNORE_KEYWORDS = {
 }
 
 
-def classify_image_with_claude(image_bytes):
-    """Claude Vision se image classify karo — koi bhi product accurately detect hoga."""
+def classify_image_with_hf(image_bytes):
+    """HuggingFace Vision API se image classify karo — free, no card needed."""
     import io, json
     try:
-        b64 = base64.b64encode(image_bytes).decode()
-        img_check = Image.open(io.BytesIO(image_bytes))
-        fmt = img_check.format or "JPEG"
-        media_type_map = {
-            "JPEG": "image/jpeg", "JPG": "image/jpeg",
-            "PNG":  "image/png",  "WEBP": "image/webp",
-            "GIF":  "image/gif",
-        }
-        media_type = media_type_map.get(fmt.upper(), "image/jpeg")
+        hf_key = ""
+        try:
+            hf_key = str(st.secrets.get("HF_API_KEY", "")).strip()
+        except Exception:
+            pass
+        if not hf_key:
+            return None, "HF_API_KEY not set in Streamlit secrets"
 
-        prompt = """You are a grocery product identifier. Look at this image and identify what grocery/food product(s) are visible.
-
-Return ONLY a JSON array (no markdown, no explanation) like this:
-[
-  {"tag": "banana", "confidence": 92.0},
-  {"tag": "fruit", "confidence": 88.0},
-  {"tag": "fresh produce", "confidence": 75.0}
-]
-
-Rules:
-- Use simple lowercase English words for tags
-- First tag = most specific product name (e.g. "banana", "biscuit", "milk", "noodles", "chips", "tea", "coffee", "rice", "dal", "ghee", "atta", "masala", "juice", "soap", "detergent")
-- Second tag = general category (e.g. "fruit", "dairy", "snack", "grain", "spice", "beverage", "personal care")
-- Third tag = broader category (e.g. "food", "drink", "household")
-- confidence = how sure you are (0-100)
-- Include 3-5 tags total
-- If branded product visible, include brand in first tag (e.g. "parle-g biscuit", "amul milk", "maggi noodles", "tata salt")
-- Return ONLY the JSON array, nothing else"""
+        # ViT model — 1000 ImageNet categories detect karta hai
+        API_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224"
+        headers = {"Authorization": f"Bearer {hf_key}"}
 
         response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01",
-            },
-            json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 300,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": media_type,
-                                    "data": b64,
-                                },
-                            },
-                            {"type": "text", "text": prompt},
-                        ],
-                    }
-                ],
-            },
+            API_URL,
+            headers=headers,
+            data=image_bytes,
             timeout=30,
         )
 
         if response.status_code == 200:
-            raw_text = response.json()["content"][0]["text"].strip()
-            raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-            tags = json.loads(raw_text)
-            result = []
-            for t in tags:
-                if isinstance(t, dict) and "tag" in t and "confidence" in t:
-                    result.append({
-                        "tag": str(t["tag"]).lower().strip(),
-                        "confidence": float(t["confidence"])
-                    })
-            return result[:8] if result else None, None
+            raw = response.json()
+            # raw = [{"label": "banana", "score": 0.95}, ...]
+            if isinstance(raw, list) and len(raw) > 0:
+                result = []
+                for item in raw[:6]:
+                    label = item.get("label", "").lower()
+                    score = round(float(item.get("score", 0)) * 100, 1)
+                    if score < 5:
+                        continue
+                    # ImageNet labels clean karo (e.g. "Granny Smith" -> "apple")
+                    label = label.split(",")[0].strip()
+                    result.append({"tag": label, "confidence": score})
+
+                # Category tags bhi add karo based on top result
+                if result:
+                    top = result[0]["tag"]
+                    CATEGORY_MAP = {
+                        "banana": "fruit", "apple": "fruit", "orange": "fruit",
+                        "lemon": "fruit", "mango": "fruit", "strawberry": "fruit",
+                        "milk": "dairy", "butter": "dairy", "cheese": "dairy",
+                        "curd": "dairy", "yogurt": "dairy",
+                        "bread": "bakery", "biscuit": "snack", "cookie": "snack",
+                        "chip": "snack", "pretzel": "snack",
+                        "coffee": "beverage", "tea": "beverage", "juice": "beverage",
+                        "noodle": "noodles", "pasta": "noodles",
+                        "rice": "grain", "wheat": "grain", "flour": "grain",
+                        "soap": "personal care", "detergent": "home care",
+                        "oil": "condiment", "sauce": "condiment",
+                    }
+                    for key, cat in CATEGORY_MAP.items():
+                        if key in top:
+                            result.append({"tag": cat, "confidence": result[0]["confidence"] - 5})
+                            result.append({"tag": "food", "confidence": result[0]["confidence"] - 10})
+                            break
+
+                return result if result else None, None
+            return None, "Empty response from HuggingFace"
+        elif response.status_code == 503:
+            return None, "Model loading, please retry in 20 seconds"
         else:
-            return None, f"Claude API Error {response.status_code}"
+            return None, f"HF API Error {response.status_code}: {response.text[:100]}"
 
     except Exception as e:
         return None, str(e)
@@ -576,8 +565,8 @@ elif page == "📸 Image Scanner":
             import time
             pb = st.progress(0, text="🧠 Initializing...")
             time.sleep(0.3)
-            pb.progress(25, text="🤖 Claude Vision analyzing image...")
-            tags_raw, err = classify_image_with_claude(img_bytes)
+            pb.progress(25, text="🤖 HuggingFace Vision analyzing image...")
+            tags_raw, err = classify_image_with_hf(img_bytes)
             pb.progress(70, text="🔍 Matching products in catalog...")
             time.sleep(0.2)
             if tags_raw:
@@ -586,7 +575,7 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "🤖 Claude Vision AI"
+                st.session_state["cv_method"] = "🤗 HuggingFace Vision AI"
                 st.session_state["cv_done"]   = True
             else:
                 pb.progress(85, text="🎨 Using color-based fallback...")
@@ -600,7 +589,7 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_method"] = "🎨 Color-Based Fallback"
                 st.session_state["cv_done"]   = True
                 if err:
-                    st.warning(f"⚠️ Claude Vision error: {err}. Color fallback used.")
+                    st.warning(f"⚠️ HF Vision error: {err}. Color fallback used.")
 
     if st.session_state.get("cv_done"):
         method  = st.session_state["cv_method"]
