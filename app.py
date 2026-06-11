@@ -233,7 +233,7 @@ def render_cart_sidebar():
 GROCERY_KEYWORDS = {
     "milk": ["P021","P030","P136"], "bread": ["P001","P003","P132"],
     "biscuit": ["P001","P002","P007"], "cookie": ["P006","P133","P134"],
-    "juice": ["P061","P062","P063"], "fruit": ["P061","P062","P137"],
+    "juice": ["P061","P062","P063"], "fruit": ["P061","P062","P063","P137"],
     "oil": ["P049","P050"], "salt": ["P003","P041"],
     "noodle": ["P051","P052","P057"], "pasta": ["P055","P056","P060"],
     "chips": ["P011","P012","P018"], "snack": ["P011","P015","P016"],
@@ -243,26 +243,28 @@ GROCERY_KEYWORDS = {
     "tea": ["P121","P122","P125","P126"], "coffee": ["P123","P124","P127"],
     "detergent": ["P101","P102"], "soap": ["P083","P084"],
     "toothpaste": ["P081"], "mango": ["P062","P063","P066"],
-    "orange": ["P061"], "cashew": ["P002"],
+    "orange": ["P061","P063"], "cashew": ["P002"],
     "namkeen": ["P015","P016","P017"], "atta": ["P035","P145"],
     "maggi": ["P051","P131"], "rice": ["P031","P032"],
     "dal": ["P033","P034"], "ghee": ["P025"],
     "butter": ["P021"], "masala": ["P041","P042","P047"],
-    "banana": ["P061","P062","P063","P137"],
-    "apple": ["P061","P062","P137"],
+    # Fruits — specific mappings
+    "banana": ["P062","P063","P137"],
+    "apple":  ["P062","P137"],
     "vegetable": ["P041","P049","P033","P034"],
-    "food": ["P001","P051","P061"],
-    "yellow": ["P062","P063","P061"],
-    "ripe": ["P061","P062","P137"],
-    "dairy": ["P021","P023","P025","P030"],
-    "cereal": ["P031","P032","P035"],
-    "grain": ["P031","P032","P033"],
+    # Generic tags — LOW PRIORITY (used only as fallback)
+    "food":     ["P061","P062","P063"],
+    "yellow":   ["P062","P063"],
+    "ripe":     ["P062","P063","P137"],
+    "dairy":    ["P021","P023","P025","P030"],
+    "cereal":   ["P031","P032","P035"],
+    "grain":    ["P031","P032","P033"],
     "beverage": ["P061","P062","P121","P123"],
-    "drink": ["P061","P062","P121","P123"],
-    "sweet": ["P006","P077","P080"],
-    "chocolate": ["P006","P007","P133"],
-    "packet": ["P011","P015","P051"],
-    "bottle": ["P049","P061","P062"],
+    "drink":    ["P061","P062","P121","P123"],
+    "sweet":    ["P006","P077","P080"],
+    "chocolate":["P006","P007","P133"],
+    "packet":   ["P011","P015"],
+    "bottle":   ["P049","P061","P062"],
 }
 
 CONFIDENCE_THRESHOLD = 55.0
@@ -402,16 +404,28 @@ def fallback_color_analysis(image: Image.Image):
         ]
 
 
+LOW_PRIORITY_TAGS = {"food", "packet", "bottle", "yellow", "ripe", "grain", "cereal", "beverage", "drink"}
+
 def find_products_from_tags(tag_dicts, products):
-    matched = set()
+    matched_high = set()
+    matched_low  = set()
+
     for item in tag_dicts:
         tag = item["tag"] if isinstance(item, dict) else item
         for keyword, pids in GROCERY_KEYWORDS.items():
             if keyword in tag or tag in keyword:
                 for pid in pids:
                     if pid in products:
-                        matched.add(pid)
-    return list(matched)[:6]
+                        if keyword in LOW_PRIORITY_TAGS:
+                            matched_low.add(pid)
+                        else:
+                            matched_high.add(pid)
+
+    # High priority pehle, low priority sirf agar high kam ho
+    combined = list(matched_high)
+    if len(combined) < 4:
+        combined += [p for p in matched_low if p not in matched_high]
+    return combined[:6]
 
 
 # ── SIDEBAR ──
