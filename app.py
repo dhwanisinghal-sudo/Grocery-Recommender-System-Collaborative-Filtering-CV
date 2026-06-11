@@ -248,11 +248,9 @@ GROCERY_KEYWORDS = {
     "maggi": ["P051","P131"], "rice": ["P031","P032"],
     "dal": ["P033","P034"], "ghee": ["P025"],
     "butter": ["P021"], "masala": ["P041","P042","P047"],
-    # Fruits — specific mappings
     "banana": ["P062","P063","P137"],
     "apple":  ["P062","P137"],
     "vegetable": ["P041","P049","P033","P034"],
-    # Generic tags — LOW PRIORITY (used only as fallback)
     "food":     ["P061","P062","P063"],
     "yellow":   ["P062","P063"],
     "ripe":     ["P062","P063","P137"],
@@ -275,8 +273,7 @@ IGNORE_KEYWORDS = {
 
 
 def classify_image_with_hf(image_bytes):
-    """HuggingFace Vision API se image classify karo — free, no card needed."""
-    import io, json
+    """HuggingFace Vision API se image classify karo"""
     try:
         hf_key = ""
         try:
@@ -286,8 +283,8 @@ def classify_image_with_hf(image_bytes):
         if not hf_key:
             return None, "HF_API_KEY not set in Streamlit secrets"
 
-        # ViT model — 1000 ImageNet categories detect karta hai
-        API_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224"
+        # ✅ FIXED URL — router endpoint use karo
+        API_URL = "https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224"
         headers = {"Authorization": f"Bearer {hf_key}"}
 
         response = requests.post(
@@ -299,7 +296,6 @@ def classify_image_with_hf(image_bytes):
 
         if response.status_code == 200:
             raw = response.json()
-            # raw = [{"label": "banana", "score": 0.95}, ...]
             if isinstance(raw, list) and len(raw) > 0:
                 result = []
                 for item in raw[:6]:
@@ -307,11 +303,9 @@ def classify_image_with_hf(image_bytes):
                     score = round(float(item.get("score", 0)) * 100, 1)
                     if score < 5:
                         continue
-                    # ImageNet labels clean karo (e.g. "Granny Smith" -> "apple")
                     label = label.split(",")[0].strip()
                     result.append({"tag": label, "confidence": score})
 
-                # Category tags bhi add karo based on top result
                 if result:
                     top = result[0]["tag"]
                     CATEGORY_MAP = {
@@ -345,7 +339,7 @@ def classify_image_with_hf(image_bytes):
 
 
 def fallback_color_analysis(image: Image.Image):
-    """Last resort fallback agar Claude API bhi fail ho jaye"""
+    """Last resort fallback"""
     img_small = image.resize((100, 100)).convert("RGB")
     pixels = np.array(img_small).reshape(-1, 3).astype(float)
     non_white_mask = ~((pixels[:, 0] > 220) & (pixels[:, 1] > 220) & (pixels[:, 2] > 220))
@@ -392,7 +386,6 @@ def find_products_from_tags(tag_dicts, products):
                         else:
                             matched_high.add(pid)
 
-    # High priority pehle, low priority sirf agar high kam ho
     combined = list(matched_high)
     if len(combined) < 4:
         combined += [p for p in matched_low if p not in matched_high]
@@ -598,7 +591,6 @@ elif page == "📸 Image Scanner":
 
         st.markdown("---")
 
-        # Detected Labels
         st.markdown('<div class="section-header">🏷️ Detected Labels</div>', unsafe_allow_html=True)
         st.markdown(f'<small style="color:#7f8c8d;">Method: {method}</small>', unsafe_allow_html=True)
         tags_html = ""
@@ -615,7 +607,6 @@ elif page == "📸 Image Scanner":
                 tags_html += f'<span class="badge badge-orange">{item}</span>'
         st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
 
-        # Matched Products
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
         if not matched:
             st.info("No matching products found. Try a different image.")
@@ -636,7 +627,6 @@ elif page == "📸 Image Scanner":
                         add_to_cart(pid, products)
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
 
-        # CF Suggestions
         if matched:
             st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
             base_cat = products.get(matched[0], {}).get("category", "")
