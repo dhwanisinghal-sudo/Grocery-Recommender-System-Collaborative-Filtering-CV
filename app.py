@@ -273,69 +273,46 @@ IGNORE_KEYWORDS = {
 
 
 def classify_image_with_hf(image_bytes):
-    """HuggingFace Vision API se image classify karo"""
+    """Gemini Vision API se image classify karo"""
+    import base64, json
     try:
-        hf_key = ""
+        gemini_key = ""
         try:
-            hf_key = str(st.secrets.get("HF_API_KEY", "")).strip()
+            gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
         except Exception:
             pass
-        if not hf_key:
-            return None, "HF_API_KEY not set in Streamlit secrets"
+        if not gemini_key:
+            return None, "GEMINI_API_KEY not set in Streamlit secrets"
 
-        # ✅ FIXED URL — router endpoint use karo
-        API_URL = "https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224"
-        headers = {
-            "Authorization": f"Bearer {hf_key}",
-            "Content-Type": "image/jpeg"
+        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+                    {"text": """You are a grocery store assistant. Look at this image and identify the grocery/food item.
+Return ONLY a JSON array, no extra text, no markdown:
+[{"tag": "banana", "confidence": 95.0}, {"tag": "fruit", "confidence": 90.0}]
+Rules:
+- Give 3-5 simple English tags
+- Tags should be grocery-related: banana, milk, bread, chips, maggi, rice, dal, tea, coffee, biscuit, juice, oil, atta, soap, etc.
+- confidence between 0-100
+- Return ONLY the JSON array, nothing else"""}
+                ]
+            }]
         }
 
-        response = requests.post(
-            API_URL,
-            headers=headers,
-            data=image_bytes,
-            timeout=30,
-        )
+        response = requests.post(API_URL, json=payload, timeout=30)
 
         if response.status_code == 200:
-            raw = response.json()
-            if isinstance(raw, list) and len(raw) > 0:
-                result = []
-                for item in raw[:6]:
-                    label = item.get("label", "").lower()
-                    score = round(float(item.get("score", 0)) * 100, 1)
-                    if score < 5:
-                        continue
-                    label = label.split(",")[0].strip()
-                    result.append({"tag": label, "confidence": score})
-
-                if result:
-                    top = result[0]["tag"]
-                    CATEGORY_MAP = {
-                        "banana": "fruit", "apple": "fruit", "orange": "fruit",
-                        "lemon": "fruit", "mango": "fruit", "strawberry": "fruit",
-                        "milk": "dairy", "butter": "dairy", "cheese": "dairy",
-                        "curd": "dairy", "yogurt": "dairy",
-                        "bread": "bakery", "biscuit": "snack", "cookie": "snack",
-                        "chip": "snack", "pretzel": "snack",
-                        "coffee": "beverage", "tea": "beverage", "juice": "beverage",
-                        "noodle": "noodles", "pasta": "noodles",
-                        "rice": "grain", "wheat": "grain", "flour": "grain",
-                        "soap": "personal care", "detergent": "home care",
-                        "oil": "condiment", "sauce": "condiment",
-                    }
-                    for key, cat in CATEGORY_MAP.items():
-                        if key in top:
-                            result.append({"tag": cat, "confidence": result[0]["confidence"] - 5})
-                            result.append({"tag": "food", "confidence": result[0]["confidence"] - 10})
-                            break
-
-                return result if result else None, None
-            return None, "Empty response from HuggingFace"
-        elif response.status_code == 503:
-            return None, "Model loading, please retry in 20 seconds"
+            data = response.json()
+            text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+            text = text.replace("```json", "").replace("```", "").strip()
+            result = json.loads(text)
+            return result if result else None, None
         else:
-            return None, f"HF API Error {response.status_code}: {response.text[:100]}"
+            return None, f"Gemini API Error {response.status_code}: {response.text[:100]}"
 
     except Exception as e:
         return None, str(e)
