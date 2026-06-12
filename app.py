@@ -273,7 +273,6 @@ IGNORE_KEYWORDS = {
 
 
 def classify_image_with_hf(image_bytes):
-    """Gemini Vision API se image classify karo"""
     import base64, json
     try:
         gemini_key = ""
@@ -285,7 +284,8 @@ def classify_image_with_hf(image_bytes):
             return None, "GEMINI_API_KEY not set in Streamlit secrets"
 
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+        # ✅ CHANGED: gemini-2.0-flash → gemini-1.5-flash
+        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
 
         payload = {
             "contents": [{
@@ -319,7 +319,6 @@ Rules:
 
 
 def fallback_color_analysis(image: Image.Image):
-    """Last resort fallback"""
     img_small = image.resize((100, 100)).convert("RGB")
     pixels = np.array(img_small).reshape(-1, 3).astype(float)
     non_white_mask = ~((pixels[:, 0] > 220) & (pixels[:, 1] > 220) & (pixels[:, 2] > 220))
@@ -548,7 +547,7 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "✨ Gemini 2.0 Flash Vision"
+                st.session_state["cv_method"] = "✨ Gemini 1.5 Flash Vision"
                 st.session_state["cv_done"]   = True
             else:
                 pb.progress(85, text="🎨 Using color-based fallback...")
