@@ -285,7 +285,7 @@ def classify_image_with_hf(image_bytes):
             return None, "GEMINI_API_KEY not set in Streamlit secrets"
 
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
 
         payload = {
             "contents": [{
@@ -538,7 +538,7 @@ elif page == "📸 Image Scanner":
             import time
             pb = st.progress(0, text="🧠 Initializing...")
             time.sleep(0.3)
-            pb.progress(25, text="🤖 HuggingFace Vision analyzing image...")
+            pb.progress(25, text="🤖 Gemini Vision analyzing image...")
             tags_raw, err = classify_image_with_hf(img_bytes)
             pb.progress(70, text="🔍 Matching products in catalog...")
             time.sleep(0.2)
@@ -548,7 +548,7 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "🤗 HuggingFace Vision AI"
+                st.session_state["cv_method"] = "✨ Gemini 2.0 Flash Vision"
                 st.session_state["cv_done"]   = True
             else:
                 pb.progress(85, text="🎨 Using color-based fallback...")
@@ -562,7 +562,7 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_method"] = "🎨 Color-Based Fallback"
                 st.session_state["cv_done"]   = True
                 if err:
-                    st.warning(f"⚠️ HF Vision error: {err}. Color fallback used.")
+                    st.warning(f"⚠️ Gemini Vision error: {err}. Color fallback used.")
 
     if st.session_state.get("cv_done"):
         method  = st.session_state["cv_method"]
