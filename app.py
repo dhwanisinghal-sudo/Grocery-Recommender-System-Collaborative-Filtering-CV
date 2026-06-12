@@ -284,8 +284,8 @@ def classify_image_with_hf(image_bytes):
             return None, "GEMINI_API_KEY not set in Streamlit secrets"
 
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        # ✅ CHANGED: gemini-2.0-flash → gemini-1.5-flash
-        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        # ✅ FIXED: gemini-1.5-flash → gemini-2.0-flash
+        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
 
         payload = {
             "contents": [{
@@ -547,7 +547,7 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "✨ Gemini 1.5 Flash Vision"
+                st.session_state["cv_method"] = "✨ Gemini 2.0 Flash Vision"
                 st.session_state["cv_done"]   = True
             else:
                 pb.progress(85, text="🎨 Using color-based fallback...")
