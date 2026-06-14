@@ -286,7 +286,10 @@ def classify_image_with_hf(image_bytes):
             return None, "HF_API_TOKEN not set in Streamlit secrets"
 
         # Step 1: HF image classification model use karo
-        headers = {"Authorization": f"Bearer {hf_token}"}
+        headers = {
+            "Authorization": f"Bearer {hf_token}",
+            "Content-Type": "image/jpeg",
+        }
 
         # Multiple models try karo — agar ek fail ho toh doosra
         MODELS = [
