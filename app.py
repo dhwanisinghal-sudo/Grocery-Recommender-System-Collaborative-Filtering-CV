@@ -272,47 +272,109 @@ IGNORE_KEYWORDS = {
 }
 
 
+# ✅ UPDATED: Hugging Face Vision API (Gemini ki jagah)
 def classify_image_with_hf(image_bytes):
-    import base64, json
+    import json
     try:
-        gemini_key = ""
+        # HF token lo secrets se
+        hf_token = ""
         try:
-            gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
+            hf_token = str(st.secrets.get("HF_API_TOKEN", "")).strip()
         except Exception:
             pass
-        if not gemini_key:
-            return None, "GEMINI_API_KEY not set in Streamlit secrets"
+        if not hf_token:
+            return None, "HF_API_TOKEN not set in Streamlit secrets"
 
-        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        # ✅ FIXED: gemini-1.5-flash → gemini-2.0-flash
-        API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+        # Step 1: HF image classification model use karo
+        headers = {"Authorization": f"Bearer {hf_token}"}
 
-        payload = {
-            "contents": [{
-                "parts": [
-                    {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
-                    {"text": """You are a grocery store assistant. Look at this image and identify the grocery/food item.
-Return ONLY a JSON array, no extra text, no markdown:
-[{"tag": "banana", "confidence": 95.0}, {"tag": "fruit", "confidence": 90.0}]
-Rules:
-- Give 3-5 simple English tags
-- Tags should be grocery-related: banana, milk, bread, chips, maggi, rice, dal, tea, coffee, biscuit, juice, oil, atta, soap, etc.
-- confidence between 0-100
-- Return ONLY the JSON array, nothing else"""}
-                ]
-            }]
+        # Multiple models try karo — agar ek fail ho toh doosra
+        MODELS = [
+            "google/vit-base-patch16-224",           # Best general image classifier
+            "microsoft/resnet-50",                    # Backup 1
+            "apple/mobilevit-small",                  # Backup 2
+        ]
+
+        raw_labels = []
+        last_error = None
+
+        for model in MODELS:
+            API_URL = f"https://api-inference.huggingface.co/models/{model}"
+            try:
+                response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=30)
+                if response.status_code == 200:
+                    results = response.json()
+                    if isinstance(results, list) and len(results) > 0:
+                        raw_labels = results
+                        break
+                elif response.status_code == 503:
+                    # Model loading — ek aur try
+                    last_error = f"Model {model} loading, try again"
+                    continue
+                else:
+                    last_error = f"HF API Error {response.status_code}: {response.text[:100]}"
+                    continue
+            except Exception as e:
+                last_error = str(e)
+                continue
+
+        if not raw_labels:
+            return None, last_error or "No response from HF models"
+
+        # Step 2: HF labels ko grocery tags mein convert karo
+        LABEL_TO_GROCERY = {
+            # Fruits
+            "banana": "banana", "fig": "fruit", "jackfruit": "fruit",
+            "pineapple": "fruit", "strawberry": "fruit", "orange": "orange",
+            "lemon": "fruit", "apple": "apple", "mango": "mango",
+            "pomegranate": "fruit", "grape": "fruit", "watermelon": "fruit",
+            # Dairy
+            "milk can": "milk", "milk": "milk", "butter": "butter",
+            "cheese": "dairy", "curd": "curd", "yogurt": "yogurt",
+            # Grains
+            "rice": "rice", "bread": "bread", "bagel": "bread",
+            "pretzel": "biscuit", "corn": "cereal", "wheat": "wheat",
+            # Snacks
+            "chip": "chips", "pretzel": "snack", "popcorn": "snack",
+            "cracker": "biscuit", "wafer": "biscuit",
+            # Beverages
+            "coffee": "coffee", "espresso": "coffee", "tea": "tea",
+            "juice": "juice", "bottle": "bottle", "can": "drink",
+            # Condiments
+            "sauce": "masala", "ketchup": "masala", "pickle": "condiments",
+            "honey": "honey", "jam": "jam", "oil": "oil",
+            # Noodles
+            "noodle": "noodle", "pasta": "pasta", "spaghetti": "pasta",
+            # Cleaning
+            "soap": "soap", "detergent": "detergent",
         }
 
-        response = requests.post(API_URL, json=payload, timeout=30)
+        tags = []
+        seen = set()
+        for item in raw_labels[:8]:
+            label = item.get("label", "").lower()
+            score = item.get("score", 0.0)
+            conf  = round(score * 100, 1)
 
-        if response.status_code == 200:
-            data = response.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-            text = text.replace("```json", "").replace("```", "").strip()
-            result = json.loads(text)
-            return result if result else None, None
-        else:
-            return None, f"Gemini API Error {response.status_code}: {response.text[:100]}"
+            if conf < 5:
+                continue
+
+            # Direct match dhundo
+            grocery_tag = None
+            for key, val in LABEL_TO_GROCERY.items():
+                if key in label:
+                    grocery_tag = val
+                    break
+
+            # Agar koi match nahi toh label ka pehla word use karo
+            if not grocery_tag:
+                grocery_tag = label.split(",")[0].split(" ")[0].strip()
+
+            if grocery_tag and grocery_tag not in seen:
+                seen.add(grocery_tag)
+                tags.append({"tag": grocery_tag, "confidence": conf})
+
+        return (tags if tags else None), None
 
     except Exception as e:
         return None, str(e)
@@ -537,7 +599,7 @@ elif page == "📸 Image Scanner":
             import time
             pb = st.progress(0, text="🧠 Initializing...")
             time.sleep(0.3)
-            pb.progress(25, text="🤖 Gemini Vision analyzing image...")
+            pb.progress(25, text="🤖 HF Vision analyzing image...")
             tags_raw, err = classify_image_with_hf(img_bytes)
             pb.progress(70, text="🔍 Matching products in catalog...")
             time.sleep(0.2)
@@ -547,7 +609,7 @@ elif page == "📸 Image Scanner":
                 time.sleep(0.3); pb.empty()
                 st.session_state["cv_tags"]   = tags_raw
                 st.session_state["cv_pids"]   = matched_pids
-                st.session_state["cv_method"] = "✨ Gemini 2.0 Flash Vision"
+                st.session_state["cv_method"] = "✨ Hugging Face Vision (ViT)"
                 st.session_state["cv_done"]   = True
             else:
                 pb.progress(85, text="🎨 Using color-based fallback...")
@@ -561,7 +623,7 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_method"] = "🎨 Color-Based Fallback"
                 st.session_state["cv_done"]   = True
                 if err:
-                    st.warning(f"⚠️ Gemini Vision error: {err}. Color fallback used.")
+                    st.warning(f"⚠️ HF Vision error: {err}. Color fallback used.")
 
     if st.session_state.get("cv_done"):
         method  = st.session_state["cv_method"]
