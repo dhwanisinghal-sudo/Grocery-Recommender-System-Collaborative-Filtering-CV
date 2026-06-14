@@ -290,16 +290,15 @@ def classify_image_with_hf(image_bytes):
 
         # Multiple models try karo — agar ek fail ho toh doosra
         MODELS = [
-            "google/vit-base-patch16-224",           # Best general image classifier
-            "microsoft/resnet-50",                    # Backup 1
-            "apple/mobilevit-small",                  # Backup 2
+            "google/vit-base-patch16-224",
+            "microsoft/resnet-50",
         ]
 
         raw_labels = []
         last_error = None
 
         for model in MODELS:
-            API_URL = f"https://api-inference.huggingface.co/models/{model}"
+            API_URL = f"https://router.huggingface.co/hf-inference/models/{model}"
             try:
                 response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=30)
                 if response.status_code == 200:
