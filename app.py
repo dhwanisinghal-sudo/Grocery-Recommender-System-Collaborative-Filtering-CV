@@ -234,6 +234,13 @@ def render_cart_sidebar():
 GROCERY_KEYWORDS = {
     "milk":         ["P021","P030","P136","P027"],
     "butter":       ["P021","P025","P135"],
+    "amul butter":  ["P021"],
+    "salted butter":["P021"],
+    "unsalted butter":["P021"],
+    "table butter": ["P021"],
+    "cooking butter":["P021","P025"],
+    "makhan":       ["P021","P025"],
+    "makkhan":      ["P021","P025"],
     "ghee":         ["P025"],
     "curd":         ["P023","P029","P030"],
     "yogurt":       ["P023","P029","P030"],
@@ -529,21 +536,20 @@ GROCERY_KEYWORDS = {
     "sack":         ["P031","P032","P035"],
     "jar":          ["P071","P077","P078","P079","P095"],
     "tube":         ["P081"],
-    # ── NEW: HF garbage label handlers ──
-    "band":         ["P021","P025","P030"],   # HF butter ko "band" bolta hai
+    # HF garbage label handlers
+    "band":         ["P021","P025","P030"],
     "band aid":     ["P021","P025","P030"],
     "bandage":      ["P021","P025","P030"],
     "adhesive":     ["P021","P025","P030"],
     "wrapper":      ["P051","P011","P001"],
     "wrapping":     ["P051","P011","P001"],
     "label":        ["P051","P011","P001"],
-    "golden":       ["P025","P077"],           # ghee/honey
-    "block":        ["P021","P022","P024"],    # cheese/butter/paneer block
+    "golden":       ["P025","P077"],
+    "block":        ["P021","P022","P024"],
     "slab":         ["P021","P022","P024"],
     "rectangular":  ["P021","P022","P024"],
     "foil":         ["P021","P025"],
     "wrapped":      ["P021","P025","P051"],
-    "spread":       ["P021","P079"],
     "margarine":    ["P021","P025"],
     "fat":          ["P021","P025","P049"],
 }
@@ -555,6 +561,17 @@ LOW_PRIORITY_TAGS = {
     "block", "slab", "rectangular", "foil", "wrapped", "golden"
 }
 
+# ── Butter-specific tags for priority override ──
+BUTTER_TAGS = {
+    "butter", "amul butter", "salted butter", "unsalted butter",
+    "table butter", "cooking butter", "margarine", "spread", "fat spread",
+    "dairy fat", "makhan", "makkhan", "white block", "yellow block",
+    "rectangular block", "foil wrapped", "butter block", "dairy block",
+}
+
+# ── Tags that should NOT override butter detection ──
+BUTTER_CONFLICT_TAGS = {"cream", "yogurt", "curd", "dahi", "milk", "lassi"}
+
 
 def normalize_tag(tag: str) -> str:
     return " ".join(tag.lower().strip().split())
@@ -564,10 +581,32 @@ def find_products_from_tags(tag_dicts, products):
     matched_high = set()
     matched_low  = set()
 
+    # Collect all normalized tags first
+    raw_tag_texts = []
+    for item in tag_dicts:
+        raw_tag = item["tag"] if isinstance(item, dict) else str(item)
+        raw_tag_texts.append(normalize_tag(raw_tag))
+
+    # ── BUTTER PRIORITY CHECK ──
+    # If ANY tag strongly suggests butter, force-add butter PIDs
+    # and suppress conflicting dairy tags (cream, yogurt, etc.)
+    butter_found = any(
+        any(bt in tag or tag in bt for bt in BUTTER_TAGS)
+        for tag in raw_tag_texts
+    )
+    if butter_found:
+        for pid in ["P021", "P025", "P135"]:
+            if pid in products:
+                matched_high.add(pid)
+
     for item in tag_dicts:
         raw_tag = item["tag"] if isinstance(item, dict) else str(item)
         tag = normalize_tag(raw_tag)
         tag_words = [w for w in tag.split() if len(w) >= 3]
+
+        # ── If butter detected, skip conflicting dairy tags ──
+        if butter_found and tag in BUTTER_CONFLICT_TAGS:
+            continue
 
         for keyword, pids in GROCERY_KEYWORDS.items():
             kw = normalize_tag(keyword)
@@ -601,9 +640,6 @@ def find_products_from_tags(tag_dicts, products):
     return combined[:6]
 
 
-# ══════════════════════════════════════════════════════════════════
-# FIXED classify_image_with_hf — Gemini primary + better HF models
-# ══════════════════════════════════════════════════════════════════
 def classify_image_with_hf(image_bytes):
     import json
     debug_messages = []
@@ -638,6 +674,9 @@ def classify_image_with_hf(image_bytes):
                 "bournvita, horlicks, ice cream, frozen, fries\n"
                 "- confidence between 0-100\n"
                 "- NEVER say 'band', 'bandage', 'adhesive' for food items\n"
+                "- If you see a YELLOW or WHITE solid block wrapped in foil or paper → ALWAYS say 'butter' first\n"
+                "- If you see a flat rectangular dairy block → say 'butter', NEVER say 'cream' or 'yogurt'\n"
+                "- Amul butter, table butter, cooking butter are all 'butter'\n"
                 "- If you see butter/ghee/dairy, say exactly that\n"
                 "- Return ONLY the JSON array"
             )
@@ -700,7 +739,6 @@ def classify_image_with_hf(image_bytes):
         debug_messages.append(f"❌ Gemini setup error: {str(e)[:80]}")
 
     # ── 2. HUGGING FACE (fallback) ───────────────────────────────
-    # Better models: food-specific pehle, generic ImageNet baad mein
     LABEL_TO_GROCERY = {
         "milk": "milk", "milk can": "milk", "milk bottle": "milk",
         "butter": "butter", "ghee": "ghee", "curd": "curd",
@@ -735,8 +773,8 @@ def classify_image_with_hf(image_bytes):
         "detergent": "detergent", "dishwash": "dishwash",
         "ice cream": "ice cream", "kulfi": "kulfi", "frozen": "frozen",
         # HF garbage labels — mapped to sensible grocery
-        "band aid": "dairy", "band": "dairy", "bandage": "dairy",
-        "adhesive bandage": "dairy", "adhesive": "dairy",
+        "band aid": "butter", "band": "butter", "bandage": "butter",
+        "adhesive bandage": "butter", "adhesive": "butter",
         "packet": "packaged food", "package": "packaged food",
         "wrapper": "packaged food", "envelope": "packaged food",
         "sachet": "packaged food", "pouch": "packaged food",
@@ -747,9 +785,23 @@ def classify_image_with_hf(image_bytes):
         "red": "masala", "green": "vegetable", "orange": "juice",
         "brown": "biscuit", "food": "food item", "vegetable": "vegetable",
         "fruit": "fruit", "fresh": "fresh", "organic": "organic",
+        # ── BUTTER-SPECIFIC HF LABEL FIXES ──
         "block": "butter", "slab": "butter", "rectangular": "butter",
         "foil": "butter", "wrapped": "butter", "margarine": "butter",
-        "spread": "butter", "fat": "oil", "corn": "cereal",
+        "spread": "butter", "fat": "butter",
+        "yellow block": "butter", "white block": "butter",
+        "dairy block": "butter", "butter block": "butter",
+        "table butter": "butter", "cooking butter": "butter",
+        "salted butter": "butter", "unsalted butter": "butter",
+        "dairy fat": "butter", "makhan": "butter",
+        # cream/yogurt only when explicitly those labels
+        "cream cheese": "cheese",
+        "fresh cream": "cream",
+        "whipped cream": "cream",
+        "sour cream": "cream",
+        "greek yogurt": "yogurt",
+        "plain yogurt": "yogurt",
+        "corn": "cereal",
         "grain": "grain", "cereal": "oats", "ingredient": "cooking ingredient",
         "produce": "food item", "grocery": "grocery",
         "smoothie": "juice", "coconut water": "drink",
@@ -766,12 +818,11 @@ def classify_image_with_hf(image_bytes):
                 "Authorization": f"Bearer {hf_token}",
                 "Content-Type":  "image/jpeg",
             }
-            # Better HF models — food-specific pehle
             HF_MODELS = [
-                "nateraw/food",                  # Food-101 trained ✅
-                "Kaludi/grocery-products",       # Grocery specific ✅
-                "google/vit-large-patch16-224",  # Better ImageNet
-                "microsoft/resnet-50",           # Last resort
+                "nateraw/food",
+                "Kaludi/grocery-products",
+                "google/vit-large-patch16-224",
+                "microsoft/resnet-50",
             ]
             for model in HF_MODELS:
                 API_URL = f"https://router.huggingface.co/hf-inference/models/{model}"
@@ -789,12 +840,10 @@ def classify_image_with_hf(image_bytes):
                                 conf      = round(item.get("score", 0.0) * 100, 1)
                                 if conf < 3:
                                     continue
-                                # Clean label
                                 raw_label = re.sub(r"\(.*?\)", "", raw_label).strip()
                                 raw_label = raw_label.split(",")[0].strip()
                                 raw_label = raw_label.split("/")[0].strip()
 
-                                # Map to grocery
                                 grocery_tag = None
                                 if raw_label in LABEL_TO_GROCERY:
                                     grocery_tag = LABEL_TO_GROCERY[raw_label]
@@ -867,7 +916,8 @@ def fallback_color_analysis(image: Image.Image):
     elif b > r * 1.1 and b > g * 1.1:
         return [{"tag": "milk", "confidence": 66.0}, {"tag": "dairy", "confidence": 63.0}]
     elif brightness > 215 and r > 205 and g > 205 and b > 205:
-        return [{"tag": "butter", "confidence": 68.0}, {"tag": "dairy", "confidence": 65.0}]
+        # Bright white/pale yellow solid → most likely butter
+        return [{"tag": "butter", "confidence": 80.0}, {"tag": "dairy", "confidence": 75.0}]
     elif brightness < 80:
         return [{"tag": "coffee", "confidence": 68.0}, {"tag": "tea", "confidence": 65.0}]
     elif r > 130 and g > 90 and b < 90 and r > g and r > b * 1.5:
@@ -1092,7 +1142,6 @@ elif page == "📸 Image Scanner":
                 tags_html += f'<span class="badge badge-orange">{item}</span>'
         st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
 
-        # ── Debug log (new) ──
         if st.session_state.get("cv_debug"):
             with st.expander("🔧 Debug Log — API Status"):
                 for msg in st.session_state["cv_debug"]:
