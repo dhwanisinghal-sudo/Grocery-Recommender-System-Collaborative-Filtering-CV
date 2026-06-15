@@ -272,114 +272,117 @@ IGNORE_KEYWORDS = {
 }
 
 
-# ✅ UPDATED: Hugging Face Vision API (Gemini ki jagah)
+# ✅ UPDATED: Gemini (primary) + HF (fallback) Vision API
 def classify_image_with_hf(image_bytes):
-    import json
+    import json, base64
+
+    # ── 1. GEMINI TRY KARO (Best for Indian products) ──
     try:
-        # HF token lo secrets se
-        hf_token = ""
-        try:
-            hf_token = str(st.secrets.get("HF_API_TOKEN", "")).strip()
-        except Exception:
-            pass
-        if not hf_token:
-            return None, "HF_API_TOKEN not set in Streamlit secrets"
-
-        # Step 1: HF image classification model use karo
-        headers = {
-            "Authorization": f"Bearer {hf_token}",
-            "Content-Type": "image/jpeg",
-        }
-
-        # Multiple models try karo — agar ek fail ho toh doosra
-        MODELS = [
-            "google/vit-base-patch16-224",
-            "microsoft/resnet-50",
-        ]
-
-        raw_labels = []
-        last_error = None
-
-        for model in MODELS:
-            API_URL = f"https://router.huggingface.co/hf-inference/models/{model}"
-            try:
-                response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=30)
-                if response.status_code == 200:
-                    results = response.json()
-                    if isinstance(results, list) and len(results) > 0:
-                        raw_labels = results
+        gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
+        if gemini_key:
+            image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+            GEMINI_MODELS = [
+                "gemini-2.0-flash",
+                "gemini-1.5-flash",
+                "gemini-1.5-flash-8b",
+            ]
+            for gmodel in GEMINI_MODELS:
+                API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{gmodel}:generateContent?key={gemini_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+                            {"text": """You are a grocery store assistant. Look at this image and identify the grocery/food item.
+Return ONLY a JSON array, no extra text, no markdown:
+[{"tag": "banana", "confidence": 95.0}, {"tag": "fruit", "confidence": 90.0}]
+Rules:
+- Give 3-5 simple English tags
+- Tags should be grocery-related: banana, milk, bread, chips, maggi, rice, dal, tea, coffee, biscuit, juice, oil, atta, soap, etc.
+- confidence between 0-100
+- Return ONLY the JSON array, nothing else"""}
+                        ]
+                    }]
+                }
+                try:
+                    response = requests.post(API_URL, json=payload, timeout=30)
+                    if response.status_code == 200:
+                        data = response.json()
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        text = text.replace("```json", "").replace("```", "").strip()
+                        result = json.loads(text)
+                        if result:
+                            return result, None
+                    elif response.status_code == 429:
+                        continue
+                    else:
                         break
-                elif response.status_code == 503:
-                    # Model loading — ek aur try
-                    last_error = f"Model {model} loading, try again"
+                except Exception:
                     continue
-                else:
-                    last_error = f"HF API Error {response.status_code}: {response.text[:100]}"
+    except Exception:
+        pass
+
+    # ── 2. HUGGING FACE TRY KARO (Fallback) ──
+    try:
+        hf_token = str(st.secrets.get("HF_API_TOKEN", "")).strip()
+        if hf_token:
+            headers = {
+                "Authorization": f"Bearer {hf_token}",
+                "Content-Type": "image/jpeg",
+            }
+            MODELS = [
+                "google/vit-base-patch16-224",
+                "microsoft/resnet-50",
+            ]
+            LABEL_TO_GROCERY = {
+                "banana": "banana", "fig": "fruit", "pineapple": "fruit",
+                "strawberry": "fruit", "orange": "orange", "lemon": "fruit",
+                "apple": "apple", "mango": "mango", "grape": "fruit",
+                "watermelon": "fruit", "milk can": "milk", "milk": "milk",
+                "butter": "butter", "cheese": "dairy", "curd": "curd",
+                "yogurt": "yogurt", "rice": "rice", "bread": "bread",
+                "bagel": "bread", "corn": "cereal", "wheat": "wheat",
+                "chip": "chips", "popcorn": "snack", "cracker": "biscuit",
+                "wafer": "biscuit", "coffee": "coffee", "espresso": "coffee",
+                "tea": "tea", "juice": "juice", "bottle": "bottle",
+                "can": "drink", "sauce": "masala", "ketchup": "masala",
+                "honey": "honey", "jam": "jam", "oil": "oil",
+                "noodle": "noodle", "pasta": "pasta", "spaghetti": "noodle",
+                "soap": "soap", "detergent": "detergent",
+            }
+            for model in MODELS:
+                API_URL = f"https://router.huggingface.co/hf-inference/models/{model}"
+                try:
+                    response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=30)
+                    if response.status_code == 200:
+                        results = response.json()
+                        if isinstance(results, list) and results:
+                            tags = []
+                            seen = set()
+                            for item in results[:8]:
+                                label = item.get("label", "").lower()
+                                conf  = round(item.get("score", 0.0) * 100, 1)
+                                if conf < 5:
+                                    continue
+                                grocery_tag = None
+                                for key, val in LABEL_TO_GROCERY.items():
+                                    if key in label:
+                                        grocery_tag = val
+                                        break
+                                if not grocery_tag:
+                                    grocery_tag = label.split(",")[0].split(" ")[0].strip()
+                                if grocery_tag and grocery_tag not in seen:
+                                    seen.add(grocery_tag)
+                                    tags.append({"tag": grocery_tag, "confidence": conf})
+                            if tags:
+                                return tags, None
+                except Exception:
                     continue
-            except Exception as e:
-                last_error = str(e)
-                continue
+    except Exception:
+        pass
 
-        if not raw_labels:
-            return None, last_error or "No response from HF models"
+    # ── 3. DONO FAIL — Color fallback main function mein handle karega ──
+    return None, "Both Gemini and HF Vision failed"
 
-        # Step 2: HF labels ko grocery tags mein convert karo
-        LABEL_TO_GROCERY = {
-            # Fruits
-            "banana": "banana", "fig": "fruit", "jackfruit": "fruit",
-            "pineapple": "fruit", "strawberry": "fruit", "orange": "orange",
-            "lemon": "fruit", "apple": "apple", "mango": "mango",
-            "pomegranate": "fruit", "grape": "fruit", "watermelon": "fruit",
-            # Dairy
-            "milk can": "milk", "milk": "milk", "butter": "butter",
-            "cheese": "dairy", "curd": "curd", "yogurt": "yogurt",
-            # Grains
-            "rice": "rice", "bread": "bread", "bagel": "bread",
-            "pretzel": "biscuit", "corn": "cereal", "wheat": "wheat",
-            # Snacks
-            "chip": "chips", "pretzel": "snack", "popcorn": "snack",
-            "cracker": "biscuit", "wafer": "biscuit",
-            # Beverages
-            "coffee": "coffee", "espresso": "coffee", "tea": "tea",
-            "juice": "juice", "bottle": "bottle", "can": "drink",
-            # Condiments
-            "sauce": "masala", "ketchup": "masala", "pickle": "condiments",
-            "honey": "honey", "jam": "jam", "oil": "oil",
-            # Noodles
-            "noodle": "noodle", "pasta": "pasta", "spaghetti": "pasta",
-            # Cleaning
-            "soap": "soap", "detergent": "detergent",
-        }
-
-        tags = []
-        seen = set()
-        for item in raw_labels[:8]:
-            label = item.get("label", "").lower()
-            score = item.get("score", 0.0)
-            conf  = round(score * 100, 1)
-
-            if conf < 5:
-                continue
-
-            # Direct match dhundo
-            grocery_tag = None
-            for key, val in LABEL_TO_GROCERY.items():
-                if key in label:
-                    grocery_tag = val
-                    break
-
-            # Agar koi match nahi toh label ka pehla word use karo
-            if not grocery_tag:
-                grocery_tag = label.split(",")[0].split(" ")[0].strip()
-
-            if grocery_tag and grocery_tag not in seen:
-                seen.add(grocery_tag)
-                tags.append({"tag": grocery_tag, "confidence": conf})
-
-        return (tags if tags else None), None
-
-    except Exception as e:
-        return None, str(e)
 
 
 def fallback_color_analysis(image: Image.Image):
