@@ -561,6 +561,14 @@ def find_products_from_tags(tag_dicts, products):
         raw_tag = item["tag"] if isinstance(item, dict) else str(item)
         raw_tag_texts.append(normalize_tag(raw_tag))
 
+    # ── NOT IN CATALOG: fresh produce / non-packaged items ──
+    # Gemini was told to return this single tag for fresh fruits,
+    # vegetables, salads, etc. that we genuinely don't sell.
+    # Don't force a random fallback match — return empty so the UI
+    # can show an honest "not available" message instead.
+    if any(t in ("not in catalog", "not_in_catalog", "notincatalog") for t in raw_tag_texts):
+        return []
+
     cleaned_tags, forced_pids = apply_conflict_resolution(raw_tag_texts)
     for pid in forced_pids:
         if pid in products:
@@ -645,7 +653,13 @@ SPICE IDENTIFICATION:
 - Red powder specifically = chilli powder / red chilli
 - Mixed multi-spice powder = masala (garam masala, kitchen king, etc.)
 
-Return ONLY a valid JSON array with 4-6 tags, most specific first.
+OUR STORE ONLY SELLS PACKAGED GROCERY ITEMS — no loose fresh fruits, vegetables, salads, or non-packaged produce.
+If the image shows a fresh, unpackaged fruit, vegetable, salad, or any item that is clearly NOT a packaged grocery product (no brand label, no wrapper, no box), do NOT guess a random packaged product name for it. Instead return exactly this single tag:
+[{"tag": "not_in_catalog", "confidence": 99.0}]
+
+Only use packaged-product tags (butter, chips, biscuit, etc.) when you can see actual packaging — a wrapper, box, bottle, jar, or branded label.
+
+Return ONLY a valid JSON array with 4-6 tags, most specific first (or the single not_in_catalog tag above if applicable).
 Format: [{"tag": "product name", "confidence": 95.0}, ...]
 Rules:
 - Use brand name if visible (e.g. "amul butter", "maggi", "lays")
@@ -1213,8 +1227,15 @@ elif page == "📸 Image Scanner":
                 for msg in st.session_state["cv_debug"]:
                     st.markdown(f"`{msg}`")
 
+        is_not_in_catalog = any(
+            isinstance(t, dict) and normalize_tag(t.get("tag","")) in ("not in catalog", "not_in_catalog", "notincatalog")
+            for t in tags
+        )
+
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
-        if not matched:
+        if is_not_in_catalog:
+            st.warning("🚫 This item isn't sold in our store — we only carry packaged grocery products (no loose fresh fruits, vegetables, or salads). Try uploading a packaged product instead!")
+        elif not matched:
             st.info("No matching products found. Try a different image.")
         else:
             m_cols = st.columns(3)
@@ -1226,7 +1247,7 @@ elif page == "📸 Image Scanner":
                     if st.button("🛒 Add", key=f"cv_match_{pid}"):
                         add_to_cart(pid, products); st.toast(f"✅ {p['name']} added!", icon="🛒")
 
-        if matched:
+        if matched and not is_not_in_catalog:
             st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
             base_cat = products.get(matched[0], {}).get("category","")
             blocked_words = ["energy","bisleri","sting","limca","7up","appy","red bull","soda","cola"]
