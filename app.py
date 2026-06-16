@@ -557,16 +557,30 @@ def find_products_from_tags(tag_dicts, products):
     matched_low  = set()
 
     raw_tag_texts = []
+    confidences   = []
     for item in tag_dicts:
-        raw_tag = item["tag"] if isinstance(item, dict) else str(item)
-        raw_tag_texts.append(normalize_tag(raw_tag))
+        if isinstance(item, dict):
+            raw_tag_texts.append(normalize_tag(str(item.get("tag", ""))))
+            confidences.append(float(item.get("confidence", 0) or 0))
+        else:
+            raw_tag_texts.append(normalize_tag(str(item)))
+            confidences.append(0.0)
 
     # ── NOT IN CATALOG: fresh produce / non-packaged items ──
-    # Gemini was told to return this single tag for fresh fruits,
-    # vegetables, salads, etc. that we genuinely don't sell.
-    # Don't force a random fallback match — return empty so the UI
-    # can show an honest "not available" message instead.
-    if any(t in ("not in catalog", "not_in_catalog", "notincatalog") for t in raw_tag_texts):
+    # Case 1: Gemini explicitly returned the not_in_catalog tag.
+    # Case 2: Gemini still guessed a packaged-product tag, but with
+    #         very low confidence (e.g. 3-5%) — this is the model
+    #         essentially saying "I'm not sure this is even a real
+    #         match", which happens with fruits/veggies/unknown items.
+    #         Treat low-confidence top guesses the same way rather
+    #         than forcing a random product onto the user.
+    explicit_not_in_catalog = any(
+        t in ("not in catalog", "not_in_catalog", "notincatalog") for t in raw_tag_texts
+    )
+    top_confidence = max(confidences) if confidences else 0
+    low_confidence_guess = len(confidences) > 0 and top_confidence < 20
+
+    if explicit_not_in_catalog or low_confidence_guess:
         return []
 
     cleaned_tags, forced_pids = apply_conflict_resolution(raw_tag_texts)
@@ -610,62 +624,61 @@ def find_products_from_tags(tag_dicts, products):
 
 
 # ══════════════════════════════════════════════════════════════
-# GEMINI PROMPT  — very detailed, product-specific
+# GEMINI PROMPT  — generic product-TYPE focused (brand-agnostic)
+# Works for ANY image of a product type, not just our exact catalog
+# brands — confidence reflects how sure Gemini is about the TYPE,
+# not whether the exact brand matches our store.
 # ══════════════════════════════════════════════════════════════
-GEMINI_PROMPT = """You are an expert Indian grocery product identifier.
-Look at the image carefully and identify the EXACT product. Be precise — do not guess a visually-similar but wrong product.
+GEMINI_PROMPT = """You are an expert grocery product identifier. Your job is to identify the TYPE of grocery/food/household product shown, regardless of brand.
 
-DAIRY IDENTIFICATION GUIDE — check packaging shape/texture, not just colour:
-- BUTTER → solid, dense, rectangular block; wrapped in foil or waxed paper; yellow or pale white. Brands: Amul Butter, Priya Gold Butter Bite.
-  → Say "butter". Do NOT say cream, yogurt, curd, or dahi for this shape.
-- GHEE → liquid or semi-solid, sold in a jar/tin/pouch, golden-yellow, glossy/oily appearance. Brands: Amul Ghee, Patanjali.
-  → Say "ghee". Do NOT say butter or cream.
-- PANEER → soft white solid block, usually vacuum-sealed in a clear plastic pack, NOT wrapped in foil. Brands: Mother Dairy Paneer.
-  → Say "paneer". Do NOT say butter or cheese.
-- CHEESE → thin individually-wrapped slices, or a firm block with a printed cheese-brand wrapper. Brands: Amul Cheese Slices.
-  → Say "cheese". Do NOT say butter or paneer.
-- YOGURT/CURD/DAHI → semi-liquid, sold in a cup, pot, or tub with a peel-off foil lid — never a solid block. Brands: Nestlé Yogurt, Epigamia, Amul Masti Dahi.
-  → Say "yogurt" or "curd" or "dahi". Do NOT say butter, ghee, or cream for a solid block.
-- CREAM → pourable liquid in a small sealed plastic pouch or carton. Brand: Amul Cream.
-  → Say "cream". Do NOT say butter, yogurt, or curd.
-- MILK → liquid in a pouch, tetra-pack, or bottle.
-  → Say "milk".
-- LASSI → drinkable liquid in a bottle/cup, often with visible froth. Brand: Amul Lassi.
-  → Say "lassi".
+IMPORTANT: The exact brand in the image does not need to match any specific store's catalog. Focus on identifying what KIND of product it is (butter, chips, biscuit, juice, etc.) — any brand of that product type counts as a correct identification. Give HIGH confidence (70-95) whenever you can clearly tell the product type, even if you don't recognize the specific brand.
 
-THE SINGLE MOST IMPORTANT RULE: if the object is a SOLID block (not liquid, not in a cup/tub) wrapped in foil or paper, it is BUTTER — full stop. Never label a solid wrapped block as yogurt, curd, dahi, or cream; those are always liquid/semi-liquid in cups, tubs, or pouches.
+DAIRY IDENTIFICATION — judge by packaging shape/texture, not colour alone:
+- BUTTER → solid, dense, rectangular block; wrapped in foil or waxed paper. Any brand (Amul, Britannia, Land O'Lakes, generic, etc.) → say "butter".
+- GHEE → liquid/semi-solid in a jar/tin/pouch, golden, glossy/oily. → say "ghee".
+- PANEER → soft white solid block, usually clear vacuum-sealed plastic (not foil). → say "paneer".
+- CHEESE → individually wrapped slices, a firm block, or a wedge with a cheese-brand wrapper. → say "cheese".
+- YOGURT/CURD/DAHI → semi-liquid in a cup, pot, or tub with a peel-off foil lid — never a solid block. → say "yogurt" or "curd".
+- CREAM → pourable liquid in a small sealed pouch or carton. → say "cream".
+- MILK → liquid in a pouch, tetra-pack, carton, or bottle. → say "milk".
 
-SNACK IDENTIFICATION:
-- Flat round/oval crisp in a packet = chips (Lays, Pringles, Bingo)
-- Fried salty mixture in a packet = namkeen (Haldiram)
-- Fried thin strips = sev or bhujia
-- Triangular crisp = nacho or doritos
-- Do not confuse biscuits (flat, baked, in a box/packet) with chips (thin, fried, crinkled)
+KEY RULE: a SOLID block (not liquid, not in a cup/tub) wrapped in foil or paper is BUTTER, regardless of brand or exact colour shade. Liquid/semi-liquid items in cups, tubs, or pouches are yogurt/curd/cream — never call those "butter", and never call a solid block "yogurt" or "cream".
 
-NOODLE IDENTIFICATION:
-- Square yellow noodle cake in a wrapper = instant noodles / maggi
-- Red and yellow packet = Maggi specifically
-- Long thin strands, Italian-style box = pasta (not noodles)
+SNACKS (any brand counts):
+- Thin, flat, fried, crinkled discs/strips in a packet = chips
+- Fried salty mixture (small irregular pieces) in a packet = namkeen/mixture
+- Thin fried strips = sev or bhujia
+- Triangular fried crisp = nacho-style chip
+- Baked, flat, uniform shape in a box/packet = biscuit/cookie (NOT chips)
 
-SPICE IDENTIFICATION:
-- Small packet/box of powder = masala or spice
-- Yellow powder specifically = turmeric/haldi
-- Red powder specifically = chilli powder / red chilli
-- Mixed multi-spice powder = masala (garam masala, kitchen king, etc.)
+NOODLES & PASTA (any brand counts):
+- Square/rectangular dried noodle cake in a wrapper = instant noodles
+- Long thin dried strands in a box/bag = pasta or spaghetti
 
-OUR STORE ONLY SELLS PACKAGED GROCERY ITEMS — no loose fresh fruits, vegetables, salads, or non-packaged produce.
-If the image shows a fresh, unpackaged fruit, vegetable, salad, or any item that is clearly NOT a packaged grocery product (no brand label, no wrapper, no box), do NOT guess a random packaged product name for it. Instead return exactly this single tag:
+SPICES (any brand counts):
+- Small packet/jar/box of fine powder = spice or masala
+- Yellow powder = turmeric
+- Red powder = chilli powder
+- Multi-ingredient spice blend = masala
+
+BEVERAGES (any brand counts):
+- Carbonated drink in a bottle/can = soda
+- Fruit-coloured liquid in a bottle/carton = juice
+- Leaves/bags/powder for hot drinks = tea or coffee
+
+GENERAL RULE: identify the most likely PRODUCT TYPE even if the exact brand is unfamiliar to you. A product type you can clearly recognize (e.g. "this is clearly a chips packet" or "this is clearly a butter block") should get confidence 70+ even without knowing the brand. Only use confidence below 30 when the product type itself is genuinely ambiguous or unclear.
+
+OUR STORE ONLY SELLS PACKAGED GROCERY ITEMS — no loose fresh fruits, vegetables, salads, meat, or non-packaged produce.
+If the image shows a fresh, unpackaged fruit, vegetable, salad, raw meat, or any item that is clearly NOT a packaged product (no wrapper, no box, no bottle, no jar, no branded label of any kind), return exactly this single tag instead of guessing:
 [{"tag": "not_in_catalog", "confidence": 99.0}]
 
-Only use packaged-product tags (butter, chips, biscuit, etc.) when you can see actual packaging — a wrapper, box, bottle, jar, or branded label.
-
-Return ONLY a valid JSON array with 4-6 tags, most specific first (or the single not_in_catalog tag above if applicable).
-Format: [{"tag": "product name", "confidence": 95.0}, ...]
+Return ONLY a valid JSON array with 4-6 tags, most specific first (or the single not_in_catalog tag if applicable).
+Format: [{"tag": "product name", "confidence": 85.0}, ...]
 Rules:
-- Use brand name if visible (e.g. "amul butter", "maggi", "lays")
-- Then product type (e.g. "butter", "noodles", "chips")
-- Then category (e.g. "dairy", "snack", "spice")
-- Confidence 0-100
+- First tag: most specific guess (brand name if you recognize it, e.g. "amul butter")
+- Then the generic product type (e.g. "butter") — THIS is the most important tag, always include it even if you don't know the brand
+- Then the category (e.g. "dairy")
+- Confidence 0-100, calibrated to how sure you are about the PRODUCT TYPE, not the brand
 - NO markdown, NO extra text, ONLY the JSON array
 """
 
@@ -1227,10 +1240,12 @@ elif page == "📸 Image Scanner":
                 for msg in st.session_state["cv_debug"]:
                     st.markdown(f"`{msg}`")
 
-        is_not_in_catalog = any(
+        explicit_not_in_catalog = any(
             isinstance(t, dict) and normalize_tag(t.get("tag","")) in ("not in catalog", "not_in_catalog", "notincatalog")
             for t in tags
         )
+        top_conf = max([float(t.get("confidence", 0) or 0) for t in tags if isinstance(t, dict)], default=0)
+        is_not_in_catalog = explicit_not_in_catalog or (len(tags) > 0 and top_conf < 20)
 
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
         if is_not_in_catalog:
