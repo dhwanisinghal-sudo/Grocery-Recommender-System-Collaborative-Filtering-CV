@@ -633,16 +633,14 @@ GEMINI_PROMPT = """You are an expert grocery product identifier. Your job is to 
 
 IMPORTANT: The exact brand in the image does not need to match any specific store's catalog. Focus on identifying what KIND of product it is (butter, chips, biscuit, juice, etc.) — any brand of that product type counts as a correct identification. Give HIGH confidence (70-95) whenever you can clearly tell the product type, even if you don't recognize the specific brand.
 
-DAIRY IDENTIFICATION — judge by packaging shape/texture, not colour alone:
-- BUTTER → solid, dense, rectangular block; wrapped in foil or waxed paper. Any brand (Amul, Britannia, Land O'Lakes, generic, etc.) → say "butter".
-- GHEE → liquid/semi-solid in a jar/tin/pouch, golden, glossy/oily. → say "ghee".
-- PANEER → soft white solid block, usually clear vacuum-sealed plastic (not foil). → say "paneer".
-- CHEESE → individually wrapped slices, a firm block, or a wedge with a cheese-brand wrapper. → say "cheese".
-- YOGURT/CURD/DAHI → semi-liquid in a cup, pot, or tub with a peel-off foil lid — never a solid block. → say "yogurt" or "curd".
-- CREAM → pourable liquid in a small sealed pouch or carton. → say "cream".
-- MILK → liquid in a pouch, tetra-pack, carton, or bottle. → say "milk".
-
-KEY RULE: a SOLID block (not liquid, not in a cup/tub) wrapped in foil or paper is BUTTER, regardless of brand or exact colour shade. Liquid/semi-liquid items in cups, tubs, or pouches are yogurt/curd/cream — never call those "butter", and never call a solid block "yogurt" or "cream".
+STEP 1 — MANDATORY FOR ANY DAIRY-LOOKING ITEM:
+Before naming a dairy product, you MUST first decide which physical state it is in. Ask yourself in order:
+  (a) Is it a SOLID block/stick/brick — something you could pick up with your hand and it would hold its own shape, wrapped in foil, wax paper, or a printed wrapper, NOT inside a cup/tub/bowl? → it is BUTTER. Stop here, do not consider yogurt/cream/curd at all.
+  (b) Is it inside an open or sealed CUP, POT, TUB, or BOWL with a flat top surface, semi-liquid, spoonable? → it is YOGURT or CURD.
+  (c) Is it a POURABLE LIQUID inside a small carton, pouch, or bottle (you would pour it, not scoop it)? → it is CREAM or MILK.
+  (d) Is it in a JAR/TIN and clearly oily/translucent liquid or semi-liquid, golden coloured? → it is GHEE.
+  (e) Is it a firm white block in clear (not foil) vacuum plastic? → it is PANEER.
+A solid foil/paper-wrapped block can NEVER be yogurt, curd, or cream — those three are always physically liquid or semi-liquid sitting in an open-top container. If you see ANY solid, hand-holdable, wrapped block shape in a dairy context, your answer is BUTTER, even if the colour looks pale, white, or cream-coloured. Colour alone never overrides shape.
 
 SNACKS (any brand counts):
 - Thin, flat, fried, crinkled discs/strips in a packet = chips
