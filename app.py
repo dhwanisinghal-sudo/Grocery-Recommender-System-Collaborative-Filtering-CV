@@ -1043,6 +1043,23 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_done"] = False
                 st.rerun()
 
+        # ── Manual search box (always visible) ──
+        st.markdown("---")
+        st.markdown('<div class="section-header">🔎 Product Search (Manual)</div>', unsafe_allow_html=True)
+        manual_query = st.text_input("API fail ho toh yahan product naam type karo (e.g. butter, maggi, chips)", key="manual_search")
+        if st.button("🔍 Search by Name", use_container_width=True):
+            if manual_query.strip():
+                manual_tags = [{"tag": normalize_tag(manual_query), "confidence": 90}]
+                # also add each word as a tag
+                for w in manual_query.lower().strip().split():
+                    if len(w) >= 3:
+                        manual_tags.append({"tag": w, "confidence": 70})
+                matched_pids = find_products_from_tags(manual_tags, products)
+                st.session_state["cv_tags"]   = manual_tags
+                st.session_state["cv_pids"]   = matched_pids
+                st.session_state["cv_method"] = f"🔎 Manual Search: '{manual_query}'"
+                st.session_state["cv_done"]   = True
+
         if analyze:
             import time
             pb = st.progress(0, text="🧠 Initializing...")
@@ -1072,7 +1089,7 @@ elif page == "📸 Image Scanner":
                 st.session_state["cv_method"] = "🎨 Color-Based Fallback"
                 st.session_state["cv_done"]   = True
                 if err:
-                    st.warning(f"⚠️ Vision API error: {err}. Color fallback used.")
+                    st.warning(f"⚠️ Vision API: {err} — Color fallback used. Ya upar manually search karo 👆")
 
     if st.session_state.get("cv_done"):
         method  = st.session_state["cv_method"]
