@@ -510,12 +510,10 @@ VISUAL_LABEL_TO_TAG = {
     "glass cleaner": "glass cleaner",
     # ── Frozen ──
     "frozen": "frozen fries", "frozen food": "frozen fries",
-    # ── Fresh fruit — store has no fresh produce, map to nearest packaged equivalent ──
-    "banana": "mango juice", "apple": "apple juice", "orange": "orange juice",
-    "grape": "juice", "pineapple": "juice", "papaya": "juice",
-    "guava": "guava juice", "pomegranate": "pomegranate juice",
-    "watermelon": "juice", "melon": "juice", "berry": "juice", "berries": "juice",
-    "fruit salad": "juice", "fruit bowl": "juice",
+    # ── Fresh fruit — keep as-is, do NOT force-map to unrelated packaged products ──
+    # (catalog has no fresh produce; if no match is found, the matcher will
+    #  correctly fall back rather than pretending a banana is mango juice)
+    "fruit salad": "fruit", "fruit bowl": "fruit",
     # ── Packaging-only words → generic packaged food (low priority) ──
     "packet": "packaged food", "package": "packaged food",
     "sachet": "packaged food", "pouch": "packaged food",
@@ -523,7 +521,7 @@ VISUAL_LABEL_TO_TAG = {
     "jar": "packaged food", "container": "packaged food",
     "box": "packaged food", "carton": "packaged food", "bag": "packaged food",
     "tube": "toothpaste", "food": "packaged food", "vegetable": "packaged food",
-    "fruit": "juice", "grocery": "packaged food", "produce": "packaged food",
+    "fruit": "fruit", "grocery": "packaged food", "produce": "fruit",
 }
 
 # Cuisine/region/meal-type words a generic classifier sometimes blurts out
@@ -617,8 +615,11 @@ def find_products_from_tags(tag_dicts, products):
         for p in matched_low:
             if p not in matched_high:
                 combined.append(p)
-    if not combined:
-        combined = [p for p in ["P051", "P011", "P001", "P021", "P033", "P061"] if p in products]
+    # NOTE: if combined is empty here, we deliberately do NOT inject an
+    # unrelated "popular products" fallback — that would silently show
+    # the wrong item (e.g. a banana matching "mango juice") as if it were
+    # a real match. An empty result means "no match in this catalog",
+    # and the UI is responsible for telling the user that honestly.
     return combined[:6]
 
 
@@ -1103,7 +1104,8 @@ elif page == "📸 Image Scanner":
 
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
         if not matched:
-            st.info("No matching products found. Try a different image.")
+            top_tag = tags[0].get("tag", "this item") if tags and isinstance(tags[0], dict) else "this item"
+            st.info(f"🔍 Detected **{top_tag}**, but it doesn't match any product in our catalog. Try uploading a packaged grocery item instead.")
         else:
             m_cols = st.columns(3)
             for i, pid in enumerate(matched):
