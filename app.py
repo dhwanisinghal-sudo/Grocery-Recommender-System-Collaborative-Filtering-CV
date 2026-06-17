@@ -508,6 +508,10 @@ VISUAL_LABEL_TO_TAG = {
     "pho":"noodles","udon":"noodles","vermicelli":"vermicelli","maggi":"maggi",
     "pasta":"pasta","penne":"pasta","macaroni":"pasta","fusilli":"pasta",
     "pretzel":"noodles","coil":"noodles","spiral":"noodles","ring":"noodles",
+    "donut":"noodles","donuts":"noodles","doughnut":"noodles","doughnuts":"noodles",
+    "paella":"noodles","fried":"noodles","lo mein":"noodles","chow mein":"noodles",
+    "noodle dish":"noodles","stir fry":"noodles","stir-fry":"noodles",
+    "instant":"maggi","yellow noodle":"noodles","dry noodle":"noodles",
     # Bakery
     "biscuit":"biscuit","cookie":"biscuit","cracker":"biscuit","wafer":"biscuit",
     "bread":"bread","loaf":"bread","toast":"bread","bun":"bread","naan":"bread",
@@ -554,7 +558,16 @@ VISUAL_LABEL_TO_TAG = {
     "detergent":"detergent","dishwash":"dishwash",
     "toilet cleaner":"toilet cleaner","floor cleaner":"floor cleaner",
     # Packaging (low priority)
-    "packet":"packaged food","package":"packaged food",
+    "flour":"atta","wheat flour":"atta","maida":"maida","bread flour":"atta",
+    "white powder":"atta","wheat":"atta","whole wheat":"atta",
+    "atta":"atta","grain":"rice","cereal":"oats",
+    "bar":"biscuit","chocolate bar":"biscuit","waffle":"biscuit",
+    "sandwich":"bread","wrap":"bread",
+    "tub":"curd","cup":"curd",
+    "sachet":"maggi","yellow packet":"maggi","orange packet":"chips",
+    "red packet":"masala","white packet":"atta","green packet":"tea",
+    "curry":"masala","dip":"chutney","syrup":"honey",
+    "powder":"masala","liquid":"milk","beverage":"tea",
     "sachet":"packaged food","pouch":"packaged food",
     "bottle":"packaged food","can":"packaged food",
     "jar":"packaged food","container":"packaged food",
@@ -646,16 +659,25 @@ def map_visual_label(raw_label: str) -> str:
     raw = re.sub(r"\(.*?\)", "", raw).strip()
     raw = raw.split(",")[0].strip()
     raw = raw.split("/")[0].strip()
-    raw = raw.replace("_", " ")
+    raw = raw.replace("_", " ").strip()
     if not raw or len(raw) < 3 or raw in JUNK_DESCRIPTORS or raw in CUISINE_NOISE_WORDS:
         return ""
+    # Direct lookup
     if raw in VISUAL_LABEL_TO_TAG:
         return VISUAL_LABEL_TO_TAG[raw]
+    # Substring: key inside raw label
     for key, val in VISUAL_LABEL_TO_TAG.items():
-        if len(key) >= 5 and key in raw:
+        if len(key) >= 4 and key in raw:
             return val
+    # Substring: raw label inside key
+    for key, val in VISUAL_LABEL_TO_TAG.items():
+        if len(raw) >= 4 and raw in key:
+            return val
+    # First word fallback
     first = raw.split()[0] if raw.split() else ""
-    if len(first) >= 4 and first not in JUNK_DESCRIPTORS:
+    if len(first) >= 4 and first not in JUNK_DESCRIPTORS and first not in CUISINE_NOISE_WORDS:
+        if first in VISUAL_LABEL_TO_TAG:
+            return VISUAL_LABEL_TO_TAG[first]
         return first
     return ""
 
@@ -695,7 +717,7 @@ RULES:
    - Soft white block in water = "paneer"
    - Sliced pale-yellow = "cheese"
 
-4. NOODLES — dry coiled block of thin strands in yellow packet = "maggi" or "noodles". NEVER call it "pretzel", "donut", "ring", or "band".
+4. NOODLES CRITICAL: A block of dry thin coiled strands in yellow/orange packet = ALWAYS say "maggi" or "noodles". NEVER say "donut", "donuts", "paella", "fried", "pretzel", "ring", "band". If Maggi logo visible, first tag must be "maggi".
 
 5. DO NOT output visual/shape words as tags: never output "band", "block", "foil", "wrapper", "yellow", "strip", "rectangular", "solid" — always name the actual PRODUCT.
 
