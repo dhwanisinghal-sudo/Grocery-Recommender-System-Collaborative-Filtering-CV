@@ -289,12 +289,10 @@ GROCERY_KEYWORDS = {
     "spaghetti":["P055","P056"],
     "cup noodles":["P051","P052","P131"],
     "hakka noodles":["P058"],
-    "fried noodles":["P051","P052","P058"],
     "chow mein":["P058"],
     # ── Grains ──
     "rice":["P031","P032"], "basmati":["P031"],
     "basmati rice":["P031"], "india gate":["P031"], "daawat":["P032"],
-    "fried rice":["P031","P032"],
     "dal":["P033","P034","P017","P112"],
     "toor dal":["P033"], "chana dal":["P034"],
     "atta":["P035","P145"], "aashirvaad":["P035"],
@@ -405,7 +403,7 @@ GROCERY_KEYWORDS = {
     "kulfi":["P119"], "vadilal":["P119"],
     "amul ice cream":["P115"], "cornetto":["P116"],
     "cutlet":["P120"], "frozen":["P111","P112","P113","P114","P115","P116"],
-    # ── Generic fallbacks (LOW PRIORITY) ──
+    # ── Generic fallbacks ──
     "packaged food":["P051","P052","P011","P012","P001"],
     "breakfast":["P037","P038","P039","P094","P121","P122"],
     "ready to eat":["P051","P052","P112","P113"],
@@ -421,26 +419,34 @@ LOW_PRIORITY_TAGS = {
     "condiment", "fruit juice", "staples", "drink",
 }
 
-# Words that give ZERO product signal — always skip these
+# Words with zero product signal — skip entirely
 JUNK_DESCRIPTORS = {
-    # shape/material/visual
+    # shape / material / visual noise
     "block", "slab", "rectangular", "foil", "wrapped", "solid", "object", "thing",
     "item", "material", "texture", "surface", "background", "pattern", "shape",
+    # medical / band-aid junk (HF loves this for butter packs)
     "band", "bandage", "adhesive", "band aid", "medical", "first aid", "plaster",
     "strip", "ribbon", "tape",
     # colors
     "yellow", "red", "green", "white", "orange", "brown", "golden", "black",
     "blue", "purple", "pink", "light", "dark", "bright", "shiny", "glossy",
-    "matte", "pale", "beige", "cream color", "ivory",
-    # size/quality
+    "matte", "pale", "beige", "ivory",
+    # size / quality
     "small", "large", "big", "round", "square", "flat", "thick", "thin",
-    # packaging words alone (when the ONLY tag)
+    # packaging words (alone)
     "packaging", "wrapper", "label", "sticker", "logo",
-    # fat/spread (too vague — "butter" itself is handled separately)
+    # fat/spread (too vague)
     "fat", "spread", "saturated",
-    # misc noise
+    # food ambiguity
     "mix", "mixed", "blend", "product", "ingredient", "ingredients",
-    "dairy fat", "yellow block", "yellow pack",
+    # NON-GROCERY shape words HF confuses with noodles — DO NOT map these
+    "donut", "doughnut", "donuts", "doughnuts", "pretzel", "ring",
+    "coil", "spiral", "loop", "oval", "circle", "ellipse",
+    # cooking actions — NOT products
+    "fried", "grilled", "boiled", "baked", "roasted", "steamed",
+    "stir fry", "stir-fry", "deep fried",
+    # cuisine styles — NOT products
+    "paella", "risotto", "pilaf",
 }
 
 CUISINE_NOISE_WORDS = {
@@ -450,7 +456,7 @@ CUISINE_NOISE_WORDS = {
     "dish", "meal", "cuisine", "platter", "recipe", "delicacy",
 }
 
-# ── Specific dairy type detection ──
+# ── Specific dairy detection (butter vs yogurt vs milk etc) ──
 DAIRY_SPECIFIC = {
     "butter": {
         "tags": {"butter", "amul butter", "salted butter", "unsalted butter",
@@ -499,82 +505,77 @@ DAIRY_SPECIFIC = {
     },
 }
 
-# ── Visual label → grocery tag (for HF model output cleanup) ──
+# ── STRICT visual label → grocery tag mapping ──
+# ONLY map labels that are unambiguously a grocery product.
+# DO NOT add shape words (ring, oval, coil), cooking actions (fried),
+# or ambiguous words (grain, cereal) that could misfire on non-grocery items.
 VISUAL_LABEL_TO_TAG = {
-    # Noodles
-    "noodle":"noodles","noodles":"noodles","ramen":"noodles",
-    "fried noodle":"noodles","chow mein":"noodles","lo mein":"noodles",
-    "pad thai":"noodles","spaghetti":"noodles","linguine":"noodles",
-    "pho":"noodles","udon":"noodles","vermicelli":"vermicelli","maggi":"maggi",
-    "pasta":"pasta","penne":"pasta","macaroni":"pasta","fusilli":"pasta",
-    "pretzel":"noodles","coil":"noodles","spiral":"noodles","ring":"noodles",
-    "donut":"noodles","donuts":"noodles","doughnut":"noodles","doughnuts":"noodles",
-    "paella":"noodles","fried":"noodles","lo mein":"noodles","chow mein":"noodles",
-    "noodle dish":"noodles","stir fry":"noodles","stir-fry":"noodles",
-    "instant":"maggi","yellow noodle":"noodles","dry noodle":"noodles",
+    # Noodles — ONLY actual noodle product names
+    "noodle": "noodles", "noodles": "noodles", "ramen": "noodles",
+    "chow mein": "noodles", "lo mein": "noodles",
+    "pad thai": "noodles", "spaghetti": "noodles", "linguine": "noodles",
+    "pho": "noodles", "udon": "noodles", "vermicelli": "vermicelli",
+    "maggi": "maggi", "pasta": "pasta", "penne": "pasta",
+    "macaroni": "pasta", "fusilli": "pasta", "instant noodles": "maggi",
     # Bakery
-    "biscuit":"biscuit","cookie":"biscuit","cracker":"biscuit","wafer":"biscuit",
-    "bread":"bread","loaf":"bread","toast":"bread","bun":"bread","naan":"bread",
-    "roti":"bread","chapati":"bread","paratha":"bread",
+    "biscuit": "biscuit", "cookie": "biscuit", "cracker": "biscuit",
+    "wafer": "biscuit", "bread": "bread", "loaf": "bread",
+    "toast": "bread", "bun": "bread", "naan": "bread",
+    "roti": "bread", "chapati": "bread", "paratha": "bread",
+    "chocolate bar": "biscuit", "waffle": "biscuit",
     # Snacks
-    "potato chip":"chips","potato chips":"chips","chip":"chips","crisp":"chips",
-    "crisps":"chips","tortilla chip":"nacho","corn chip":"chips",
-    "popcorn":"snack","bhujia":"bhujia","namkeen":"namkeen","boondi":"boondi",
-    "french fries":"frozen fries","fries":"frozen fries","nachos":"nacho",
-    # Dairy
-    "butter":"butter","margarine":"butter","ghee":"ghee",
-    "curd":"curd","yogurt":"yogurt","yoghurt":"yogurt",
-    "cheese":"cheese","paneer":"paneer","cottage cheese":"paneer",
-    "milk":"milk","cream":"cream","lassi":"lassi","buttermilk":"lassi",
-    "ice cream":"ice cream","gelato":"ice cream","kulfi":"kulfi",
+    "potato chip": "chips", "potato chips": "chips", "chip": "chips",
+    "crisp": "chips", "crisps": "chips", "tortilla chip": "nacho",
+    "corn chip": "chips", "popcorn": "snack",
+    "bhujia": "bhujia", "namkeen": "namkeen", "boondi": "boondi",
+    "french fries": "frozen fries", "nachos": "nacho",
+    # Dairy — EXACT product types only
+    "butter": "butter", "margarine": "butter",
+    "ghee": "ghee",
+    "curd": "curd", "yogurt": "yogurt", "yoghurt": "yogurt",
+    "cheese": "cheese", "paneer": "paneer", "cottage cheese": "paneer",
+    "milk": "milk", "fresh cream": "cream", "whipping cream": "cream",
+    "lassi": "lassi", "buttermilk": "lassi",
+    "ice cream": "ice cream", "gelato": "ice cream", "kulfi": "kulfi",
     # Grains
-    "rice":"rice","basmati rice":"basmati","dal":"dal",
-    "lentil":"lentil","porridge":"oats","oatmeal":"oats","oats":"oats",
-    "granola":"muesli","muesli":"muesli","poha":"poha","upma":"suji",
+    "rice": "rice", "basmati rice": "basmati",
+    "dal": "dal", "lentil": "lentil", "lentils": "lentil",
+    "porridge": "oats", "oatmeal": "oats", "oats": "oats",
+    "granola": "muesli", "muesli": "muesli",
+    "poha": "poha", "upma": "suji",
     # Spices
-    "spice":"spices","spices":"spices","turmeric":"turmeric",
-    "chilli":"chilli powder","chili":"chilli powder","masala":"masala",
-    "curry powder":"masala","garam masala":"garam masala",
+    "turmeric": "turmeric", "chilli": "chilli powder",
+    "chili": "chilli powder", "masala": "masala",
+    "curry powder": "masala", "garam masala": "garam masala",
     # Oil
-    "oil":"cooking oil","cooking oil":"cooking oil","sunflower oil":"sunflower oil",
+    "cooking oil": "cooking oil", "sunflower oil": "sunflower oil",
     # Condiments
-    "ketchup":"ketchup","sauce":"sauce","mayonnaise":"mayonnaise",
-    "honey":"honey","jam":"jam","jelly":"jam",
-    "peanut butter":"peanut butter","nutella":"nutella",
-    "chutney":"chutney","pickle":"pickle",
+    "ketchup": "ketchup", "mayonnaise": "mayonnaise",
+    "honey": "honey", "jam": "jam", "jelly": "jam",
+    "peanut butter": "peanut butter", "nutella": "nutella",
+    "chutney": "chutney", "pickle": "pickle",
     # Drinks
-    "juice":"juice","mango":"mango juice","mango juice":"mango juice",
-    "smoothie":"juice","lemonade":"soda","soda":"soda","water":"water",
-    "energy drink":"energy drink",
+    "mango juice": "mango juice", "orange juice": "orange juice",
+    "lemonade": "soda", "soda": "soda", "water": "water",
+    "energy drink": "energy drink",
     # Beverages
-    "tea":"tea","chai":"tea","green tea":"green tea",
-    "coffee":"coffee","espresso":"coffee","latte":"coffee",
-    "bournvita":"bournvita","horlicks":"horlicks","milo":"milo",
+    "tea": "tea", "chai": "tea", "green tea": "green tea",
+    "coffee": "coffee", "espresso": "coffee",
+    "bournvita": "bournvita", "horlicks": "horlicks", "milo": "milo",
     # Personal Care
-    "soap":"soap","shampoo":"shampoo","toothpaste":"toothpaste",
-    "toothbrush":"toothbrush","lotion":"body lotion","face wash":"face wash",
-    "razor":"razor",
+    "soap": "soap", "shampoo": "shampoo", "toothpaste": "toothpaste",
+    "toothbrush": "toothbrush", "face wash": "face wash", "razor": "razor",
     # Home Care
-    "detergent":"detergent","dishwash":"dishwash",
-    "toilet cleaner":"toilet cleaner","floor cleaner":"floor cleaner",
-    # Packaging (low priority)
-    "flour":"atta","wheat flour":"atta","maida":"maida","bread flour":"atta",
-    "white powder":"atta","wheat":"atta","whole wheat":"atta",
-    "atta":"atta","grain":"rice","cereal":"oats",
-    "bar":"biscuit","chocolate bar":"biscuit","waffle":"biscuit",
-    "sandwich":"bread","wrap":"bread",
-    "tub":"curd","cup":"curd",
-    "sachet":"maggi","yellow packet":"maggi","orange packet":"chips",
-    "red packet":"masala","white packet":"atta","green packet":"tea",
-    "curry":"masala","dip":"chutney","syrup":"honey",
-    "powder":"masala","liquid":"milk","beverage":"tea",
-    "sachet":"packaged food","pouch":"packaged food",
-    "bottle":"packaged food","can":"packaged food",
-    "jar":"packaged food","container":"packaged food",
-    "box":"packaged food","carton":"packaged food",
-    "bag":"packaged food","tube":"toothpaste",
-    "food":"packaged food","vegetable":"packaged food",
-    "grocery":"packaged food","fruit":"fruit",
+    "detergent": "detergent", "dishwash": "dishwash",
+    "toilet cleaner": "toilet cleaner", "floor cleaner": "floor cleaner",
+    # Flour/grain
+    "flour": "atta", "wheat flour": "atta", "whole wheat": "atta",
+    "atta": "atta", "maida": "maida",
+    # Packaging hints (only specific ones)
+    "tube": "toothpaste",
+    "sauce": "sauce",
+    "syrup": "honey",
+    "powder": "masala",
 }
 
 
@@ -583,7 +584,7 @@ def normalize_tag(tag: str) -> str:
 
 
 def detect_dairy_type(tag_texts):
-    priority_order = ["butter","ghee","paneer","cheese","curd","cream","milk"]
+    priority_order = ["butter", "ghee", "paneer", "cheese", "curd", "cream", "milk"]
     found = {}
     for tag in tag_texts:
         for dtype, info in DAIRY_SPECIFIC.items():
@@ -655,35 +656,45 @@ def find_products_from_tags(tag_dicts, products):
 
 
 def map_visual_label(raw_label: str) -> str:
+    """Clean HF model label and map to a grocery tag. Returns '' if no match."""
     raw = raw_label.lower().strip()
     raw = re.sub(r"\(.*?\)", "", raw).strip()
     raw = raw.split(",")[0].strip()
     raw = raw.split("/")[0].strip()
     raw = raw.replace("_", " ").strip()
-    if not raw or len(raw) < 3 or raw in JUNK_DESCRIPTORS or raw in CUISINE_NOISE_WORDS:
+
+    # Reject junk immediately
+    if not raw or len(raw) < 3:
         return ""
+    if raw in JUNK_DESCRIPTORS or raw in CUISINE_NOISE_WORDS:
+        return ""
+
     # Direct lookup
     if raw in VISUAL_LABEL_TO_TAG:
         return VISUAL_LABEL_TO_TAG[raw]
-    # Substring: key inside raw label
+
+    # Substring: key inside raw label (key must be >=5 chars to avoid false matches)
     for key, val in VISUAL_LABEL_TO_TAG.items():
-        if len(key) >= 4 and key in raw:
+        if len(key) >= 5 and key in raw:
             return val
-    # Substring: raw label inside key
+
+    # Substring: raw inside key (raw must be >=5 chars)
     for key, val in VISUAL_LABEL_TO_TAG.items():
-        if len(raw) >= 4 and raw in key:
+        if len(raw) >= 5 and raw in key:
             return val
-    # First word fallback
+
+    # First word fallback — only if first word is in VISUAL_LABEL_TO_TAG
     first = raw.split()[0] if raw.split() else ""
     if len(first) >= 4 and first not in JUNK_DESCRIPTORS and first not in CUISINE_NOISE_WORDS:
         if first in VISUAL_LABEL_TO_TAG:
             return VISUAL_LABEL_TO_TAG[first]
-        return first
+
+    # No match — return empty so caller can skip
     return ""
 
 
 # ═══════════════════════════════════════════════════════════════
-# GEMINI PROMPT — very specific, handles band/junk tags
+# GEMINI PROMPT
 # ═══════════════════════════════════════════════════════════════
 GEMINI_PROMPT = """You are a grocery product recognition expert for Indian supermarkets.
 Analyze this image and identify the EXACT grocery/food/household product shown.
@@ -710,18 +721,23 @@ RULES:
    FROZEN: ice cream, kulfi, frozen fries, gulab jamun
 
 3. DAIRY — be very specific, never confuse:
-   - Rectangular yellow/white solid block wrapped in paper/foil = "butter" (NEVER cream, NEVER yogurt, NEVER band)
+   - Rectangular yellow/white solid block wrapped in paper/foil = "butter" (NEVER cream, NEVER yogurt)
    - Clear/white liquid in packet or bottle = "milk"
    - Semi-solid white in a cup/tub = "curd" or "yogurt"
    - Golden liquid in jar/tin = "ghee"
    - Soft white block in water = "paneer"
    - Sliced pale-yellow = "cheese"
 
-4. NOODLES CRITICAL: A block of dry thin coiled strands in yellow/orange packet = ALWAYS say "maggi" or "noodles". NEVER say "donut", "donuts", "paella", "fried", "pretzel", "ring", "band". If Maggi logo visible, first tag must be "maggi".
+4. NOODLES: Yellow/orange packet with thin dry strands inside = "maggi" or "instant noodles".
+   NEVER call noodles: "donut", "pretzel", "ring", "paella", "fried", "coil", "band".
 
-5. DO NOT output visual/shape words as tags: never output "band", "block", "foil", "wrapper", "yellow", "strip", "rectangular", "solid" — always name the actual PRODUCT.
+5. DO NOT output shape/color words as tags. NEVER output: "band", "block", "foil",
+   "wrapper", "yellow", "strip", "rectangular", "solid", "fried", "oval", "round",
+   "donut", "ring", "coil", "spiral", "pretzel", "paella".
+   Always name the actual PRODUCT.
 
-6. Include brand if visible: Amul, Britannia, Parle, Nestle, Maggi, Haldiram, MDH, Everest, Tata, Lays, etc.
+6. Include brand if visible: Amul, Britannia, Parle, Nestle, Maggi, Haldiram, MDH,
+   Everest, Tata, Lays, etc.
 
 7. confidence is an integer 0-100.
 
@@ -740,7 +756,8 @@ def classify_image_with_hf(image_bytes):
         else:
             image_b64 = base64.b64encode(image_bytes).decode("utf-8")
             for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{gmodel}:generateContent?key={gemini_key}"
+                url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+                       f"{gmodel}:generateContent?key={gemini_key}")
                 payload = {
                     "contents": [{"parts": [
                         {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
@@ -769,10 +786,8 @@ def classify_image_with_hf(image_bytes):
                             for item in result:
                                 if isinstance(item, dict) and "tag" in item:
                                     tag = normalize_tag(str(item["tag"]))
-                                    # Skip junk descriptors like "band", "block", colors
                                     if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE_WORDS:
                                         continue
-                                    # Remap via visual label table if needed
                                     mapped = VISUAL_LABEL_TO_TAG.get(tag, tag)
                                     if mapped and mapped not in JUNK_DESCRIPTORS:
                                         item["tag"] = mapped
@@ -802,8 +817,8 @@ def classify_image_with_hf(image_bytes):
             debug.append("⚠️ HF_API_TOKEN missing")
         else:
             headers = {"Authorization": f"Bearer {hf_token}", "Content-Type": "image/jpeg"}
-            for model in ["nateraw/food","Kaludi/grocery-products",
-                          "google/vit-large-patch16-224","microsoft/resnet-50"]:
+            for model in ["nateraw/food", "Kaludi/grocery-products",
+                          "google/vit-large-patch16-224", "microsoft/resnet-50"]:
                 url = f"https://router.huggingface.co/hf-inference/models/{model}"
                 try:
                     resp = requests.post(url, headers=headers, data=image_bytes, timeout=30)
@@ -827,6 +842,8 @@ def classify_image_with_hf(image_bytes):
                                 debug.append(f"✅ HF ({model}) — {len(tags)} tags")
                                 st.session_state["cv_debug"] = debug
                                 return tags, None
+                            else:
+                                debug.append(f"⚠️ HF ({model}): no usable tags after mapping")
                     elif resp.status_code in (503, 429):
                         debug.append(f"⚠️ HF ({model}): {resp.status_code}"); continue
                     else:
@@ -1078,13 +1095,11 @@ elif page == "📸 Image Scanner":
                 tags_html += f'<span class="badge badge-orange">{item}</span>'
         st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
 
-        # Debug log
         if st.session_state.get("cv_debug"):
             with st.expander("🔧 Debug Log — API Status"):
                 for msg in st.session_state["cv_debug"]:
                     st.markdown(f"`{msg}`")
 
-        # ── Matched Products ──
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
         if not matched:
             top_tag = tags[0].get("tag","this item") if tags and isinstance(tags[0], dict) else "this item"
@@ -1104,23 +1119,18 @@ elif page == "📸 Image Scanner":
                         add_to_cart(pid, products)
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
 
-        # ── CF Suggestions (same category as detected product) ──
         if matched:
             st.markdown('<div class="section-header">🤖 You Might Also Like</div>', unsafe_allow_html=True)
-
-            # Get category of the TOP matched product
             base_cat     = products.get(matched[0], {}).get("category", "")
             allowed_cats = RELATED_CATEGORIES.get(base_cat, [base_cat])
             matched_set  = set(matched)
 
-            # Try category-filtered suggestions first
             sim_pids_all, sim_scores_all = get_similar_products(
                 matched[0], item_sim_df, products, n_recs * 3, filter_categories=allowed_cats
             )
             sim_pids   = [p for p in sim_pids_all if p not in matched_set][:n_recs]
             sim_scores = [sim_scores_all[sim_pids_all.index(p)] for p in sim_pids]
 
-            # If not enough, widen to full catalog
             if len(sim_pids) < n_recs:
                 all_pids, all_scores = get_similar_products(
                     matched[0], item_sim_df, products, n_recs + len(matched_set) + 5
@@ -1135,7 +1145,6 @@ elif page == "📸 Image Scanner":
             if not sim_pids:
                 st.info("No suggestions found.")
             else:
-                # Show category label so user knows why these are suggested
                 st.markdown(f'<small style="color:#7f8c8d;">Based on: <b>{base_cat}</b> category</small>', unsafe_allow_html=True)
                 s_cols = st.columns(4)
                 for i,(pid,score) in enumerate(zip(sim_pids, sim_scores)):
