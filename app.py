@@ -78,7 +78,7 @@ CATEGORY_EMOJI = {
 
 RELATED_CATEGORIES = {
     "Drinks":        ["Drinks", "Beverages"],
-    "Beverages":     ["Beverages", "Drinks"],
+    "Beverages":     ["Beverages", "Drinks", "Health"],
     "Snacks":        ["Snacks", "Bakery", "Frozen"],
     "Bakery":        ["Bakery", "Snacks", "Dairy", "Condiments"],
     "Dairy":         ["Dairy", "Bakery", "Condiments", "Beverages"],
@@ -180,23 +180,15 @@ def get_user_recommendations(user_id, df, predicted_df, n=6):
 
 
 def get_similar_products(product_id, item_sim_df, products, n=6, filter_categories=None):
-    """
-    Returns up to n similar products. Tries the related-category filter first;
-    if that produces fewer than n results, automatically widens the search
-    to the full catalog so every product always gets useful suggestions.
-    """
     if product_id not in item_sim_df.columns:
         return [], []
     sims = item_sim_df[product_id].drop(product_id).sort_values(ascending=False)
-
     if filter_categories:
         allowed_ids   = [pid for pid in sims.index if products.get(pid, {}).get("category") in filter_categories]
         filtered_sims = sims[allowed_ids]
         if len(filtered_sims) >= n:
             top = filtered_sims.head(n)
             return list(top.index), list(top.values)
-        # not enough in-category results -> fall through to global ranking below
-
     top = sims.head(n)
     return list(top.index), list(top.values)
 
@@ -239,136 +231,184 @@ def render_cart_sidebar():
 
 
 # ═══════════════════════════════════════════════════════════════
-# KEYWORD → PRODUCT MAP  (one keyword can map to multiple PIDs)
+# KEYWORD → PRODUCT MAP
 # ═══════════════════════════════════════════════════════════════
 GROCERY_KEYWORDS = {
-    # Dairy
-    "milk":["P021","P030","P136","P027"], "butter":["P021","P025","P135"],
-    "amul butter":["P021"], "salted butter":["P021"], "unsalted butter":["P021"],
+    # ── Dairy ──
+    "milk":["P021","P030","P136","P027"],
+    "butter":["P021","P025"], "amul butter":["P021"],
+    "salted butter":["P021"], "unsalted butter":["P021"],
     "table butter":["P021"], "cooking butter":["P021","P025"],
-    "makhan":["P021","P025"], "makkhan":["P021","P025"], "ghee":["P025"],
+    "makhan":["P021","P025"], "makkhan":["P021","P025"],
+    "ghee":["P025"], "clarified butter":["P025"], "desi ghee":["P025"],
     "curd":["P023","P029","P030"], "yogurt":["P023","P029","P030"],
-    "dahi":["P023","P029","P030"], "dairy":["P021","P022","P023","P025","P028","P030"],
-    "cream":["P028","P027"], "cheese":["P022"], "paneer":["P024"],
-    "lassi":["P136"], "shrikhand":["P026"], "condensed milk":["P027"],
+    "dahi":["P023","P029","P030"], "yoghurt":["P023","P029","P030"],
+    "dairy":["P021","P022","P023","P025","P028","P030"],
+    "cream":["P028","P027"], "fresh cream":["P028"],
+    "whipping cream":["P028"], "cheese":["P022"],
+    "processed cheese":["P022"], "cheese slice":["P022"],
+    "paneer":["P024"], "cottage cheese":["P024"],
+    "lassi":["P136"], "buttermilk":["P136"],
+    "shrikhand":["P026"], "condensed milk":["P027"],
     "amul":["P021","P022","P025","P026","P028","P030","P136"],
     "nestle":["P023","P029"], "mother dairy":["P024","P030"],
-    # Bakery
+    "dairy product":["P021","P022","P023","P024","P025","P030"],
+    "dairy products":["P021","P022","P023","P024","P025","P030"],
+    # ── Bakery ──
     "biscuit":["P001","P002","P003","P004","P005","P006","P007","P008","P009","P010"],
     "parle":["P001","P010"], "britannia":["P003","P080","P132","P133","P134"],
-    "marie":["P003"], "bourbon":["P004"], "cookie":["P006","P133","P134"],
-    "digestive":["P007"], "bread":["P001","P003","P132"],
-    "cracker":["P008","P009"], "monaco":["P009"], "tiger biscuit":["P010"],
+    "marie":["P003"], "marie biscuit":["P003"],
+    "bourbon":["P004"], "cookie":["P006","P133","P134"],
+    "digestive":["P007"], "digestive biscuit":["P007"],
+    "bread":["P001","P003","P132"], "cracker":["P008","P009"],
+    "monaco":["P009"], "tiger biscuit":["P010"],
     "multigrain":["P007","P019","P037"],
-    # Snacks
+    "cashew biscuit":["P002"], "bakery":["P001","P002","P003","P006","P007"],
+    # ── Snacks ──
     "chips":["P011","P012","P013","P014","P018","P143","P144"],
-    "lays":["P011","P018","P143"], "kurkure":["P012"], "bingo":["P013"],
-    "pringles":["P014"], "namkeen":["P015","P016","P017","P020","P141","P142"],
+    "lays":["P011","P018","P143"], "kurkure":["P012"],
+    "bingo":["P013"], "pringles":["P014"],
+    "namkeen":["P015","P016","P017","P020","P141","P142"],
     "haldiram":["P015","P016","P017","P112","P141","P142"],
     "bhujia":["P015"], "mixture":["P016"], "moong dal":["P017"],
     "snack":["P011","P012","P013","P015","P016","P019","P020"],
-    "nacho":["P144"], "doritos":["P144"], "sev":["P141"], "boondi":["P142"],
-    "popcorn":["P019","P020"],
-    # Noodles
+    "nacho":["P144"], "doritos":["P144"],
+    "sev":["P141"], "boondi":["P142"], "popcorn":["P019","P020"],
+    "potato chips":["P011","P012","P013","P014"],
+    "corn chips":["P013","P144"],
+    # ── Noodles ──
     "noodle":["P051","P052","P053","P054","P057","P058","P059","P131"],
     "noodles":["P051","P052","P053","P054","P057","P058","P059","P131"],
     "maggi":["P051","P057","P131"], "yippee":["P052"],
-    "pasta":["P055","P056","P060"], "ramen":["P051","P052","P054","P131"],
+    "pasta":["P055","P056","P060"],
+    "ramen":["P051","P052","P054","P131"],
     "instant noodle":["P051","P052","P053","P054","P131"],
     "instant noodles":["P051","P052","P053","P054","P131"],
-    "vermicelli":["P052","P057"], "knorr":["P053"], "wai wai":["P054"],
-    "patanjali noodle":["P059"], "spaghetti":["P055","P056"],
-    "cup noodles":["P051","P052","P131"], "hakka noodles":["P058"],
-    "fried noodles":["P051","P052","P058"], "chow mein":["P058"],
-    # Grains
-    "rice":["P031","P032"], "basmati":["P031"], "basmati rice":["P031"],
-    "india gate":["P031"], "daawat":["P032"], "fried rice":["P031","P032"],
-    "dal":["P033","P034","P017","P112"], "toor dal":["P033"], "chana dal":["P034"],
-    "atta":["P035","P145"], "aashirvaad":["P035"], "fortune atta":["P145"],
-    "maida":["P036"], "wheat flour":["P035","P145"],
-    "oats":["P037","P038","P094","P146"], "oat":["P037","P038","P094","P146"],
-    "quaker":["P037"], "saffola oats":["P038"], "poha":["P039"],
-    "suji":["P040"], "rawa":["P040"], "lentil":["P033","P034"],
-    "lentils":["P033","P034"], "legume":["P033","P034"], "pulses":["P033","P034"],
-    # Spices
+    "vermicelli":["P052","P057"], "knorr":["P053"],
+    "wai wai":["P054"], "patanjali noodle":["P059"],
+    "spaghetti":["P055","P056"],
+    "cup noodles":["P051","P052","P131"],
+    "hakka noodles":["P058"],
+    "fried noodles":["P051","P052","P058"],
+    "chow mein":["P058"],
+    # ── Grains ──
+    "rice":["P031","P032"], "basmati":["P031"],
+    "basmati rice":["P031"], "india gate":["P031"], "daawat":["P032"],
+    "fried rice":["P031","P032"],
+    "dal":["P033","P034","P017","P112"],
+    "toor dal":["P033"], "chana dal":["P034"],
+    "atta":["P035","P145"], "aashirvaad":["P035"],
+    "fortune atta":["P145"], "maida":["P036"],
+    "wheat flour":["P035","P145"],
+    "oats":["P037","P038","P094","P146"],
+    "oat":["P037","P038","P094","P146"],
+    "quaker":["P037"], "saffola oats":["P038"],
+    "poha":["P039"], "suji":["P040"], "rawa":["P040"],
+    "lentil":["P033","P034"], "lentils":["P033","P034"],
+    "legume":["P033","P034"], "pulses":["P033","P034"],
+    "grain":["P031","P032","P033","P034"],
+    "grains":["P031","P032","P033","P034"],
+    # ── Spices ──
     "masala":["P041","P042","P045","P047","P048","P147","P148"],
     "mdh":["P041","P045","P047","P147"],
     "everest":["P042","P044","P046","P048","P148"],
-    "garam masala":["P041"], "chilli powder":["P044"], "chili powder":["P044"],
+    "garam masala":["P041"],
+    "chilli powder":["P044"], "chili powder":["P044"],
     "red chilli":["P044"], "turmeric":["P043"], "haldi":["P043"],
     "coriander powder":["P046"], "dhania":["P046"],
     "rajma masala":["P045"], "chana masala":["P047"],
     "pav bhaji masala":["P048"], "biryani masala":["P147"],
-    "sabji masala":["P148"], "spice":["P041","P042","P043","P044","P147","P148"],
+    "sabji masala":["P148"],
+    "spice":["P041","P042","P043","P044","P147","P148"],
     "spices":["P041","P042","P043","P044","P147","P148"],
-    # Oil
+    "curry powder":["P041","P042","P148"],
+    # ── Oil ──
     "cooking oil":["P049","P050"], "saffola oil":["P049"],
     "sunflower oil":["P050"], "fortune oil":["P050"],
-    # Condiments
+    "oil":["P049","P050"],
+    # ── Condiments ──
     "jam":["P071","P080"], "kissan":["P071"],
     "ketchup":["P073"], "tomato ketchup":["P073"], "heinz":["P073"],
-    "sauce":["P072","P073","P075"], "chutney":["P074"], "schezwan":["P074"],
+    "sauce":["P072","P073","P075"],
+    "chutney":["P074"], "schezwan":["P074"],
     "mayonnaise":["P076"], "mayo":["P076"],
     "honey":["P077","P096"], "dabur honey":["P077"],
-    "nutella":["P078"], "peanut butter":["P079"], "pickle":["P072","P074"],
-    # Drinks
+    "nutella":["P078"], "peanut butter":["P079"],
+    "pickle":["P072","P074"],
+    "condiment":["P071","P072","P073","P074","P076","P077","P078","P079"],
+    # ── Drinks ──
     "juice":["P061","P062","P063","P066","P067","P068","P137","P138"],
-    "tropicana":["P061","P138"], "real juice":["P062","P137","P138"],
-    "frooti":["P063"], "mango drink":["P062","P063","P066"],
-    "mango juice":["P062","P063","P066"], "maaza":["P066"],
-    "paper boat":["P067"], "orange juice":["P061"],
+    "tropicana":["P061","P138"],
+    "real juice":["P062","P137","P138"],
+    "frooti":["P063"],
+    "mango drink":["P062","P063","P066"],
+    "mango juice":["P062","P063","P066"],
+    "maaza":["P066"], "paper boat":["P067"],
+    "orange juice":["P061"],
     "pomegranate juice":["P137"], "guava juice":["P138"],
-    "apple juice":["P139"], "energy drink":["P064","P070"],
+    "apple juice":["P139"],
+    "energy drink":["P064","P070"],
     "sting":["P064"], "red bull":["P070"],
-    "soda":["P065","P139","P140"], "limca":["P065"], "7up":["P140"],
-    "appy":["P139"], "water":["P069"], "bisleri":["P069"],
+    "soda":["P065","P139","P140"], "limca":["P065"],
+    "7up":["P140"], "appy":["P139"],
+    "water":["P069"], "bisleri":["P069"],
     "cold drink":["P065","P064","P070","P139","P140"],
     "soft drink":["P065","P139","P140"],
-    # Beverages
-    "tea":["P121","P122","P125","P126","P130"], "tata tea":["P121"],
-    "red label":["P122"], "green tea":["P125"], "lipton":["P125"],
-    "masala chai":["P126"], "tetley":["P126"], "taj mahal tea":["P130"],
-    "coffee":["P123","P124","P127"], "nescafe":["P123"],
-    "bru":["P124"], "davidoff":["P127"],
+    "fruit juice":["P061","P062","P063","P066","P137","P138"],
+    "mango":["P062","P063","P066","P067"],
+    "fruit":["P061","P062","P063","P066","P137","P138"],
+    # ── Beverages ──
+    "tea":["P121","P122","P125","P126","P130"],
+    "tata tea":["P121"], "red label":["P122"],
+    "green tea":["P125"], "lipton":["P125"],
+    "masala chai":["P126"], "tetley":["P126"],
+    "taj mahal tea":["P130"],
+    "coffee":["P123","P124","P127"],
+    "nescafe":["P123"], "bru":["P124"], "davidoff":["P127"],
     "bournvita":["P128"], "milo":["P129"],
     "horlicks":["P091"], "complan":["P092"],
     "health drink":["P091","P092","P093","P128","P129"],
-    # Personal Care
+    # ── Personal Care ──
     "toothpaste":["P081"], "colgate":["P081"],
     "toothbrush":["P082"], "oral-b":["P082"],
-    "soap":["P083","P084","P149"], "dove":["P083"],
-    "dettol":["P084"], "pears soap":["P149"],
+    "soap":["P083","P084","P149"],
+    "dove":["P083"], "dettol":["P084"], "pears soap":["P149"],
     "shampoo":["P085","P086"], "pantene":["P086"],
     "body lotion":["P087"], "nivea":["P087"],
     "coconut oil":["P088"], "parachute":["P088"],
     "razor":["P089"], "gillette":["P089"],
     "face wash":["P085","P150"], "garnier":["P150"],
-    # Home Care
-    "detergent":["P101","P102"], "surf excel":["P101"], "ariel":["P102"],
+    # ── Home Care ──
+    "detergent":["P101","P102"],
+    "surf excel":["P101"], "ariel":["P102"],
     "dishwash":["P103"], "vim":["P103"],
     "toilet cleaner":["P104"], "harpic":["P104"],
     "glass cleaner":["P105"], "colin":["P105"],
     "floor cleaner":["P106"], "lizol":["P106"],
-    "freshener":["P107"], "odonil":["P107"], "scrub":["P108"],
-    "mosquito repellent":["P109","P110"], "mortein":["P109"], "good knight":["P110"],
-    # Health
+    "freshener":["P107"], "odonil":["P107"],
+    "scrub":["P108"],
+    "mosquito repellent":["P109","P110"],
+    "mortein":["P109"], "good knight":["P110"],
+    # ── Health ──
     "muesli":["P094"], "chyawanprash":["P095","P100"],
     "patanjali":["P095","P059","P100"], "dabur":["P096"],
-    "vitamin":["P097"], "revital":["P097"], "pediasure":["P098"],
-    "glucon d":["P099"], "supplement":["P091","P092","P093","P098"],
-    # Frozen
+    "vitamin":["P097"], "revital":["P097"],
+    "pediasure":["P098"], "glucon d":["P099"],
+    "supplement":["P091","P092","P093","P098"],
+    # ── Frozen ──
     "frozen fries":["P111","P118"], "mccain":["P111"],
-    "dal makhani":["P112"], "paneer butter masala":["P113"],
-    "mtr":["P039","P113"], "gulab jamun":["P114"], "gits":["P114"],
-    "ice cream":["P115","P116","P119"], "kulfi":["P119"],
-    "vadilal":["P119"], "amul ice cream":["P115"], "cornetto":["P116"],
-    "cutlet":["P120"],
-    # Generic / low priority fallback keywords (filler only)
-    "dairy product":["P021","P022","P023","P024","P025","P030"],
+    "dal makhani":["P112"],
+    "paneer butter masala":["P113"],
+    "mtr":["P039","P113"],
+    "gulab jamun":["P114"], "gits":["P114"],
+    "ice cream":["P115","P116","P119"],
+    "kulfi":["P119"], "vadilal":["P119"],
+    "amul ice cream":["P115"], "cornetto":["P116"],
+    "cutlet":["P120"], "frozen":["P111","P112","P113","P114","P115","P116"],
+    # ── Generic fallbacks (LOW PRIORITY) ──
     "packaged food":["P051","P052","P011","P012","P001"],
     "breakfast":["P037","P038","P039","P094","P121","P122"],
     "ready to eat":["P051","P052","P112","P113"],
-    "fruit juice":["P061","P062","P063","P066","P137","P138"],
     "indian food":["P033","P035","P041","P051","P121"],
     "staple":["P031","P033","P035","P037","P121"],
 }
@@ -378,43 +418,77 @@ LOW_PRIORITY_TAGS = {
     "grocery", "groceries", "food item", "indian", "staple", "packaged",
     "packaged food", "processed food", "dairy product", "dairy products",
     "cooking ingredient", "indian food", "breakfast", "ready to eat",
-    "condiment", "fruit juice", "staples",
+    "condiment", "fruit juice", "staples", "drink",
 }
 
+# Words that give ZERO product signal — always skip these
+JUNK_DESCRIPTORS = {
+    # shape/material/visual
+    "block", "slab", "rectangular", "foil", "wrapped", "solid", "object", "thing",
+    "item", "material", "texture", "surface", "background", "pattern", "shape",
+    "band", "bandage", "adhesive", "band aid", "medical", "first aid", "plaster",
+    "strip", "ribbon", "tape",
+    # colors
+    "yellow", "red", "green", "white", "orange", "brown", "golden", "black",
+    "blue", "purple", "pink", "light", "dark", "bright", "shiny", "glossy",
+    "matte", "pale", "beige", "cream color", "ivory",
+    # size/quality
+    "small", "large", "big", "round", "square", "flat", "thick", "thin",
+    # packaging words alone (when the ONLY tag)
+    "packaging", "wrapper", "label", "sticker", "logo",
+    # fat/spread (too vague — "butter" itself is handled separately)
+    "fat", "spread", "saturated",
+    # misc noise
+    "mix", "mixed", "blend", "product", "ingredient", "ingredients",
+    "dairy fat", "yellow block", "yellow pack",
+}
 
-# ═══════════════════════════════════════════════════════════════
-# DAIRY-SPECIFIC DETECTION
-# (prevents butter <-> cream/yogurt/curd cross-contamination)
-# ═══════════════════════════════════════════════════════════════
+CUISINE_NOISE_WORDS = {
+    "greek", "mediterranean", "italian", "indian cuisine", "chinese cuisine",
+    "mexican", "thai cuisine", "japanese cuisine", "korean", "american",
+    "continental", "fusion", "ethnic", "regional", "homemade", "restaurant",
+    "dish", "meal", "cuisine", "platter", "recipe", "delicacy",
+}
+
+# ── Specific dairy type detection ──
 DAIRY_SPECIFIC = {
     "butter": {
         "tags": {"butter", "amul butter", "salted butter", "unsalted butter",
-                 "table butter", "cooking butter", "makhan", "makkhan", "margarine"},
-        "pids": ["P021", "P025", "P135"],
-        "blocks": {"cream", "yogurt", "curd", "dahi", "milk", "lassi", "paneer", "cheese", "ghee"},
+                 "table butter", "cooking butter", "makhan", "makkhan", "margarine",
+                 "butter block", "dairy butter"},
+        "pids": ["P021", "P025"],
+        "blocks": {"cream", "yogurt", "curd", "dahi", "milk", "lassi",
+                   "paneer", "cheese", "ghee", "condensed milk"},
     },
     "ghee": {
         "tags": {"ghee", "clarified butter", "desi ghee", "pure ghee"},
         "pids": ["P025"],
-        "blocks": {"butter", "cream", "yogurt", "curd", "milk", "paneer", "cheese"},
+        "blocks": {"butter", "cream", "yogurt", "curd", "milk", "paneer",
+                   "cheese", "condensed milk"},
     },
     "curd": {
-        "tags": {"curd", "dahi", "yogurt", "yoghurt", "greek yogurt", "plain yogurt"},
+        "tags": {"curd", "dahi", "yogurt", "yoghurt", "greek yogurt",
+                 "plain yogurt", "set curd", "thick curd"},
         "pids": ["P023", "P029", "P030"],
-        "blocks": {"butter", "cream", "milk", "paneer", "cheese", "ghee"},
+        "blocks": {"butter", "cream", "milk", "paneer", "cheese", "ghee",
+                   "condensed milk"},
     },
     "milk": {
-        "tags": {"milk", "toned milk", "full cream milk", "skimmed milk"},
+        "tags": {"milk", "toned milk", "full cream milk", "skimmed milk",
+                 "double toned milk"},
         "pids": ["P021", "P030", "P136"],
-        "blocks": {"butter", "cream", "curd", "yogurt", "paneer", "cheese", "ghee"},
+        "blocks": {"butter", "cream", "curd", "yogurt", "paneer", "cheese",
+                   "ghee", "condensed milk"},
     },
     "cream": {
-        "tags": {"fresh cream", "whipping cream", "whipped cream", "sour cream"},
+        "tags": {"fresh cream", "whipping cream", "whipped cream", "sour cream",
+                 "cooking cream"},
         "pids": ["P028", "P027"],
         "blocks": {"butter", "curd", "yogurt", "paneer", "cheese", "ghee", "milk"},
     },
     "cheese": {
-        "tags": {"cheese", "processed cheese", "cream cheese", "cheddar", "cheese slice"},
+        "tags": {"cheese", "processed cheese", "cream cheese", "cheddar",
+                 "cheese slice", "cheese slices"},
         "pids": ["P022"],
         "blocks": {"butter", "curd", "yogurt", "cream", "ghee", "milk", "paneer"},
     },
@@ -425,113 +499,69 @@ DAIRY_SPECIFIC = {
     },
 }
 
-# Vague shape / texture / color descriptors that add no product signal.
-# Always skipped — never matched against GROCERY_KEYWORDS.
-JUNK_DESCRIPTORS = {
-    "block", "slab", "rectangular", "foil", "wrapped", "solid", "object", "thing",
-    "item", "material", "texture", "surface", "background", "pattern", "shape",
-    "band", "bandage", "adhesive", "band aid", "medical", "first aid", "plaster",
-    "yellow", "red", "green", "white", "orange", "brown", "golden", "black",
-    "blue", "purple", "pink", "light", "dark", "bright", "shiny", "glossy",
-    "matte", "small", "large", "big", "round", "square", "flat", "thick", "thin",
-    "packaging", "wrapper", "label", "sticker", "logo", "spread", "fat",
-}
-
-# ── Master visual-label → grocery-tag map used by BOTH the HF fallback
-#    and as a sanity post-check on Gemini's output. Every entry here is
-#    something a generic image classifier might say when it actually
-#    sees a packaged grocery item (cooked-dish names, shape words, etc).
+# ── Visual label → grocery tag (for HF model output cleanup) ──
 VISUAL_LABEL_TO_TAG = {
-    # ── Noodles — dishes & shapes that a generic classifier confuses with noodles ──
-    "noodle": "noodles", "noodles": "noodles", "ramen": "noodles",
-    "fried noodle": "noodles", "chow mein": "noodles", "lo mein": "noodles",
-    "pad thai": "noodles", "spaghetti": "noodles", "linguine": "noodles",
-    "pho": "noodles", "laksa": "noodles", "udon": "noodles",
-    "vermicelli": "vermicelli", "maggi": "maggi",
-    "pasta": "pasta", "penne": "pasta", "macaroni": "pasta", "fusilli": "pasta",
-    "risotto": "rice", "biryani": "rice", "pulao": "rice",
-    "fried rice": "fried rice", "paella": "fried rice",
-    # shapes a vision model uses for coiled dry noodle blocks
-    "pretzel": "noodles", "bagel": "noodles", "donut": "noodles",
-    "doughnut": "noodles", "ring": "noodles", "coil": "noodles",
-    "spiral": "noodles", "loop": "noodles", "curly": "noodles", "wavy": "noodles",
-    # ── Bakery ──
-    "biscuit": "biscuit", "cookie": "biscuit", "cracker": "biscuit",
-    "wafer": "biscuit", "shortbread": "biscuit",
-    "bread": "bread", "loaf": "bread", "toast": "bread", "bagel bread": "bread",
-    "bun": "bread", "roll": "bread", "naan": "bread", "roti": "bread",
-    "chapati": "bread", "paratha": "bread", "pita": "bread",
-    "cake": "bakery", "muffin": "bakery", "pastry": "bakery",
-    # ── Snacks ──
-    "potato chip": "chips", "potato chips": "chips", "chip": "chips",
-    "crisp": "chips", "crisps": "chips", "tortilla chip": "nacho",
-    "corn chip": "chips", "popcorn": "snack", "samosa": "snack",
-    "bhujia": "bhujia", "namkeen": "namkeen", "boondi": "boondi",
-    "french fries": "frozen fries", "fries": "frozen fries", "nachos": "nacho",
-    # ── Dairy ── (resolved further by detect_dairy_type)
-    "butter": "butter", "margarine": "butter", "ghee": "ghee",
-    "curd": "curd", "yogurt": "yogurt", "yoghurt": "yogurt",
-    "cheese": "cheese", "paneer": "paneer", "cottage cheese": "paneer",
-    "milk": "milk", "cream": "cream", "lassi": "lassi", "buttermilk": "lassi",
-    "ice cream": "ice cream", "gelato": "ice cream", "kulfi": "kulfi",
-    # ── Grains ──
-    "rice": "rice", "basmati rice": "basmati", "dal": "dal",
-    "lentil": "lentil", "curry": "masala", "porridge": "oats",
-    "oatmeal": "oats", "oats": "oats", "granola": "muesli", "muesli": "muesli",
-    "cereal": "oats", "congee": "rice", "poha": "poha", "upma": "suji",
-    "idli": "bread", "dosa": "bread",
-    # ── Spices ──
-    "spice": "spices", "spices": "spices", "turmeric": "turmeric",
-    "chilli": "chilli powder", "chili": "chilli powder", "masala": "masala",
-    "curry powder": "masala", "garam masala": "garam masala",
-    # ── Oil ──
-    "oil": "cooking oil", "olive oil": "cooking oil", "cooking oil": "cooking oil",
-    "sunflower oil": "sunflower oil",
-    # ── Condiments ──
-    "ketchup": "ketchup", "sauce": "sauce", "mayonnaise": "mayonnaise",
-    "honey": "honey", "jam": "jam", "jelly": "jam",
-    "peanut butter": "peanut butter", "nutella": "nutella",
-    "chutney": "chutney", "pickle": "pickle",
-    # ── Drinks ──
-    "juice": "juice", "mango": "mango juice", "mango juice": "mango juice",
-    "smoothie": "juice", "lemonade": "soda", "soda": "soda",
-    "cola": "soft drink", "water": "water", "energy drink": "energy drink",
-    # ── Beverages ──
-    "tea": "tea", "chai": "tea", "green tea": "green tea",
-    "coffee": "coffee", "espresso": "coffee", "latte": "coffee",
-    "bournvita": "bournvita", "horlicks": "horlicks", "milo": "milo",
-    # ── Personal Care ──
-    "soap": "soap", "shampoo": "shampoo", "toothpaste": "toothpaste",
-    "toothbrush": "toothbrush", "lotion": "body lotion",
-    "moisturizer": "body lotion", "face wash": "face wash", "razor": "razor",
-    # ── Home Care ──
-    "detergent": "detergent", "dishwash": "dishwash",
-    "toilet cleaner": "toilet cleaner", "floor cleaner": "floor cleaner",
-    "glass cleaner": "glass cleaner",
-    # ── Frozen ──
-    "frozen": "frozen fries", "frozen food": "frozen fries",
-    # ── Fresh fruit — keep as-is, do NOT force-map to unrelated packaged products ──
-    # (catalog has no fresh produce; if no match is found, the matcher will
-    #  correctly fall back rather than pretending a banana is mango juice)
-    "fruit salad": "fruit", "fruit bowl": "fruit",
-    # ── Packaging-only words → generic packaged food (low priority) ──
-    "packet": "packaged food", "package": "packaged food",
-    "sachet": "packaged food", "pouch": "packaged food",
-    "bottle": "packaged food", "can": "packaged food",
-    "jar": "packaged food", "container": "packaged food",
-    "box": "packaged food", "carton": "packaged food", "bag": "packaged food",
-    "tube": "toothpaste", "food": "packaged food", "vegetable": "packaged food",
-    "fruit": "fruit", "grocery": "packaged food", "produce": "fruit",
-}
-
-# Cuisine/region/meal-type words a generic classifier sometimes blurts out
-# (e.g. "greek", "mediterranean", "italian") — these carry NO product signal
-# and must never be treated as a tag on their own.
-CUISINE_NOISE_WORDS = {
-    "greek", "mediterranean", "italian", "indian cuisine", "chinese cuisine",
-    "mexican", "thai cuisine", "japanese cuisine", "korean", "american",
-    "continental", "fusion", "ethnic", "regional", "homemade", "restaurant",
-    "dish", "meal", "cuisine", "platter", "recipe", "delicacy",
+    # Noodles
+    "noodle":"noodles","noodles":"noodles","ramen":"noodles",
+    "fried noodle":"noodles","chow mein":"noodles","lo mein":"noodles",
+    "pad thai":"noodles","spaghetti":"noodles","linguine":"noodles",
+    "pho":"noodles","udon":"noodles","vermicelli":"vermicelli","maggi":"maggi",
+    "pasta":"pasta","penne":"pasta","macaroni":"pasta","fusilli":"pasta",
+    "pretzel":"noodles","coil":"noodles","spiral":"noodles","ring":"noodles",
+    # Bakery
+    "biscuit":"biscuit","cookie":"biscuit","cracker":"biscuit","wafer":"biscuit",
+    "bread":"bread","loaf":"bread","toast":"bread","bun":"bread","naan":"bread",
+    "roti":"bread","chapati":"bread","paratha":"bread",
+    # Snacks
+    "potato chip":"chips","potato chips":"chips","chip":"chips","crisp":"chips",
+    "crisps":"chips","tortilla chip":"nacho","corn chip":"chips",
+    "popcorn":"snack","bhujia":"bhujia","namkeen":"namkeen","boondi":"boondi",
+    "french fries":"frozen fries","fries":"frozen fries","nachos":"nacho",
+    # Dairy
+    "butter":"butter","margarine":"butter","ghee":"ghee",
+    "curd":"curd","yogurt":"yogurt","yoghurt":"yogurt",
+    "cheese":"cheese","paneer":"paneer","cottage cheese":"paneer",
+    "milk":"milk","cream":"cream","lassi":"lassi","buttermilk":"lassi",
+    "ice cream":"ice cream","gelato":"ice cream","kulfi":"kulfi",
+    # Grains
+    "rice":"rice","basmati rice":"basmati","dal":"dal",
+    "lentil":"lentil","porridge":"oats","oatmeal":"oats","oats":"oats",
+    "granola":"muesli","muesli":"muesli","poha":"poha","upma":"suji",
+    # Spices
+    "spice":"spices","spices":"spices","turmeric":"turmeric",
+    "chilli":"chilli powder","chili":"chilli powder","masala":"masala",
+    "curry powder":"masala","garam masala":"garam masala",
+    # Oil
+    "oil":"cooking oil","cooking oil":"cooking oil","sunflower oil":"sunflower oil",
+    # Condiments
+    "ketchup":"ketchup","sauce":"sauce","mayonnaise":"mayonnaise",
+    "honey":"honey","jam":"jam","jelly":"jam",
+    "peanut butter":"peanut butter","nutella":"nutella",
+    "chutney":"chutney","pickle":"pickle",
+    # Drinks
+    "juice":"juice","mango":"mango juice","mango juice":"mango juice",
+    "smoothie":"juice","lemonade":"soda","soda":"soda","water":"water",
+    "energy drink":"energy drink",
+    # Beverages
+    "tea":"tea","chai":"tea","green tea":"green tea",
+    "coffee":"coffee","espresso":"coffee","latte":"coffee",
+    "bournvita":"bournvita","horlicks":"horlicks","milo":"milo",
+    # Personal Care
+    "soap":"soap","shampoo":"shampoo","toothpaste":"toothpaste",
+    "toothbrush":"toothbrush","lotion":"body lotion","face wash":"face wash",
+    "razor":"razor",
+    # Home Care
+    "detergent":"detergent","dishwash":"dishwash",
+    "toilet cleaner":"toilet cleaner","floor cleaner":"floor cleaner",
+    # Packaging (low priority)
+    "packet":"packaged food","package":"packaged food",
+    "sachet":"packaged food","pouch":"packaged food",
+    "bottle":"packaged food","can":"packaged food",
+    "jar":"packaged food","container":"packaged food",
+    "box":"packaged food","carton":"packaged food",
+    "bag":"packaged food","tube":"toothpaste",
+    "food":"packaged food","vegetable":"packaged food",
+    "grocery":"packaged food","fruit":"fruit",
 }
 
 
@@ -540,14 +570,7 @@ def normalize_tag(tag: str) -> str:
 
 
 def detect_dairy_type(tag_texts):
-    """
-    Looks at all normalized tags and decides whether a SPECIFIC dairy
-    product is present (butter / ghee / curd / milk / cream / cheese / paneer).
-    Returns (dairy_type, forced_pids, blocked_tags) or (None, [], set()).
-    Priority: butter > ghee > paneer > cheese > curd > cream > milk
-    (most visually-distinctive / least ambiguous first).
-    """
-    priority_order = ["butter", "ghee", "paneer", "cheese", "curd", "cream", "milk"]
+    priority_order = ["butter","ghee","paneer","cheese","curd","cream","milk"]
     found = {}
     for tag in tag_texts:
         for dtype, info in DAIRY_SPECIFIC.items():
@@ -562,11 +585,7 @@ def detect_dairy_type(tag_texts):
 
 
 def find_products_from_tags(tag_dicts, products):
-    """
-    Core matcher: turns a list of {"tag": ..., "confidence": ...} dicts
-    into a ranked list of product IDs.
-    """
-    matched_high = {}   # pid -> accumulated score
+    matched_high = {}
     matched_low  = set()
 
     raw_tags = []
@@ -577,13 +596,13 @@ def find_products_from_tags(tag_dicts, products):
 
     tag_texts = [t for t, _ in raw_tags]
 
-    # Step 1 — resolve a specific dairy type if present, and block conflicts
+    # Step 1: dairy-specific forced match
     dairy_type, forced_pids, blocked_tags = detect_dairy_type(tag_texts)
     for pid in forced_pids:
         if pid in products:
-            matched_high[pid] = matched_high.get(pid, 0) + 200  # dominant signal
+            matched_high[pid] = matched_high.get(pid, 0) + 200
 
-    # Step 2 — match every remaining tag against the keyword table
+    # Step 2: keyword matching
     for (tag, conf) in raw_tags:
         if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE_WORDS:
             continue
@@ -597,7 +616,10 @@ def find_products_from_tags(tag_dicts, products):
             kw_words = [w for w in kw.split() if len(w) >= 3]
             exact    = (kw == tag)
             substr   = (len(kw) >= 4 and kw in tag) or (len(tag) >= 4 and tag in kw)
-            word_hit = any((tw in kw) or any(kw_w in tw for kw_w in kw_words) for tw in tag_words)
+            word_hit = any(
+                (tw in kw) or any(kw_w in tw for kw_w in kw_words)
+                for tw in tag_words
+            )
 
             if exact or substr or word_hit:
                 for pid in pids:
@@ -615,121 +637,93 @@ def find_products_from_tags(tag_dicts, products):
         for p in matched_low:
             if p not in matched_high:
                 combined.append(p)
-    # NOTE: if combined is empty here, we deliberately do NOT inject an
-    # unrelated "popular products" fallback — that would silently show
-    # the wrong item (e.g. a banana matching "mango juice") as if it were
-    # a real match. An empty result means "no match in this catalog",
-    # and the UI is responsible for telling the user that honestly.
+
     return combined[:6]
 
 
 def map_visual_label(raw_label: str) -> str:
-    """
-    Cleans a raw classifier label and maps it to a grocery tag using
-    VISUAL_LABEL_TO_TAG. Returns '' if the label is junk and should be skipped.
-    """
     raw = raw_label.lower().strip()
     raw = re.sub(r"\(.*?\)", "", raw).strip()
     raw = raw.split(",")[0].strip()
     raw = raw.split("/")[0].strip()
     raw = raw.replace("_", " ")
-
-    if not raw or len(raw) < 3:
+    if not raw or len(raw) < 3 or raw in JUNK_DESCRIPTORS or raw in CUISINE_NOISE_WORDS:
         return ""
-    if raw in JUNK_DESCRIPTORS:
-        return ""
-    if raw in CUISINE_NOISE_WORDS:
-        return ""
-    if raw.isdigit():
-        return ""
-
     if raw in VISUAL_LABEL_TO_TAG:
         return VISUAL_LABEL_TO_TAG[raw]
-
-    # substring match — only for keys long enough to be meaningful
     for key, val in VISUAL_LABEL_TO_TAG.items():
         if len(key) >= 5 and key in raw:
             return val
-    for key, val in VISUAL_LABEL_TO_TAG.items():
-        if len(key) >= 5 and raw in key:
-            return val
-
     first = raw.split()[0] if raw.split() else ""
-    if len(first) >= 4 and first not in JUNK_DESCRIPTORS and first not in CUISINE_NOISE_WORDS:
+    if len(first) >= 4 and first not in JUNK_DESCRIPTORS:
         return first
     return ""
 
 
 # ═══════════════════════════════════════════════════════════════
-# IMAGE CLASSIFICATION — Gemini (primary) → HF (fallback) → color (last resort)
+# GEMINI PROMPT — very specific, handles band/junk tags
 # ═══════════════════════════════════════════════════════════════
 GEMINI_PROMPT = """You are a grocery product recognition expert for Indian supermarkets.
 Analyze this image and identify the EXACT grocery/food/household product shown.
 
-CRITICAL: Return ONLY a valid JSON array. No markdown, no explanation, nothing else.
-Example: [{"tag": "maggi noodles", "confidence": 95}, {"tag": "noodles", "confidence": 90}]
+Return ONLY a valid JSON array. No markdown, no explanation, nothing else.
+Example: [{"tag": "butter", "confidence": 95}, {"tag": "amul butter", "confidence": 90}, {"tag": "dairy", "confidence": 85}]
 
 RULES:
-1. Give 4-6 tags ordered: brand -> specific product -> category.
-2. Use EXACT names from this vocabulary where possible:
-   DAIRY: milk, butter, ghee, curd, yogurt, paneer, cheese, cream, lassi, shrikhand, condensed milk
-   BAKERY: biscuit, bread, cookie, cake, cracker, digestive, bourbon, marie biscuit
+1. Give 4-6 tags: brand name first, then specific product name, then category.
+2. Use EXACT names from this list:
+   DAIRY: milk, butter, ghee, curd, yogurt, paneer, cheese, cream, lassi, condensed milk
+   BAKERY: biscuit, bread, cookie, digestive biscuit, bourbon, marie biscuit, cracker
    SNACKS: chips, lays, kurkure, bingo, namkeen, bhujia, sev, boondi, nacho, popcorn
    NOODLES: maggi, noodles, instant noodles, ramen, pasta, vermicelli, yippee, cup noodles
    GRAINS: rice, basmati rice, dal, toor dal, atta, maida, oats, poha, suji
    SPICES: masala, turmeric, chilli powder, garam masala, biryani masala, coriander powder
    OIL: cooking oil, sunflower oil, coconut oil
-   CONDIMENTS: ketchup, jam, honey, mayonnaise, peanut butter, nutella, chutney, pickle, sauce
+   CONDIMENTS: ketchup, jam, honey, mayonnaise, peanut butter, nutella, chutney, pickle
    DRINKS: juice, mango juice, orange juice, energy drink, soda, water, frooti, maaza
    BEVERAGES: tea, green tea, coffee, bournvita, horlicks, milo
-   PERSONAL CARE: soap, shampoo, toothpaste, toothbrush, face wash, body lotion, razor, coconut oil
+   PERSONAL CARE: soap, shampoo, toothpaste, toothbrush, face wash, body lotion, razor
    HOME CARE: detergent, dishwash, toilet cleaner, floor cleaner, glass cleaner
-   HEALTH: muesli, oats, chyawanprash, vitamin, supplement, horlicks, complan
-   FROZEN: ice cream, kulfi, frozen fries, gulab jamun, paneer butter masala, dal makhani
+   HEALTH: muesli, oats, chyawanprash, vitamin, supplement
+   FROZEN: ice cream, kulfi, frozen fries, gulab jamun
 
-3. NOODLE DETECTION (very important — these get misread often):
-   - A coiled/nested block of thin dry strands, in a yellow wrapper or packet = "maggi" or "noodles"
-   - NEVER label noodles as "donut", "pretzel", "bagel", "ring" or "paella" — always say "noodles" or "maggi"
-
-4. DAIRY DETECTION (be very specific, never confuse these):
-   - Rectangular yellow/white solid block in foil/wrapper = "butter" (NEVER "cream", NEVER "yogurt")
+3. DAIRY — be very specific, never confuse:
+   - Rectangular yellow/white solid block wrapped in paper/foil = "butter" (NEVER cream, NEVER yogurt, NEVER band)
    - Clear/white liquid in packet or bottle = "milk"
-   - Semi-solid white substance in a cup/tub = "curd" or "yogurt"
-   - Golden translucent liquid in a jar/tin = "ghee"
-   - Soft white block sitting in water = "paneer"
-   - Sliced or cubed pale-yellow product = "cheese"
+   - Semi-solid white in a cup/tub = "curd" or "yogurt"
+   - Golden liquid in jar/tin = "ghee"
+   - Soft white block in water = "paneer"
+   - Sliced pale-yellow = "cheese"
 
-5. Include the brand if a logo/label is visible: Amul, Britannia, Parle, Nestle, Maggi,
-   Haldiram, MDH, Everest, Tata, Lipton, Lays, Kurkure, etc.
-6. FRESH FRUIT: If you see a fresh whole fruit (banana, apple, orange, grape, etc.), say the
-   fruit's name directly (e.g. "banana", "apple") — do NOT describe it as a cuisine or dish.
-7. NEVER output a cuisine/region word alone as a tag (e.g. "greek", "italian", "mediterranean",
-   "indian cuisine", "continental") — always name the actual food/product instead.
-8. confidence is an integer 0-100, be honest about uncertainty.
+4. NOODLES — dry coiled block of thin strands in yellow packet = "maggi" or "noodles". NEVER call it "pretzel", "donut", "ring", or "band".
 
-Return ONLY the JSON array."""
+5. DO NOT output visual/shape words as tags: never output "band", "block", "foil", "wrapper", "yellow", "strip", "rectangular", "solid" — always name the actual PRODUCT.
+
+6. Include brand if visible: Amul, Britannia, Parle, Nestle, Maggi, Haldiram, MDH, Everest, Tata, Lays, etc.
+
+7. confidence is an integer 0-100.
+
+Return ONLY the JSON array, nothing else."""
 
 
 def classify_image_with_hf(image_bytes):
     import json
     debug = []
 
-    # ── 1. GEMINI (primary, most accurate) ──────────────────────
+    # ── 1. GEMINI ──
     try:
         gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
         if not gemini_key:
-            debug.append("⚠️ GEMINI_API_KEY missing in secrets.toml")
+            debug.append("⚠️ GEMINI_API_KEY missing")
         else:
             image_b64 = base64.b64encode(image_bytes).decode("utf-8")
             for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{gmodel}:generateContent?key={gemini_key}"
                 payload = {
-                    "contents": [{
-                        "parts": [
-                            {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
-                            {"text": GEMINI_PROMPT}
-                        ]
-                    }],
+                    "contents": [{"parts": [
+                        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+                        {"text": GEMINI_PROMPT}
+                    ]}],
                     "generationConfig": {"temperature": 0.05, "topP": 0.8}
                 }
                 try:
@@ -738,14 +732,12 @@ def classify_image_with_hf(image_bytes):
                         data  = resp.json()
                         cands = data.get("candidates", [])
                         if not cands:
-                            debug.append(f"⚠️ {gmodel}: empty candidates")
-                            continue
+                            debug.append(f"⚠️ {gmodel}: empty candidates"); continue
                         fr = cands[0].get("finishReason", "")
                         if fr in ("SAFETY", "RECITATION"):
-                            debug.append(f"⚠️ {gmodel}: blocked ({fr})")
-                            continue
+                            debug.append(f"⚠️ {gmodel}: blocked ({fr})"); continue
                         text = cands[0]["content"]["parts"][0]["text"].strip()
-                        text = text.replace("```json", "").replace("```", "").strip()
+                        text = text.replace("```json","").replace("```","").strip()
                         s, e = text.find("["), text.rfind("]") + 1
                         if s != -1 and e > s:
                             text = text[s:e]
@@ -755,47 +747,41 @@ def classify_image_with_hf(image_bytes):
                             for item in result:
                                 if isinstance(item, dict) and "tag" in item:
                                     tag = normalize_tag(str(item["tag"]))
-                                    # skip cuisine/region noise words outright
-                                    if tag in CUISINE_NOISE_WORDS:
+                                    # Skip junk descriptors like "band", "block", colors
+                                    if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE_WORDS:
                                         continue
-                                    # safety-net: fix common noodle misreads even if
-                                    # the model slips and returns a shape word
+                                    # Remap via visual label table if needed
                                     mapped = VISUAL_LABEL_TO_TAG.get(tag, tag)
-                                    if mapped and mapped not in JUNK_DESCRIPTORS and mapped not in CUISINE_NOISE_WORDS:
+                                    if mapped and mapped not in JUNK_DESCRIPTORS:
                                         item["tag"] = mapped
                                         cleaned.append(item)
                             if cleaned:
-                                debug.append(f"✅ Gemini ({gmodel}) success — {len(cleaned)} tags")
+                                debug.append(f"✅ Gemini ({gmodel}) — {len(cleaned)} tags")
                                 st.session_state["cv_debug"] = debug
                                 return cleaned, None
                     elif resp.status_code == 429:
-                        debug.append(f"⚠️ {gmodel}: rate limit, trying next model")
-                        continue
+                        debug.append(f"⚠️ {gmodel}: rate limit"); continue
                     elif resp.status_code == 400:
                         err = resp.json().get("error", {}).get("message", "")
-                        debug.append(f"❌ {gmodel}: bad request — {err}")
-                        break
+                        debug.append(f"❌ {gmodel}: bad request — {err}"); break
                     else:
-                        debug.append(f"❌ {gmodel}: HTTP {resp.status_code}")
-                        break
+                        debug.append(f"❌ {gmodel}: HTTP {resp.status_code}"); break
                 except json.JSONDecodeError as je:
-                    debug.append(f"⚠️ {gmodel}: JSON parse error — {je}")
-                    continue
+                    debug.append(f"⚠️ {gmodel}: JSON error — {je}"); continue
                 except Exception as ex:
-                    debug.append(f"⚠️ {gmodel}: {str(ex)[:80]}")
-                    continue
+                    debug.append(f"⚠️ {gmodel}: {str(ex)[:80]}"); continue
     except Exception as ex:
-        debug.append(f"❌ Gemini setup error: {str(ex)[:80]}")
+        debug.append(f"❌ Gemini error: {str(ex)[:80]}")
 
-    # ── 2. HUGGING FACE (fallback if Gemini fails entirely) ─────
+    # ── 2. HUGGING FACE ──
     try:
         hf_token = str(st.secrets.get("HF_API_TOKEN", "")).strip()
         if not hf_token:
-            debug.append("⚠️ HF_API_TOKEN missing in secrets.toml")
+            debug.append("⚠️ HF_API_TOKEN missing")
         else:
             headers = {"Authorization": f"Bearer {hf_token}", "Content-Type": "image/jpeg"}
-            for model in ["nateraw/food", "Kaludi/grocery-products",
-                          "google/vit-large-patch16-224", "microsoft/resnet-50"]:
+            for model in ["nateraw/food","Kaludi/grocery-products",
+                          "google/vit-large-patch16-224","microsoft/resnet-50"]:
                 url = f"https://router.huggingface.co/hf-inference/models/{model}"
                 try:
                     resp = requests.post(url, headers=headers, data=image_bytes, timeout=30)
@@ -804,8 +790,8 @@ def classify_image_with_hf(image_bytes):
                         if isinstance(results, list) and results:
                             tags, seen = [], set()
                             for item in results[:12]:
-                                raw  = item.get("label", "").lower().strip()
-                                conf = round(item.get("score", 0.0) * 100, 1)
+                                raw  = item.get("label","").lower().strip()
+                                conf = round(item.get("score",0.0)*100, 1)
                                 if conf < 4:
                                     continue
                                 gtag = map_visual_label(raw)
@@ -816,56 +802,46 @@ def classify_image_with_hf(image_bytes):
                                     seen.add(gtag)
                                     tags.append({"tag": gtag, "confidence": conf})
                             if tags:
-                                debug.append(f"✅ HF ({model}) — {len(tags)} usable tags")
+                                debug.append(f"✅ HF ({model}) — {len(tags)} tags")
                                 st.session_state["cv_debug"] = debug
                                 return tags, None
-                            else:
-                                debug.append(f"⚠️ HF ({model}): no usable tags after mapping")
-                    elif resp.status_code == 503:
-                        debug.append(f"⚠️ HF ({model}): model loading (503), skip")
-                        continue
-                    elif resp.status_code == 429:
-                        debug.append(f"⚠️ HF ({model}): rate limit, skip")
-                        continue
+                    elif resp.status_code in (503, 429):
+                        debug.append(f"⚠️ HF ({model}): {resp.status_code}"); continue
                     else:
-                        debug.append(f"❌ HF ({model}): HTTP {resp.status_code}")
-                        continue
+                        debug.append(f"❌ HF ({model}): HTTP {resp.status_code}"); continue
                 except Exception as ex:
-                    debug.append(f"⚠️ HF ({model}): {str(ex)[:60]}")
-                    continue
+                    debug.append(f"⚠️ HF ({model}): {str(ex)[:60]}"); continue
     except Exception as ex:
-        debug.append(f"❌ HF setup error: {str(ex)[:80]}")
+        debug.append(f"❌ HF error: {str(ex)[:80]}")
 
     st.session_state["cv_debug"] = debug
     return None, "Both Gemini and HF Vision failed"
 
 
 def fallback_color_analysis(image: Image.Image):
-    """Pure-pixel heuristic used only when both APIs are unreachable."""
-    img   = image.resize((100, 100)).convert("RGB")
-    pix   = np.array(img).reshape(-1, 3).astype(float)
-    mask  = ~((pix[:, 0] > 220) & (pix[:, 1] > 220) & (pix[:, 2] > 220))
-    fg    = pix[mask] if mask.sum() > 50 else pix
-    r, g, b = fg.mean(axis=0)
-    bright  = (r + g + b) / 3
-
-    if r > 160 and g > 130 and b < 110 and r > b * 1.7:
-        return [{"tag": "mango juice", "confidence": 65}, {"tag": "juice", "confidence": 60}]
-    if r > 190 and 90 < g < 170 and b < 90 and r > g * 1.2:
-        return [{"tag": "mango juice", "confidence": 65}, {"tag": "juice", "confidence": 60}]
-    if g > r and g > b and g > 100 and g > r * 1.1:
-        return [{"tag": "packaged food", "confidence": 55}]
-    if r > g * 1.4 and r > b * 1.4 and r > 140:
-        return [{"tag": "chilli powder", "confidence": 65}, {"tag": "masala", "confidence": 60}]
-    if b > r * 1.1 and b > g * 1.1:
-        return [{"tag": "milk", "confidence": 62}, {"tag": "dairy product", "confidence": 58}]
-    if bright > 210 and abs(r - g) < 20 and abs(g - b) < 20:
-        return [{"tag": "dairy product", "confidence": 60}]
-    if bright < 80:
-        return [{"tag": "coffee", "confidence": 62}, {"tag": "tea", "confidence": 58}]
-    if r > 130 and g > 90 and b < 90 and r > g and r > b * 1.5:
-        return [{"tag": "biscuit", "confidence": 60}]
-    return [{"tag": "snack", "confidence": 55}, {"tag": "packaged food", "confidence": 52}]
+    img   = image.resize((100,100)).convert("RGB")
+    pix   = np.array(img).reshape(-1,3).astype(float)
+    mask  = ~((pix[:,0]>220)&(pix[:,1]>220)&(pix[:,2]>220))
+    fg    = pix[mask] if mask.sum()>50 else pix
+    r,g,b = fg.mean(axis=0)
+    bright= (r+g+b)/3
+    if r>160 and g>130 and b<110 and r>b*1.7:
+        return [{"tag":"mango juice","confidence":65},{"tag":"juice","confidence":60}]
+    if r>190 and 90<g<170 and b<90 and r>g*1.2:
+        return [{"tag":"mango juice","confidence":65},{"tag":"juice","confidence":60}]
+    if g>r and g>b and g>100 and g>r*1.1:
+        return [{"tag":"packaged food","confidence":55}]
+    if r>g*1.4 and r>b*1.4 and r>140:
+        return [{"tag":"chilli powder","confidence":65},{"tag":"masala","confidence":60}]
+    if b>r*1.1 and b>g*1.1:
+        return [{"tag":"milk","confidence":62},{"tag":"dairy product","confidence":58}]
+    if bright>210 and abs(r-g)<20 and abs(g-b)<20:
+        return [{"tag":"butter","confidence":65},{"tag":"dairy product","confidence":60}]
+    if bright<80:
+        return [{"tag":"coffee","confidence":62},{"tag":"tea","confidence":58}]
+    if r>130 and g>90 and b<90 and r>g and r>b*1.5:
+        return [{"tag":"biscuit","confidence":60}]
+    return [{"tag":"snack","confidence":55},{"tag":"packaged food","confidence":52}]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -877,7 +853,7 @@ with st.sidebar:
     st.markdown("### 🧭 Navigation")
     page = st.radio(
         "",
-        ["🏠 Home Dashboard", "🤖 CF Recommendations", "📸 Image Scanner", "📊 Analytics"],
+        ["🏠 Home Dashboard","🤖 CF Recommendations","📸 Image Scanner","📊 Analytics"],
         label_visibility="collapsed"
     )
     st.markdown("---")
@@ -885,11 +861,7 @@ with st.sidebar:
     n_recs = st.slider("Number of Recommendations", 3, 10, 6)
     render_cart_sidebar()
     st.markdown("---")
-    st.markdown(
-        '<p style="font-size:0.75rem;opacity:0.5;text-align:center;">'
-        'Built with ❤️ using Streamlit<br>ML + CV Domain Project</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<p style="font-size:0.75rem;opacity:0.5;text-align:center;">Built with ❤️ using Streamlit<br>ML + CV Domain Project</p>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
 # LOAD DATA & MODEL
@@ -908,7 +880,7 @@ if page == "🏠 Home Dashboard":
     st.markdown('<h1 class="main-title">🛒 Smart Grocery Recommender</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Collaborative Filtering + Computer Vision — ML/CV Domain Project</p>', unsafe_allow_html=True)
     st.markdown("---")
-    c1, c2, c3, c4 = st.columns(4)
+    c1,c2,c3,c4 = st.columns(4)
     with c1: st.markdown(f'<div class="stat-box"><div class="stat-number">{len(users)}</div><div class="stat-label">Users</div></div>', unsafe_allow_html=True)
     with c2: st.markdown(f'<div class="stat-box"><div class="stat-number">{len(products)}</div><div class="stat-label">Products</div></div>', unsafe_allow_html=True)
     with c3: st.markdown('<div class="stat-box"><div class="stat-number">SVD</div><div class="stat-label">CF Model</div></div>', unsafe_allow_html=True)
@@ -919,16 +891,14 @@ if page == "🏠 Home Dashboard":
     sel_cats = st.multiselect("Filter by Category", cats, default=cats[:4])
     filtered = {pid: pdata for pid, pdata in products.items() if pdata["category"] in sel_cats}
     cols     = st.columns(4)
-    for i, (pid, pdata) in enumerate(filtered.items()):
-        with cols[i % 4]:
+    for i,(pid,pdata) in enumerate(filtered.items()):
+        with cols[i%4]:
             badges = "".join([f'<span class="badge badge-green">{t}</span>' for t in pdata["tags"][:2]])
-            st.markdown(f"""
-            <div class="product-card">
+            st.markdown(f"""<div class="product-card">
                 <span class="product-emoji">{pdata['emoji']}</span>
                 <div class="product-name">{pdata['name']}</div>
                 <div style="color:#e74c3c;font-weight:700;margin:0.25rem 0;">₹{pdata['price']}</div>
-                <div>{badges}</div>
-            </div>""", unsafe_allow_html=True)
+                <div>{badges}</div></div>""", unsafe_allow_html=True)
             if st.button("🛒 Add", key=f"home_cart_{pid}"):
                 add_to_cart(pid, products)
                 st.toast(f"✅ {pdata['name']} added!", icon="🛒")
@@ -941,11 +911,10 @@ elif page == "🤖 CF Recommendations":
     st.markdown('<h1 class="main-title">🤖 Collaborative Filtering</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">SVD-based Matrix Factorization • Cosine Similarity</p>', unsafe_allow_html=True)
     st.markdown("---")
-
-    tab1, tab2 = st.tabs(["👤 User-Based Recommendations", "🔗 Item Similarity"])
+    tab1, tab2 = st.tabs(["👤 User-Based Recommendations","🔗 Item Similarity"])
 
     with tab1:
-        col1, col2 = st.columns([1, 2])
+        col1, col2 = st.columns([1,2])
         with col1:
             st.markdown('<div class="section-header">Select User</div>', unsafe_allow_html=True)
             sel_user = st.selectbox("Choose a user", users)
@@ -965,28 +934,23 @@ elif page == "🤖 CF Recommendations":
                 st.markdown(f'<div class="section-header">🎁 Recommended for {u}</div>', unsafe_allow_html=True)
                 rcols = st.columns(3)
                 for i, pid in enumerate(recs):
-                    if pid not in products:
-                        continue
+                    if pid not in products: continue
                     p     = products[pid]
                     score = predicted_df.loc[u, pid]
-                    with rcols[i % 3]:
-                        st.markdown(f"""
-                        <div class="product-card">
+                    with rcols[i%3]:
+                        st.markdown(f"""<div class="product-card">
                             <span class="product-emoji">{p['emoji']}</span>
                             <div class="product-name">{p['name']}</div>
                             <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                            <div class="product-score">⭐ Score: {score:.2f}</div>
-                        </div>""", unsafe_allow_html=True)
+                            <div class="product-score">⭐ Score: {score:.2f}</div></div>""", unsafe_allow_html=True)
                         if st.button("🛒 Add to Cart", key=f"cf_rec_{pid}_{u}"):
                             add_to_cart(pid, products)
                             st.toast(f"✅ {p['name']} added!", icon="🛒")
 
     with tab2:
         st.markdown('<div class="section-header">🔗 Item-Item Similarity</div>', unsafe_allow_html=True)
-        sel_product = st.selectbox(
-            "Select a product", product_ids,
-            format_func=lambda x: f"{products[x]['emoji']} {products[x]['name']}"
-        )
+        sel_product = st.selectbox("Select a product", product_ids,
+            format_func=lambda x: f"{products[x]['emoji']} {products[x]['name']}")
         if st.button("🔍 Find Similar Products"):
             base_cat = products[sel_product]["category"]
             allowed  = RELATED_CATEGORIES.get(base_cat, [base_cat])
@@ -995,18 +959,15 @@ elif page == "🤖 CF Recommendations":
             if not sim_pids:
                 st.info("No similar products found.")
             scols = st.columns(3)
-            for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
-                if pid not in products:
-                    continue
+            for i,(pid,score) in enumerate(zip(sim_pids, sim_scores)):
+                if pid not in products: continue
                 p = products[pid]
-                with scols[i % 3]:
-                    st.markdown(f"""
-                    <div class="product-card">
+                with scols[i%3]:
+                    st.markdown(f"""<div class="product-card">
                         <span class="product-emoji">{p['emoji']}</span>
                         <div class="product-name">{p['name']}</div>
                         <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                        <div class="product-score">🔗 Similarity: {score:.3f}</div>
-                    </div>""", unsafe_allow_html=True)
+                        <div class="product-score">🔗 Similarity: {score:.3f}</div></div>""", unsafe_allow_html=True)
                     if st.button("🛒 Add to Cart", key=f"sim_{pid}_{sel_product}"):
                         add_to_cart(pid, products)
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
@@ -1021,10 +982,10 @@ elif page == "📸 Image Scanner":
     st.markdown("---")
     st.info("📌 Upload any grocery/food product image. The CV module analyzes it and maps it to products in our catalog, then uses CF to suggest related items.")
 
-    up_col, prev_col = st.columns([1, 1])
+    up_col, prev_col = st.columns([1,1])
     with up_col:
         st.markdown('<div class="section-header">📤 Upload Image</div>', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Upload a grocery product image", type=["jpg", "jpeg", "png", "webp"])
+        uploaded_file = st.file_uploader("Upload a grocery product image", type=["jpg","jpeg","png","webp"])
 
     if uploaded_file:
         image     = Image.open(uploaded_file).convert("RGB")
@@ -1035,7 +996,7 @@ elif page == "📸 Image Scanner":
             st.image(image, caption="📷 Uploaded Image", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        btn1, btn2 = st.columns([1, 1])
+        btn1, btn2 = st.columns([1,1])
         with btn1:
             analyze = st.button("🔍 Analyze & Recommend", use_container_width=True)
         with btn2:
@@ -1086,61 +1047,62 @@ elif page == "📸 Image Scanner":
         tags_html = ""
         for item in tags[:10]:
             if isinstance(item, dict):
-                tag_name = item.get("tag", ""); conf = item.get("confidence", 0); conf_int = int(conf)
-                tags_html += f"""
-                <div style="margin:4px 0;">
+                tag_name = item.get("tag",""); conf = item.get("confidence",0); conf_int = min(int(conf),100)
+                tags_html += f"""<div style="margin:4px 0;">
                     <span class="badge badge-orange">{tag_name}</span>
                     <span class="badge badge-conf">{conf:.0f}%</span>
-                    <div class="conf-bar-wrap"><div class="conf-bar" style="width:{conf_int}%;"></div></div>
-                </div>"""
+                    <div class="conf-bar-wrap"><div class="conf-bar" style="width:{conf_int}%;"></div></div></div>"""
             else:
                 tags_html += f'<span class="badge badge-orange">{item}</span>'
         st.markdown(f'<div style="margin:0.75rem 0;">{tags_html}</div>', unsafe_allow_html=True)
 
+        # Debug log
         if st.session_state.get("cv_debug"):
             with st.expander("🔧 Debug Log — API Status"):
                 for msg in st.session_state["cv_debug"]:
                     st.markdown(f"`{msg}`")
 
+        # ── Matched Products ──
         st.markdown('<div class="section-header">🛒 Matched Products</div>', unsafe_allow_html=True)
         if not matched:
-            top_tag = tags[0].get("tag", "this item") if tags and isinstance(tags[0], dict) else "this item"
-            st.info(f"🔍 Detected **{top_tag}**, but it doesn't match any product in our catalog. Try uploading a packaged grocery item instead.")
+            top_tag = tags[0].get("tag","this item") if tags and isinstance(tags[0], dict) else "this item"
+            st.info(f"🔍 Detected **{top_tag}**, but no matching product found in catalog. Try a packaged grocery item.")
         else:
             m_cols = st.columns(3)
             for i, pid in enumerate(matched):
                 p = products.get(pid)
-                if not p:
-                    continue
-                with m_cols[i % 3]:
-                    st.markdown(f"""
-                    <div class="product-card">
+                if not p: continue
+                with m_cols[i%3]:
+                    st.markdown(f"""<div class="product-card">
                         <span class="product-emoji">{p['emoji']}</span>
                         <div class="product-name">{p['name']}</div>
                         <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                        <small style="color:#7f8c8d;">{p['category']}</small>
-                    </div>""", unsafe_allow_html=True)
+                        <small style="color:#7f8c8d;">{p['category']}</small></div>""", unsafe_allow_html=True)
                     if st.button("🛒 Add", key=f"cv_match_{pid}"):
                         add_to_cart(pid, products)
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
 
+        # ── CF Suggestions (same category as detected product) ──
         if matched:
-            st.markdown('<div class="section-header">🤖 CF-Enhanced Suggestions</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-header">🤖 You Might Also Like</div>', unsafe_allow_html=True)
+
+            # Get category of the TOP matched product
             base_cat     = products.get(matched[0], {}).get("category", "")
             allowed_cats = RELATED_CATEGORIES.get(base_cat, [base_cat])
             matched_set  = set(matched)
 
-            # 1) Try suggestions within related categories
+            # Try category-filtered suggestions first
             sim_pids_all, sim_scores_all = get_similar_products(
                 matched[0], item_sim_df, products, n_recs * 3, filter_categories=allowed_cats
             )
             sim_pids   = [p for p in sim_pids_all if p not in matched_set][:n_recs]
             sim_scores = [sim_scores_all[sim_pids_all.index(p)] for p in sim_pids]
 
-            # 2) If still short, widen to the ENTIRE catalog so every
-            #    product (not just the popular ones) gets suggestions
+            # If not enough, widen to full catalog
             if len(sim_pids) < n_recs:
-                all_pids, all_scores = get_similar_products(matched[0], item_sim_df, products, n_recs + len(matched_set) + 5)
+                all_pids, all_scores = get_similar_products(
+                    matched[0], item_sim_df, products, n_recs + len(matched_set) + 5
+                )
                 for p, s in zip(all_pids, all_scores):
                     if p not in matched_set and p not in sim_pids:
                         sim_pids.append(p)
@@ -1149,21 +1111,20 @@ elif page == "📸 Image Scanner":
                         break
 
             if not sim_pids:
-                st.info("No CF suggestions found for this product.")
+                st.info("No suggestions found.")
             else:
+                # Show category label so user knows why these are suggested
+                st.markdown(f'<small style="color:#7f8c8d;">Based on: <b>{base_cat}</b> category</small>', unsafe_allow_html=True)
                 s_cols = st.columns(4)
-                for i, (pid, score) in enumerate(zip(sim_pids, sim_scores)):
-                    if pid not in products:
-                        continue
+                for i,(pid,score) in enumerate(zip(sim_pids, sim_scores)):
+                    if pid not in products: continue
                     p = products[pid]
-                    with s_cols[i % 4]:
-                        st.markdown(f"""
-                        <div class="product-card">
+                    with s_cols[i%4]:
+                        st.markdown(f"""<div class="product-card">
                             <span class="product-emoji">{p['emoji']}</span>
                             <div class="product-name">{p['name']}</div>
                             <div style="color:#e74c3c;font-weight:700;">₹{p['price']}</div>
-                            <div class="product-score">🔗 {score:.3f}</div>
-                        </div>""", unsafe_allow_html=True)
+                            <div class="product-score">🔗 {score:.3f}</div></div>""", unsafe_allow_html=True)
                         if st.button("🛒 Add to Cart", key=f"cv_cf_{pid}_{i}"):
                             add_to_cart(pid, products)
                             st.toast(f"✅ {p['name']} added!", icon="🛒")
@@ -1176,7 +1137,6 @@ elif page == "📊 Analytics":
     st.markdown('<h1 class="main-title">📊 Analytics Dashboard</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Purchase patterns, model insights, and catalog stats</p>', unsafe_allow_html=True)
     st.markdown("---")
-
     col1, col2 = st.columns(2)
     with col1:
         st.markdown('<div class="section-header">🏆 Most Popular Products</div>', unsafe_allow_html=True)
@@ -1190,12 +1150,12 @@ elif page == "📊 Analytics":
         st.markdown('<div class="section-header">📂 Category Distribution</div>', unsafe_allow_html=True)
         cat_counts = {}
         for p in products.values():
-            cat_counts[p["category"]] = cat_counts.get(p["category"], 0) + 1
+            cat_counts[p["category"]] = cat_counts.get(p["category"],0) + 1
         cat_df = pd.DataFrame({"Category": list(cat_counts.keys()), "Count": list(cat_counts.values())})
         st.bar_chart(cat_df.set_index("Category"))
 
     st.markdown('<div class="section-header">📈 User Purchase Heatmap (Sample)</div>', unsafe_allow_html=True)
-    sample = ratings_df.iloc[:15, :10].copy()
+    sample = ratings_df.iloc[:15,:10].copy()
     sample.columns = [f"{products[c]['emoji']}{products[c]['name'][:8]}" for c in sample.columns if c in products]
     st.dataframe(sample.style.background_gradient(cmap="Greens"), use_container_width=True)
 
@@ -1205,7 +1165,7 @@ elif page == "📊 Analytics":
     svd_test.fit(ratings_df.values)
     var_df = pd.DataFrame({
         "Component":              [f"C{i+1}" for i in range(n_comp)],
-        "Explained Variance (%)": (svd_test.explained_variance_ratio_ * 100).round(2)
+        "Explained Variance (%)": (svd_test.explained_variance_ratio_*100).round(2)
     })
     st.bar_chart(var_df.set_index("Component"))
     st.caption(f"Total variance explained: {svd_test.explained_variance_ratio_.sum()*100:.1f}%")
