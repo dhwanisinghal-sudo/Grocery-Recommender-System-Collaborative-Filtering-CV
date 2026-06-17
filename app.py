@@ -510,6 +510,12 @@ VISUAL_LABEL_TO_TAG = {
     "glass cleaner": "glass cleaner",
     # ── Frozen ──
     "frozen": "frozen fries", "frozen food": "frozen fries",
+    # ── Fresh fruit — store has no fresh produce, map to nearest packaged equivalent ──
+    "banana": "mango juice", "apple": "apple juice", "orange": "orange juice",
+    "grape": "juice", "pineapple": "juice", "papaya": "juice",
+    "guava": "guava juice", "pomegranate": "pomegranate juice",
+    "watermelon": "juice", "melon": "juice", "berry": "juice", "berries": "juice",
+    "fruit salad": "juice", "fruit bowl": "juice",
     # ── Packaging-only words → generic packaged food (low priority) ──
     "packet": "packaged food", "package": "packaged food",
     "sachet": "packaged food", "pouch": "packaged food",
@@ -518,6 +524,16 @@ VISUAL_LABEL_TO_TAG = {
     "box": "packaged food", "carton": "packaged food", "bag": "packaged food",
     "tube": "toothpaste", "food": "packaged food", "vegetable": "packaged food",
     "fruit": "juice", "grocery": "packaged food", "produce": "packaged food",
+}
+
+# Cuisine/region/meal-type words a generic classifier sometimes blurts out
+# (e.g. "greek", "mediterranean", "italian") — these carry NO product signal
+# and must never be treated as a tag on their own.
+CUISINE_NOISE_WORDS = {
+    "greek", "mediterranean", "italian", "indian cuisine", "chinese cuisine",
+    "mexican", "thai cuisine", "japanese cuisine", "korean", "american",
+    "continental", "fusion", "ethnic", "regional", "homemade", "restaurant",
+    "dish", "meal", "cuisine", "platter", "recipe", "delicacy",
 }
 
 
@@ -571,7 +587,7 @@ def find_products_from_tags(tag_dicts, products):
 
     # Step 2 — match every remaining tag against the keyword table
     for (tag, conf) in raw_tags:
-        if tag in JUNK_DESCRIPTORS:
+        if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE_WORDS:
             continue
         if dairy_type and tag in blocked_tags:
             continue
@@ -621,6 +637,8 @@ def map_visual_label(raw_label: str) -> str:
         return ""
     if raw in JUNK_DESCRIPTORS:
         return ""
+    if raw in CUISINE_NOISE_WORDS:
+        return ""
     if raw.isdigit():
         return ""
 
@@ -636,7 +654,7 @@ def map_visual_label(raw_label: str) -> str:
             return val
 
     first = raw.split()[0] if raw.split() else ""
-    if len(first) >= 4 and first not in JUNK_DESCRIPTORS:
+    if len(first) >= 4 and first not in JUNK_DESCRIPTORS and first not in CUISINE_NOISE_WORDS:
         return first
     return ""
 
@@ -682,7 +700,11 @@ RULES:
 
 5. Include the brand if a logo/label is visible: Amul, Britannia, Parle, Nestle, Maggi,
    Haldiram, MDH, Everest, Tata, Lipton, Lays, Kurkure, etc.
-6. confidence is an integer 0-100, be honest about uncertainty.
+6. FRESH FRUIT: If you see a fresh whole fruit (banana, apple, orange, grape, etc.), say the
+   fruit's name directly (e.g. "banana", "apple") — do NOT describe it as a cuisine or dish.
+7. NEVER output a cuisine/region word alone as a tag (e.g. "greek", "italian", "mediterranean",
+   "indian cuisine", "continental") — always name the actual food/product instead.
+8. confidence is an integer 0-100, be honest about uncertainty.
 
 Return ONLY the JSON array."""
 
@@ -732,10 +754,13 @@ def classify_image_with_hf(image_bytes):
                             for item in result:
                                 if isinstance(item, dict) and "tag" in item:
                                     tag = normalize_tag(str(item["tag"]))
+                                    # skip cuisine/region noise words outright
+                                    if tag in CUISINE_NOISE_WORDS:
+                                        continue
                                     # safety-net: fix common noodle misreads even if
                                     # the model slips and returns a shape word
                                     mapped = VISUAL_LABEL_TO_TAG.get(tag, tag)
-                                    if mapped and mapped not in JUNK_DESCRIPTORS:
+                                    if mapped and mapped not in JUNK_DESCRIPTORS and mapped not in CUISINE_NOISE_WORDS:
                                         item["tag"] = mapped
                                         cleaned.append(item)
                             if cleaned:
