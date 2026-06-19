@@ -107,16 +107,35 @@ h1,h2,h3,h4 { font-family: 'Poppins', sans-serif; }
 # ─────────────────────────────────────────────
 # DATA LOADING
 # ─────────────────────────────────────────────
+import os
+
+def find_file(filename):
+    """Search for CSV in common Streamlit Cloud + local paths."""
+    candidates = [
+        filename,
+        os.path.join("data", filename),
+        os.path.join(os.path.dirname(__file__), filename),
+        os.path.join(os.path.dirname(__file__), "data", filename),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    raise FileNotFoundError(
+        f"❌ '{filename}' not found! Make sure it's committed to your GitHub repo "
+        f"in the same folder as app.py (or in a 'data/' subfolder).\n"
+        f"Searched: {candidates}"
+    )
+
 @st.cache_data
 def load_data():
-    products = pd.read_csv("products_500plus.csv")
-    ratings  = pd.read_csv("user_ratings.csv")
+    products = pd.read_csv(find_file("products_500plus.csv"))
+    ratings  = pd.read_csv(find_file("user_ratings.csv"))
     return products, ratings
 
 @st.cache_data
 def build_all_models(ratings_hash):
-    ratings  = pd.read_csv("user_ratings.csv")
-    products = pd.read_csv("products_500plus.csv")
+    ratings  = pd.read_csv(find_file("user_ratings.csv"))
+    products = pd.read_csv(find_file("products_500plus.csv"))
     pivot    = ratings.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     mat      = pivot.values.astype(float)
 
