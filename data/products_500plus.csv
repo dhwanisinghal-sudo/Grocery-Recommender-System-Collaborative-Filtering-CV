@@ -1,0 +1,501 @@
+product_id,name,category,subcategory,price,tags,rating,emoji
+P001,Parle-G Biscuit,Bakery,Biscuits,10,"bakery,tea,kids",4.5,🍘
+P002,Good Day Cashew Biscuit,Bakery,Biscuits,35,"bakery,premium,cashew",4.3,🍪
+P003,Britannia Marie Gold,Bakery,Biscuits,25,"bakery,light,tea",4.2,🫓
+P004,Bourbon Chocolate Cream,Bakery,Biscuits,30,"bakery,chocolate,cream",4.4,🍫
+P005,Milk Bikis,Bakery,Biscuits,20,"bakery,milk,kids",4.1,🥛
+P006,Hide & Seek Chocolate,Bakery,Biscuits,40,"bakery,chocolate,premium",4.3,🍩
+P007,Digestive NutriChoice,Bakery,Biscuits,55,"bakery,health,fiber",4.0,🌾
+P008,Krackjack Sweet Salty,Bakery,Biscuits,20,"bakery,sweet,salty",4.2,🧇
+P009,Monaco Biscuits,Bakery,Biscuits,15,"bakery,light,snack",4.0,🫙
+P010,Tiger Glucose Biscuit,Bakery,Biscuits,10,"bakery,glucose,kids",3.9,🐯
+P011,Lays Classic Salted,Snacks,Chips,20,"snack,chips,kids",4.5,🥔
+P012,Kurkure Masala Munch,Snacks,Chips,20,"snack,spicy,masala",4.6,🌶️
+P013,Bingo Mad Angles,Snacks,Chips,20,"snack,tangy,masala",4.4,📐
+P014,Pringles Original,Snacks,Chips,99,"snack,premium,imported",4.3,🫙
+P015,Haldiram Aloo Bhujia,Snacks,Namkeen,50,"snack,namkeen,spicy",4.7,🥜
+P016,Haldiram Mixture,Snacks,Namkeen,60,"snack,namkeen,mixed",4.5,🫘
+P017,Haldiram Moong Dal,Snacks,Namkeen,30,"snack,dal,crispy",4.4,🟡
+P018,Lays Magic Masala,Snacks,Chips,20,"snack,chips,masala",4.5,🧡
+P019,Too Yumm Multigrain,Snacks,Chips,20,"snack,health,multigrain",4.0,🌽
+P020,Bikano Chana Chur,Snacks,Namkeen,40,"snack,namkeen,spicy",4.3,🟤
+P021,Amul Butter 500g,Dairy,Butter,280,"dairy,butter,cooking",4.8,🧈
+P022,Amul Cheese Slices,Dairy,Cheese,140,"dairy,cheese,sandwich",4.6,🧀
+P023,Nestlé Yogurt,Dairy,Yogurt,35,"dairy,yogurt,healthy",4.2,🍶
+P024,Mother Dairy Paneer 200g,Dairy,Paneer,90,"dairy,paneer,cooking",4.5,⬜
+P025,Amul Ghee 1L,Dairy,Ghee,650,"dairy,ghee,cooking,premium",4.8,🪔
+P026,Amul Shrikhand,Dairy,Sweets,80,"dairy,sweet,dessert",4.4,🍮
+P027,Milkmaid Condensed Milk,Dairy,Milk,95,"dairy,sweet,baking",4.3,🥫
+P028,Amul Cream 200ml,Dairy,Cream,55,"dairy,cream,cooking",4.3,🫗
+P029,Epigamia Greek Yogurt,Dairy,Yogurt,65,"dairy,yogurt,premium,healthy",4.4,🥣
+P030,Amul Masti Dahi 400g,Dairy,Yogurt,55,"dairy,dahi,daily",4.5,🪣
+P031,India Gate Basmati Rice 5kg,Grains,Rice,450,"grains,rice,basmati,cooking",4.7,🍚
+P032,Daawat Rozana Rice 5kg,Grains,Rice,350,"grains,rice,daily",4.5,🌾
+P033,Tata Sampann Toor Dal 1kg,Grains,Dal,145,"grains,dal,protein,daily",4.6,🫘
+P034,Tata Sampann Chana Dal 1kg,Grains,Dal,130,"grains,dal,protein",4.5,🟡
+P035,Aashirvaad Atta 10kg,Grains,Flour,480,"grains,atta,wheat,daily",4.7,🌽
+P036,Pillsbury Maida 1kg,Grains,Flour,55,"grains,maida,baking",4.3,🍞
+P037,Quaker Oats 1kg,Grains,Oats,200,"grains,oats,healthy,breakfast",4.4,🥣
+P038,Saffola Oats 500g,Grains,Oats,130,"grains,oats,healthy",4.3,🌿
+P039,MTR Poha 500g,Grains,Poha,60,"grains,poha,breakfast",4.4,🍛
+P040,Suji Rawa 500g,Grains,Suji,40,"grains,suji,cooking",4.2,🫙
+P041,MDH Garam Masala 100g,Spices,Masala,85,"spices,masala,cooking",4.7,🌶️
+P042,Everest Kitchen King,Spices,Masala,70,"spices,masala,cooking",4.6,👑
+P043,Catch Turmeric Powder 200g,Spices,Single Spice,45,"spices,haldi,cooking",4.5,🟡
+P044,Everest Red Chilli Powder,Spices,Single Spice,55,"spices,chilli,spicy",4.6,🔴
+P045,MDH Rajma Masala,Spices,Masala,60,"spices,masala,rajma",4.5,🫘
+P046,Catch Coriander Powder,Spices,Single Spice,40,"spices,dhania,cooking",4.4,🌿
+P047,MDH Chana Masala,Spices,Masala,65,"spices,masala,chana",4.6,🟤
+P048,Everest Pav Bhaji Masala,Spices,Masala,55,"spices,masala,street food",4.7,🍢
+P049,Saffola Oil 5L,Spices,Oil,800,"cooking,oil,healthy",4.5,🫙
+P050,Fortune Sunflower Oil 5L,Spices,Oil,720,"cooking,oil,daily",4.4,🌻
+P051,Maggi 2-Minute Noodles 12pk,Noodles,Instant,168,"noodles,quick,kids,masala",4.8,🍜
+P052,Yippee Magic Masala,Noodles,Instant,14,"noodles,masala,quick",4.6,🌀
+P053,Knorr Soupy Noodles,Noodles,Instant,25,"noodles,soup,tangy",4.3,🥣
+P054,Wai Wai Noodles,Noodles,Instant,15,"noodles,quick,spicy",4.2,🌶️
+P055,Sunfeast Pasta Treat,Noodles,Pasta,30,"pasta,kids,cheesy",4.1,🧀
+P056,Borges Penne Pasta 500g,Noodles,Pasta,120,"pasta,italian,cooking",4.2,🍝
+P057,Maggi Atta Noodles,Noodles,Instant,14,"noodles,atta,healthy",4.3,🌾
+P058,Top Ramen Curry,Noodles,Instant,14,"noodles,curry,quick",4.2,🍲
+P059,Patanjali Noodles,Noodles,Instant,15,"noodles,desi,atta",3.9,🕉️
+P060,Smith & Jones Pasta Masala,Noodles,Pasta,45,"pasta,masala,cooking",4.0,🍃
+P061,Tropicana Orange Juice 1L,Drinks,Juice,120,"drinks,juice,orange,healthy",4.4,🍊
+P062,Real Fruit Power Mango,Drinks,Juice,90,"drinks,juice,mango",4.3,🥭
+P063,Frooti Mango Drink 200ml,Drinks,Juice,20,"drinks,mango,kids",4.5,🧃
+P064,Sting Energy Drink,Drinks,Energy,30,"drinks,energy,caffeinated",4.2,⚡
+P065,Limca Soft Drink 750ml,Drinks,Soda,45,"drinks,soda,lemon",4.1,🍋
+P066,Maaza Mango 600ml,Drinks,Juice,40,"drinks,mango,refreshing",4.4,🫧
+P067,Paper Boat Aamras,Drinks,Juice,30,"drinks,aam,traditional",4.5,🚢
+P068,B Natural Mixed Fruit,Drinks,Juice,85,"drinks,juice,mixed,healthy",4.2,🍹
+P069,Bisleri Water 1L,Drinks,Water,20,"drinks,water,daily",4.6,💧
+P070,Red Bull Energy Drink,Drinks,Energy,125,"drinks,energy,premium",4.1,🐂
+P071,Kissan Mixed Fruit Jam,Condiments,Jam,110,"condiment,jam,bread,kids",4.4,🍓
+P072,Maggi Hot & Sweet Sauce,Condiments,Sauce,85,"condiment,sauce,tangy",4.6,🌶️
+P073,Heinz Tomato Ketchup 450g,Condiments,Ketchup,160,"condiment,ketchup,kids",4.5,🍅
+P074,Ching's Schezwan Chutney,Condiments,Chutney,60,"condiment,chutney,spicy,indo-chinese",4.7,🥢
+P075,Veeba Burger Sauce,Condiments,Sauce,95,"condiment,sauce,burger",4.3,🍔
+P076,Dr. Oetker Mayonnaise,Condiments,Mayo,130,"condiment,mayo,sandwich",4.3,🥪
+P077,Druk Honey 500g,Condiments,Honey,250,"condiment,honey,healthy",4.5,🍯
+P078,Nutella 350g,Condiments,Spread,380,"condiment,chocolate,bread,premium",4.7,🌰
+P079,Amul Peanut Butter Crunchy,Condiments,Spread,190,"condiment,peanut butter,protein",4.5,🥜
+P080,Britannia Date & Fig Jam,Condiments,Jam,120,"condiment,jam,fig,healthy",4.2,🫐
+P081,Colgate Strong Teeth 200g,Personal Care,Dental,85,"personal,dental,daily",4.5,🦷
+P082,Oral-B Toothbrush Soft,Personal Care,Dental,65,"personal,dental,brush",4.4,🪥
+P083,Dove Soap 100g,Personal Care,Soap,55,"personal,soap,moisturizing",4.6,🕊️
+P084,Dettol Original Soap 75g,Personal Care,Soap,35,"personal,soap,antibacterial",4.7,🧼
+P085,Head & Shoulders Shampoo 340ml,Personal Care,Haircare,280,"personal,shampoo,dandruff",4.5,💆
+P086,Pantene Long & Strong Shampoo,Personal Care,Haircare,260,"personal,shampoo,hair",4.4,💇
+P087,Nivea Body Lotion 400ml,Personal Care,Skincare,250,"personal,lotion,skin",4.4,🧴
+P088,Parachute Coconut Oil 500ml,Personal Care,Haircare,130,"personal,hair oil,coconut",4.7,🥥
+P089,Gillette Mach3 Razor,Personal Care,Grooming,250,"personal,shaving,grooming",4.5,🪒
+P090,Whisper Ultra Pads L 15pk,Personal Care,Hygiene,120,"personal,hygiene,women",4.6,🌸
+P091,Horlicks Original 500g,Health,Supplements,280,"health,supplement,kids,energy",4.4,💪
+P092,Complan Chocolate 500g,Health,Supplements,380,"health,supplement,chocolate,kids",4.3,🍫
+P093,Ensure Vanilla 400g,Health,Supplements,750,"health,supplement,adult,premium",4.4,🏋️
+P094,Saffola Active Muesli,Health,Breakfast,280,"health,muesli,breakfast,fiber",4.3,🌄
+P095,Patanjali Chyawanprash 1kg,Health,Ayurvedic,250,"health,ayurvedic,immunity",4.5,🌿
+P096,Dabur Honey 500g,Health,Natural,280,"health,honey,natural",4.6,🐝
+P097,Revital H Capsules 30,Health,Vitamins,380,"health,vitamins,daily",4.3,💊
+P098,Pediasure Vanilla 400g,Health,Supplements,800,"health,kids,nutrition,premium",4.4,👶
+P099,Glucon-D Orange 500g,Health,Energy,120,"health,energy,glucose,kids",4.3,⚡
+P100,Himalaya Chyavanaprasha,Health,Ayurvedic,220,"health,ayurvedic,immunity",4.4,🏔️
+P101,Surf Excel Easy Wash 3kg,Home Care,Detergent,380,"home,detergent,laundry",4.7,👕
+P102,Ariel Matic Top Load 4kg,Home Care,Detergent,650,"home,detergent,washing machine",4.6,🫧
+P103,Vim Dishwash Liquid 750ml,Home Care,Dishwash,120,"home,dishwash,kitchen",4.6,🍽️
+P104,Harpic Power Plus 500ml,Home Care,Toilet Cleaner,120,"home,toilet cleaner,hygiene",4.6,🚽
+P105,Colin Glass Cleaner 500ml,Home Care,Cleaner,120,"home,glass cleaner",4.4,🪟
+P106,Lizol All Floor Cleaner 2L,Home Care,Floor Cleaner,280,"home,floor cleaner,pine",4.5,🧹
+P107,Odonil Room Freshener,Home Care,Air Freshener,75,"home,fragrance,freshener",4.3,🌸
+P108,Scotch-Brite Scrub Pad 3pk,Home Care,Kitchen,75,"home,scrub,kitchen",4.5,🫧
+P109,Mortein Mosquito Coil 10pk,Home Care,Pest Control,60,"home,mosquito,pest control",4.4,🦟
+P110,Good Knight Liquid Refill,Home Care,Pest Control,75,"home,mosquito,pest control",4.5,🌙
+P111,McCain Smiles Fries 420g,Frozen,Snacks,220,"frozen,fries,kids,quick",4.3,😊
+P112,Haldiram's Ready Dal Makhani,Frozen,Ready Meals,120,"frozen,ready meal,dal,quick",4.4,🫕
+P113,MTR Paneer Butter Masala,Frozen,Ready Meals,130,"frozen,ready meal,paneer",4.3,🧆
+P114,Gits Gulab Jamun Mix,Frozen,Sweets,85,"frozen,sweet,dessert,quick",4.5,🍡
+P115,Mother Dairy Ice Cream Vanilla,Frozen,Ice Cream,120,"frozen,ice cream,dessert",4.4,🍦
+P116,Kwality Walls Cornetto,Frozen,Ice Cream,50,"frozen,ice cream,cone,kids",4.5,🍦
+P117,Amul Kool Kafe 200ml,Frozen,Beverages,40,"dairy,cold coffee,chilled",4.3,☕
+P118,ITC Farmland Potato Fries,Frozen,Snacks,180,"frozen,fries,snack",4.1,🍟
+P119,Vadilal Mango Kulfi,Frozen,Ice Cream,45,"frozen,kulfi,mango,indian",4.6,🧊
+P120,Sumeru Vegetable Cutlets,Frozen,Snacks,220,"frozen,cutlets,veg,snack",4.2,🥗
+P121,Tata Tea Gold 500g,Beverages,Tea,280,"beverage,tea,daily,morning",4.7,🫖
+P122,Red Label Tea 500g,Beverages,Tea,240,"beverage,tea,daily",4.6,🍵
+P123,Nescafé Classic 100g,Beverages,Coffee,350,"beverage,coffee,instant,morning",4.5,☕
+P124,Bru Gold Coffee 200g,Beverages,Coffee,280,"beverage,coffee,instant",4.4,🫘
+P125,Green Tea Lipton 25 bags,Beverages,Tea,180,"beverage,green tea,healthy",4.3,🍃
+P126,Tetley Masala Chai 25 bags,Beverages,Tea,120,"beverage,masala tea,chai",4.5,🌺
+P127,Davidoff Rich Coffee,Beverages,Coffee,550,"beverage,coffee,premium",4.4,🏆
+P128,Bournvita 1kg,Beverages,Health Drink,480,"beverage,chocolate,kids,health",4.6,🟤
+P129,Milo Chocolate Drink 400g,Beverages,Health Drink,280,"beverage,chocolate,energy",4.3,🏃
+P130,Taj Mahal Tea 500g,Beverages,Tea,320,"beverage,tea,premium,morning",4.7,🕌
+P131,Maggi Masala Noodles 6pk,Noodles,Instant,84,"noodles,masala,quick,kids",4.8,🍜
+P132,Britannia 50-50 Biscuits,Bakery,Biscuits,20,"bakery,sweet,salty",4.3,⚖️
+P133,Dark Fantasy Choco Fills,Bakery,Biscuits,50,"bakery,chocolate,premium",4.6,🌑
+P134,Sunfeast Dream Cream Vanilla,Bakery,Biscuits,30,"bakery,cream,vanilla",4.3,🤍
+P135,Priya Gold Butter Bite,Bakery,Biscuits,25,"bakery,butter,tea",4.1,🧈
+P136,Amul Lassi 200ml,Dairy,Lassi,25,"dairy,lassi,refreshing",4.4,🥤
+P137,Real Pomegranate Juice 1L,Drinks,Juice,150,"drinks,juice,pomegranate,healthy",4.3,❤️
+P138,Tropicana Guava Juice 1L,Drinks,Juice,130,"drinks,juice,guava,healthy",4.2,💚
+P139,Appy Fizz Apple Soda,Drinks,Soda,30,"drinks,soda,apple,kids",4.3,🍎
+P140,7UP Lime Soda 750ml,Drinks,Soda,45,"drinks,soda,lime",4.2,7️⃣
+P141,Haldiram Sev 200g,Snacks,Namkeen,40,"snack,sev,spicy",4.4,🌿
+P142,Bikaji Boondi 500g,Snacks,Namkeen,70,"snack,boondi,namkeen",4.3,🔮
+P143,Lays Spanish Tomato Tango,Snacks,Chips,20,"snack,chips,tomato",4.4,💃
+P144,Doritos Nacho Cheese,Snacks,Chips,70,"snack,chips,cheese,premium",4.3,🔺
+P145,Fortune Chakki Fresh Atta 10kg,Grains,Flour,470,"grains,atta,wheat,daily",4.5,⚙️
+P146,Saffola Masala Oats,Grains,Oats,170,"grains,oats,masala,healthy",4.3,🥗
+P147,MDH Biryani Masala,Spices,Masala,75,"spices,masala,biryani",4.7,🍛
+P148,Everest Sabji Masala,Spices,Masala,55,"spices,masala,sabji,daily",4.5,🥬
+P149,Pears Transparent Soap,Personal Care,Soap,65,"personal,soap,gentle,kids",4.5,🫧
+P150,Garnier Micellar Water,Personal Care,Skincare,280,"personal,skincare,face wash,women",4.4,💎
+P151,Britannia Fruit Cake,Bakery,Cakes,60,"bakery,cake,fruit",4.1,🎂
+P152,Monginis Black Forest Cake,Bakery,Cakes,350,"bakery,premium,celebration",4.5,🍰
+P153,Britannia Whole Wheat Bread,Bakery,Bread,45,"bakery,bread,healthy",4.2,🍞
+P154,Modern White Bread,Bakery,Bread,35,"bakery,bread,soft",4.0,🍞
+P155,Harvest Gold Multigrain Bread,Bakery,Bread,55,"bakery,multigrain,healthy",4.3,🌾
+P156,Britannia Milk Rusk,Bakery,Rusk,40,"bakery,rusk,tea",4.4,🫓
+P157,Parle Rusk Toastee,Bakery,Rusk,35,"bakery,rusk,crispy",4.1,🍞
+P158,Anmol Butter Cookies,Bakery,Cookies,30,"bakery,cookies,butter",4.0,🍪
+P159,Sunfeast Farmlite Oats Cookies,Bakery,Cookies,55,"bakery,oats,healthy",4.2,🌾
+P160,McVities Digestive Biscuit,Bakery,Biscuits,75,"bakery,digestive,imported",4.3,🍘
+P161,Britannia 50-50 Maska Chaska,Bakery,Biscuits,25,"bakery,butter,crispy",4.4,🧈
+P162,Parle Cheeselings,Bakery,Biscuits,20,"bakery,cheese,kids",4.0,🧀
+P163,Jim Jam Biscuit,Bakery,Biscuits,25,"bakery,jam,sweet",4.1,🍓
+P164,Unibic Butter Cookies,Bakery,Cookies,99,"bakery,premium,butter",4.4,🍪
+P165,Act II Butter Popcorn,Snacks,Popcorn,30,"snack,popcorn,butter",4.3,🍿
+P166,Act II Magic Masala Popcorn,Snacks,Popcorn,30,"snack,popcorn,spicy",4.4,🍿
+P167,Haldiram Peanuts Masala,Snacks,Roasted,25,"snack,peanut,masala",4.5,🥜
+P168,Cornitos Nachos Cheese,Snacks,Chips,50,"snack,nachos,cheese",4.2,🌽
+P169,Bingo Original Style Chips,Snacks,Chips,20,"snack,chips,original",4.3,🥔
+P170,Too Yumm Multigrain Chips,Snacks,Chips,30,"snack,multigrain,healthy",4.1,🌾
+P171,Haldiram Sev,Snacks,Namkeen,40,"snack,sev,crispy",4.5,🫙
+P172,Haldiram Chana Dal,Snacks,Namkeen,35,"snack,dal,crunchy",4.4,🟡
+P173,Bikaji Bhujia,Snacks,Namkeen,45,"snack,bhujia,spicy",4.6,🌶️
+P174,Bikaji Aloo Bhujia,Snacks,Namkeen,50,"snack,aloo,namkeen",4.5,🥔
+P175,Lehar Namkeen Mix,Snacks,Namkeen,35,"snack,mix,namkeen",4.2,🫙
+P176,Cornitos Corn Puffs,Snacks,Chips,40,"snack,puffs,corn",4.0,🌽
+P177,Balaji Wafers Classic,Snacks,Chips,20,"snack,wafers,plain",4.3,🥔
+P178,Parle Wafers,Snacks,Chips,20,"snack,wafers,masala",4.1,🥔
+P179,Yellow Diamond Chips,Snacks,Chips,20,"snack,chips,tangy",4.0,💛
+P180,Roasted Makhana Pudina,Snacks,Roasted,80,"snack,makhana,healthy",4.4,🌿
+P181,Amul Butter Salted,Dairy,Butter,55,"dairy,butter,salted",4.7,🧈
+P182,Amul Butter Unsalted,Dairy,Butter,55,"dairy,butter,baking",4.6,🧈
+P183,Mother Dairy Butter,Dairy,Butter,50,"dairy,butter,fresh",4.4,🧈
+P184,Amul Processed Cheese,Dairy,Cheese,75,"dairy,cheese,processed",4.5,🧀
+P185,Amul Cheese Slices,Dairy,Cheese,99,"dairy,cheese,slices",4.6,🧀
+P186,Britannia Cheese Spread,Dairy,Cheese,85,"dairy,cheese,spread",4.3,🧀
+P187,Mother Dairy Dahi,Dairy,Yogurt,45,"dairy,curd,fresh",4.6,🥣
+P188,Amul Masti Dahi,Dairy,Yogurt,40,"dairy,dahi,thick",4.7,🥛
+P189,Nestle Grekyo Greek Yogurt,Dairy,Yogurt,90,"dairy,greek,protein",4.3,🥣
+P190,Mother Dairy Paneer,Dairy,Paneer,85,"dairy,paneer,fresh",4.5,🧊
+P191,Amul Malai Paneer,Dairy,Paneer,90,"dairy,paneer,malai",4.6,🧊
+P192,Gowardhan Ghee,Dairy,Ghee,350,"dairy,ghee,pure",4.6,🫙
+P193,Patanjali Desi Ghee,Dairy,Ghee,280,"dairy,ghee,ayurvedic",4.5,🫙
+P194,Amul Gold Full Cream Milk,Dairy,Milk,30,"dairy,milk,fullcream",4.5,🥛
+P195,Mother Dairy Toned Milk,Dairy,Milk,26,"dairy,milk,toned",4.4,🥛
+P196,Amul Taaza Milk,Dairy,Milk,24,"dairy,milk,fresh",4.4,🥛
+P197,Amul Fresh Cream,Dairy,Cream,50,"dairy,cream,cooking",4.5,🍦
+P198,Nestle Milkmaid Condensed Milk,Dairy,Cream,75,"dairy,condensed,sweet",4.6,🥛
+P199,Amul Kool Rose Lassi,Dairy,Lassi,30,"dairy,lassi,rose",4.3,🌹
+P200,Amul Mango Lassi,Dairy,Lassi,30,"dairy,lassi,mango",4.5,🥭
+P201,Amul Shrikhand,Dairy,Sweets,90,"dairy,shrikhand,saffron",4.5,🟡
+P202,Amul Gulab Jamun,Dairy,Sweets,75,"dairy,mithai,sweet",4.6,🍬
+P203,India Gate Basmati Rice,Grains,Rice,180,"grains,basmati,premium",4.7,🍚
+P204,Daawat Super Basmati,Grains,Rice,150,"grains,basmati,aromatic",4.6,🍚
+P205,Tata Sampann Toor Dal,Grains,Dal,145,"grains,toor,dal",4.5,🟡
+P206,Tata Sampann Chana Dal,Grains,Dal,120,"grains,chana,dal",4.4,🟡
+P207,Tata Sampann Masoor Dal,Grains,Dal,110,"grains,masoor,red",4.3,🔴
+P208,Tata Sampann Moong Dal,Grains,Dal,130,"grains,moong,yellow",4.5,🟢
+P209,Aashirvaad Whole Wheat Atta,Grains,Flour,240,"grains,wheat,atta",4.7,🌾
+P210,Pillsbury Maida,Grains,Flour,60,"grains,maida,baking",4.3,⬜
+P211,Rajdhani Besan,Grains,Flour,85,"grains,besan,gram",4.4,🟡
+P212,Quaker Oats,Grains,Oats,120,"grains,oats,healthy",4.6,🌾
+P213,Saffola Oats,Grains,Oats,110,"grains,oats,heart",4.5,❤️
+P214,Bagrrys White Oats,Grains,Oats,100,"grains,oats,breakfast",4.3,🌾
+P215,MTR Ready Poha,Grains,Poha,35,"grains,poha,breakfast",4.2,🍽️
+P216,Patanjali Suji Fine,Grains,Suji,35,"grains,suji,semolina",4.3,⬜
+P217,Aashirvaad Multigrain Atta,Grains,Flour,270,"grains,multigrain,healthy",4.6,🌾
+P218,Fortune Soya Chunks,Grains,Dal,60,"grains,soya,protein",4.4,🟤
+P219,Tata Salt,Spices,Single Spice,25,"spice,salt,iodized",4.7,🧂
+P220,MDH Chaat Masala,Spices,Masala,55,"spice,chaat,tangy",4.7,✨
+P221,MDH Kitchen King,Spices,Masala,80,"spice,kitchen,blend",4.6,👑
+P222,MDH Garam Masala,Spices,Masala,65,"spice,garam,blend",4.7,🌶️
+P223,Everest Rajma Masala,Spices,Masala,50,"spice,rajma,blend",4.5,❤️
+P224,Everest Pav Bhaji Masala,Spices,Masala,50,"spice,pavbhaji,street",4.6,🫙
+P225,Everest Biryani Masala,Spices,Masala,55,"spice,biryani,aromatic",4.7,🍛
+P226,Catch Turmeric Powder,Spices,Single Spice,40,"spice,turmeric,haldi",4.5,🟡
+P227,Catch Red Chilli Powder,Spices,Single Spice,45,"spice,chilli,red",4.4,🌶️
+P228,Catch Coriander Powder,Spices,Single Spice,40,"spice,coriander,dhania",4.3,🌿
+P229,Patanjali Cumin Seeds,Spices,Single Spice,35,"spice,jeera,whole",4.5,🟫
+P230,Fortune Sunflower Oil,Spices,Oil,180,"spice,oil,sunflower",4.5,🌻
+P231,Saffola Gold Oil,Spices,Oil,250,"spice,oil,heart",4.6,💛
+P232,Patanjali Mustard Oil,Spices,Oil,160,"spice,mustard,kachi",4.5,💛
+P233,Dabur Olive Oil,Spices,Oil,450,"spice,olive,premium",4.4,🫒
+P234,MDH Sambar Masala,Spices,Masala,60,"spice,sambar,south",4.6,🍲
+P235,Everest Chicken Masala,Spices,Masala,60,"spice,chicken,blend",4.7,🍗
+P236,Maggi Masala Noodles,Noodles,Instant,15,"noodles,instant,masala",4.7,🍜
+P237,Maggi Chicken Noodles,Noodles,Instant,20,"noodles,chicken,quick",4.5,🍗
+P238,Yippee Magic Masala,Noodles,Instant,15,"noodles,masala,kids",4.6,✨
+P239,Yippee Power Up Noodles,Noodles,Instant,20,"noodles,multigrain,healthy",4.3,💪
+P240,Ching's Secret Hakka Noodles,Noodles,Instant,25,"noodles,hakka,chinese",4.5,🍜
+P241,Wai Wai Noodles,Noodles,Instant,15,"noodles,spicy,street",4.4,🍜
+P242,Knorr Soupy Noodles,Noodles,Instant,20,"noodles,soup,creamy",4.2,🍲
+P243,Bambino Pasta Penne,Noodles,Pasta,55,"noodles,pasta,penne",4.3,🍝
+P244,Borges Pasta Fusilli,Noodles,Pasta,75,"noodles,pasta,italian",4.4,🍝
+P245,Del Monte Pasta Sauce Arrabiata,Noodles,Pasta,110,"noodles,sauce,spicy",4.3,🍝
+P246,Real Fruit Juice Mango,Drinks,Juice,35,"drinks,mango,juice",4.5,🥭
+P247,Real Fruit Juice Mixed Fruit,Drinks,Juice,35,"drinks,mixed,juice",4.4,🍹
+P248,Tropicana Orange Juice,Drinks,Juice,50,"drinks,orange,premium",4.5,🍊
+P249,Frooti Mango Drink,Drinks,Juice,15,"drinks,mango,kids",4.4,🥭
+P250,Appy Fizz Apple Drink,Drinks,Juice,20,"drinks,apple,fizzy",4.3,🍎
+P251,Red Bull Energy Drink,Drinks,Energy,125,"drinks,energy,caffeine",4.4,🐂
+P252,Sting Energy Drink,Drinks,Energy,25,"drinks,energy,affordable",4.2,⚡
+P253,Monster Energy Green,Drinks,Energy,110,"drinks,energy,premium",4.3,👾
+P254,Limca Lemon Soda,Drinks,Soda,20,"drinks,lemon,soda",4.3,🍋
+P255,Thums Up,Drinks,Soda,20,"drinks,cola,strong",4.5,👍
+P256,Sprite Lemon Lime,Drinks,Soda,20,"drinks,lime,fizzy",4.4,🫧
+P257,Coca Cola,Drinks,Soda,20,"drinks,cola,classic",4.4,🥤
+P258,Pepsi,Drinks,Soda,20,"drinks,cola,pepsi",4.3,🔵
+P259,Bisleri Water 1L,Drinks,Water,20,"drinks,water,mineral",4.6,💧
+P260,Kinley Water 500ml,Drinks,Water,10,"drinks,water,purified",4.5,💧
+P261,Kissan Mixed Fruit Jam,Condiments,Jam,90,"condiment,jam,fruit",4.5,🍓
+P262,Kissan Strawberry Jam,Condiments,Jam,90,"condiment,strawberry,jam",4.5,🍓
+P263,Mapro Mango Jam,Condiments,Jam,75,"condiment,mango,jam",4.4,🥭
+P264,Ching's Secret Schezwan Sauce,Condiments,Sauce,75,"condiment,schezwan,spicy",4.6,🌶️
+P265,Maggi Hot & Sweet Tomato Chilli,Condiments,Sauce,50,"condiment,chilli,sweet",4.5,🍅
+P266,Maggi Pichkoo Ketchup,Condiments,Ketchup,65,"condiment,ketchup,kids",4.5,🍅
+P267,Heinz Tomato Ketchup,Condiments,Ketchup,99,"condiment,ketchup,premium",4.6,🍅
+P268,Del Monte Tomato Ketchup,Condiments,Ketchup,75,"condiment,ketchup,italian",4.3,🍅
+P269,Priya Green Chilli Pickle,Condiments,Chutney,60,"condiment,pickle,chilli",4.4,🌶️
+P270,Mothers Recipe Mango Pickle,Condiments,Chutney,75,"condiment,aam,achar",4.6,🥭
+P271,Dr Oetker Veeba Mayo,Condiments,Mayo,80,"condiment,mayo,eggless",4.3,⬜
+P272,Hellmanns Real Mayo,Condiments,Mayo,120,"condiment,mayo,classic",4.4,⬜
+P273,Dabur Honey,Condiments,Honey,150,"condiment,honey,pure",4.6,🍯
+P274,Patanjali Honey,Condiments,Honey,120,"condiment,honey,natural",4.5,🍯
+P275,Nutella Chocolate Spread,Condiments,Spread,250,"condiment,chocolate,hazelnut",4.8,🍫
+P276,Sundrop Peanut Butter Crunchy,Condiments,Spread,175,"condiment,peanut,crunchy",4.4,🥜
+P277,Dr Oetker Veeba Peri Peri Sauce,Condiments,Sauce,75,"condiment,periperi,spicy",4.4,🌶️
+P278,Colgate MaxFresh Toothpaste,Personal Care,Dental,80,"care,toothpaste,fresh",4.6,🦷
+P279,Pepsodent Germicheck,Personal Care,Dental,65,"care,toothpaste,germ",4.4,🦷
+P280,Sensodyne Sensitive,Personal Care,Dental,150,"care,sensitive,teeth",4.6,🦷
+P281,Oral-B Ultra Toothbrush,Personal Care,Dental,45,"care,toothbrush,soft",4.5,🪥
+P282,Colgate Electric Toothbrush,Personal Care,Dental,350,"care,electric,premium",4.4,🪥
+P283,Dettol Original Soap,Personal Care,Soap,35,"care,soap,antibacterial",4.6,🧼
+P284,Lux Soft Rose Soap,Personal Care,Soap,30,"care,soap,rose",4.5,🌹
+P285,Dove Cream Beauty Bar,Personal Care,Soap,55,"care,soap,moisturizing",4.7,🕊️
+P286,Pears Glycerine Soap,Personal Care,Soap,40,"care,soap,glycerine",4.6,✨
+P287,Lifebuoy Total Care,Personal Care,Soap,25,"care,soap,protect",4.4,🛡️
+P288,Head & Shoulders Anti Dandruff,Personal Care,Haircare,180,"care,shampoo,dandruff",4.5,💆
+P289,Dove Moisturizing Shampoo,Personal Care,Haircare,200,"care,shampoo,moisture",4.6,💧
+P290,Sunsilk Soft Smooth Shampoo,Personal Care,Haircare,150,"care,shampoo,smooth",4.4,✨
+P291,Parachute Coconut Oil,Personal Care,Haircare,120,"care,coconut,oil",4.7,🥥
+P292,Dabur Amla Hair Oil,Personal Care,Haircare,85,"care,amla,oil",4.5,🌿
+P293,Pantene Conditioner,Personal Care,Haircare,180,"care,conditioner,silky",4.4,💜
+P294,Nivea Soft Moisturizer,Personal Care,Skincare,150,"care,moisturizer,soft",4.6,💙
+P295,Lakme Face Wash,Personal Care,Skincare,120,"care,facewash,clean",4.4,🌊
+P296,Himalaya Purifying Neem Wash,Personal Care,Skincare,90,"care,neem,herbal",4.5,🌿
+P297,Vaseline Petroleum Jelly,Personal Care,Skincare,75,"care,jelly,healing",4.7,💊
+P298,Pond's Cold Cream,Personal Care,Skincare,80,"care,cream,classic",4.4,❄️
+P299,Gillette Mach3 Razor,Personal Care,Grooming,180,"care,razor,shave",4.6,🪒
+P300,Fogg Body Spray For Men,Personal Care,Grooming,220,"care,deodorant,long",4.5,💨
+P301,Axe Dark Temptation Deo,Personal Care,Grooming,200,"care,deo,men",4.4,🌑
+P302,Whisper Ultra Sanitary Pads,Personal Care,Hygiene,99,"care,sanitary,women",4.6,🌸
+P303,Stayfree Secure Pads,Personal Care,Hygiene,85,"care,sanitary,secure",4.5,🌸
+P304,Pampers Baby Diapers,Personal Care,Hygiene,599,"care,diaper,baby",4.6,👶
+P305,Himalaya Baby Lotion,Personal Care,Hygiene,135,"care,baby,lotion",4.7,🌿
+P306,Horlicks Classic Malt,Health,Health Drink,185,"health,horlicks,malt",4.6,🌾
+P307,Complan Kesar Badam,Health,Supplements,250,"health,complan,kids",4.4,🌰
+P308,Ensure Nutrition Powder,Health,Supplements,680,"health,protein,adult",4.5,💪
+P309,Protinex Tasty Chocolate,Health,Supplements,350,"health,protein,chocolate",4.4,🍫
+P310,MuscleBlaze Whey Protein,Health,Supplements,999,"health,whey,gym",4.5,💪
+P311,Kelloggs Corn Flakes,Health,Breakfast,135,"health,cornflakes,breakfast",4.5,🌽
+P312,Kelloggs Chocos,Health,Breakfast,140,"health,chocolate,kids",4.6,🍫
+P313,Muesli Fruit & Nut,Health,Breakfast,180,"health,muesli,fruit",4.4,🥣
+P314,Dabur Chyawanprash,Health,Ayurvedic,220,"health,immunity,ayurvedic",4.7,🌿
+P315,Patanjali Ashwagandha Tablets,Health,Ayurvedic,120,"health,ashwagandha,stress",4.5,🌿
+P316,Himalaya Liv 52,Health,Ayurvedic,140,"health,liver,ayurvedic",4.6,🌿
+P317,Organic India Tulsi Tea,Health,Natural,160,"health,tulsi,organic",4.5,🌿
+P318,True Elements Chia Seeds,Health,Natural,250,"health,chia,superfood",4.4,🌱
+P319,Neurobion Forte B Complex,Health,Vitamins,75,"health,vitamin,bcomplex",4.5,💊
+P320,Limcee Vitamin C Tablets,Health,Vitamins,60,"health,vitaminc,immunity",4.6,🍊
+P321,Surf Excel Easy Wash,Home Care,Detergent,120,"home,detergent,powder",4.7,🧺
+P322,Ariel Matic Detergent,Home Care,Detergent,175,"home,matic,washing",4.6,🌊
+P323,Tide Plus Detergent,Home Care,Detergent,100,"home,tide,clean",4.5,🌊
+P324,Wheel Washing Powder,Home Care,Detergent,60,"home,budget,wash",4.3,⚙️
+P325,Rin Detergent Powder,Home Care,Detergent,70,"home,whiteness,bright",4.4,✨
+P326,Vim Dishwash Bar,Home Care,Dishwash,35,"home,dishwash,lemon",4.5,🍋
+P327,Pril Dishwash Gel,Home Care,Dishwash,85,"home,dishes,gel",4.6,✨
+P328,Exo Dish Wash Bar,Home Care,Dishwash,30,"home,exo,scrub",4.3,🫧
+P329,Harpic Toilet Cleaner,Home Care,Toilet Cleaner,90,"home,toilet,germ",4.6,🚽
+P330,Domex Toilet Cleaner,Home Care,Toilet Cleaner,75,"home,toilet,bleach",4.4,🚽
+P331,Lizol Floor Cleaner,Home Care,Floor Cleaner,120,"home,floor,citrus",4.6,🫧
+P332,Colin Glass Cleaner,Home Care,Cleaner,80,"home,glass,shine",4.5,✨
+P333,Scotch Brite Scrub Pad,Home Care,Kitchen,35,"home,scrub,kitchen",4.6,🟩
+P334,Good Knight Mosquito Coil,Home Care,Pest Control,30,"home,mosquito,repel",4.4,🦟
+P335,All Out Mosquito Liquid,Home Care,Pest Control,120,"home,liquid,mosquito",4.5,🦟
+P336,Hit Mosquito Spray,Home Care,Pest Control,150,"home,spray,insects",4.4,🐛
+P337,Odonil Air Freshener,Home Care,Air Freshener,55,"home,air,fresh",4.5,🌸
+P338,Ambi Pur Car Freshener,Home Care,Air Freshener,175,"home,car,fragrance",4.4,🚗
+P339,Lizol Lavender Floor Cleaner,Home Care,Floor Cleaner,120,"home,lavender,floor",4.5,💜
+P340,McCain French Fries,Frozen,Snacks,120,"frozen,fries,kids",4.5,🍟
+P341,Wow Momos Frozen,Frozen,Snacks,149,"frozen,momos,steamed",4.4,🥟
+P342,ITC Master Chef Kebab,Frozen,Snacks,180,"frozen,kebab,grill",4.3,🍢
+P343,Haldiram Frozen Samosa,Frozen,Snacks,99,"frozen,samosa,crispy",4.5,🥟
+P344,MTR Frozen Paratha,Frozen,Ready Meals,85,"frozen,paratha,breakfast",4.4,🫓
+P345,Amul Pizza Frozen,Frozen,Ready Meals,120,"frozen,pizza,amul",4.2,🍕
+P346,ITC Kitchens of India Biryani,Frozen,Ready Meals,150,"frozen,biryani,ready",4.3,🍛
+P347,Amul Ice Cream Vanilla,Frozen,Ice Cream,80,"frozen,icecream,vanilla",4.6,🍦
+P348,Kwality Walls Mango Stick,Frozen,Ice Cream,30,"frozen,mango,stick",4.5,🥭
+P349,Amul Chocolate Ice Cream,Frozen,Ice Cream,80,"frozen,icecream,chocolate",4.7,🍫
+P350,Havmor Sitafal Ice Cream,Frozen,Ice Cream,90,"frozen,sitafal,custard",4.4,🍦
+P351,Amul Gulab Jamun Ice Cream,Frozen,Ice Cream,85,"frozen,gulabjamun,fusion",4.5,🎉
+P352,Tata Tea Gold,Beverages,Tea,135,"beverages,tea,premium",4.7,🍵
+P353,Red Label Natural Care Tea,Beverages,Tea,120,"beverages,tea,herbal",4.6,🍵
+P354,Society Masala Tea,Beverages,Tea,150,"beverages,masala,tea",4.5,🍵
+P355,Lipton Yellow Label Tea,Beverages,Tea,110,"beverages,tea,classic",4.4,🍵
+P356,Tetley Green Tea Lemon,Beverages,Tea,130,"beverages,green,lemon",4.5,🍋
+P357,Wagh Bakri Tea,Beverages,Tea,140,"beverages,chai,premium",4.6,☕
+P358,Nescafe Classic Coffee,Beverages,Coffee,230,"beverages,coffee,instant",4.7,☕
+P359,Bru Gold Coffee,Beverages,Coffee,210,"beverages,coffee,rich",4.6,☕
+P360,Davidoff Rich Aroma Coffee,Beverages,Coffee,450,"beverages,coffee,premium",4.6,☕
+P361,Nescafe Gold Blend,Beverages,Coffee,380,"beverages,gold,arabica",4.7,🌟
+P362,Seven Seas Omega Capsules,Health,Vitamins,350,"health,omega3,fish",4.4,🐟
+P363,Dabur Hajmola Tablets,Health,Ayurvedic,30,"health,digestive,imli",4.7,🟤
+P364,Eno Fruit Salt Original,Health,Ayurvedic,45,"health,acidity,relief",4.6,🫧
+P365,Glucon-D Lime Flavour,Health,Energy,75,"health,glucose,energy",4.5,🍋
+P366,Boost Health Drink,Health,Health Drink,175,"health,boost,chocolate",4.5,💪
+P367,Junior Horlicks,Health,Health Drink,220,"health,kids,growth",4.6,👶
+P368,Ovaltine Chocolate Malt,Health,Health Drink,195,"health,malt,chocolate",4.3,🍫
+P369,Britannia Treat Jam Biscuit,Bakery,Biscuits,25,"bakery,jam,kids",4.2,🍓
+P370,Parle Magix Cream Biscuit,Bakery,Biscuits,20,"bakery,cream,chocolate",4.1,🍪
+P371,Sunfeast Dark Fantasy,Bakery,Biscuits,50,"bakery,chocolate,premium",4.5,🌑
+P372,Oreo Chocolate Biscuit,Bakery,Biscuits,45,"bakery,oreo,chocolate",4.7,⚫
+P373,Cadbury 5 Star,Snacks,Crackers,20,"snack,chocolate,caramel",4.6,⭐
+P374,Cadbury Dairy Milk Silk,Snacks,Crackers,99,"snack,chocolate,silk",4.8,🍫
+P375,Kit Kat Chocolate,Snacks,Crackers,40,"snack,wafer,chocolate",4.6,🍫
+P376,Ferrero Rocher,Snacks,Crackers,120,"snack,premium,hazelnut",4.8,🤎
+P377,Tata Sampann Urad Dal,Grains,Dal,130,"grains,urad,black",4.4,⚫
+P378,Aashirvaad Besan,Grains,Flour,70,"grains,besan,quality",4.5,🟡
+P379,Fortune Mustard Oil,Spices,Oil,170,"spice,mustard,cooking",4.4,💛
+P380,Figaro Olive Oil,Spices,Oil,380,"spice,olive,light",4.5,🫒
+P381,MDH Chole Masala,Spices,Masala,55,"spice,chole,blend",4.6,🫘
+P382,Catch Mustard Seeds,Spices,Single Spice,35,"spice,mustard,rai",4.4,🟡
+P383,Knorr Classic Chicken Soup,Noodles,Instant,35,"noodles,soup,chicken",4.3,🍲
+P384,Top Ramen Masala,Noodles,Instant,15,"noodles,masala,quick",4.3,🍜
+P385,Del Monte Spaghetti,Noodles,Pasta,80,"noodles,spaghetti,italian",4.3,🍝
+P386,Real Fruit Juice Guava,Drinks,Juice,35,"drinks,guava,fresh",4.4,🍈
+P387,B Natural Pomegranate Juice,Drinks,Juice,65,"drinks,pomegranate,health",4.3,❤️
+P388,Mountain Dew,Drinks,Soda,20,"drinks,lime,fizzy",4.3,💚
+P389,Fanta Orange,Drinks,Soda,20,"drinks,orange,fizzy",4.2,🍊
+P390,Aquafina Water 1L,Drinks,Water,20,"drinks,water,pure",4.5,💧
+P391,Mapro Pineapple Jam,Condiments,Jam,75,"condiment,pineapple,jam",4.3,🍍
+P392,Veeba Burger Sauce,Condiments,Sauce,75,"condiment,burger,creamy",4.4,🍔
+P393,Lijjat Papad Urad,Snacks,Crackers,50,"snack,papad,crispy",4.6,⭕
+P394,Bikano Papad Mirch,Snacks,Crackers,45,"snack,papad,spicy",4.5,🌶️
+P395,Amul Kool Milk Cafe,Beverages,Coffee,25,"beverages,milk,coffee",4.4,☕
+P396,Paper Boat Aamras,Drinks,Juice,30,"drinks,mango,traditional",4.5,🥭
+P397,Paper Boat Jaljeera,Drinks,Juice,30,"drinks,jaljeera,spiced",4.3,💚
+P398,Coke Zero Sugar,Drinks,Soda,30,"drinks,cola,zero",4.3,⚫
+P399,Borges Olive Pomace Oil,Spices,Oil,280,"spice,pomace,cooking",4.3,🫒
+P400,Saffola Total Oil,Spices,Oil,210,"spice,rice,blended",4.5,❤️
+P401,Amul Kool Chocolate Milk,Dairy,Milk,25,"dairy,chocolate,cold",4.5,🍫
+P402,Mother Dairy Mishti Doi,Dairy,Yogurt,45,"dairy,sweet,bengali",4.6,🍮
+P403,Hatsun Curd,Dairy,Yogurt,35,"dairy,curd,south",4.4,🥣
+P404,Nandini Milk Powder,Dairy,Milk,180,"dairy,powder,full",4.4,🥛
+P405,Nestle Everyday Dairy Whitener,Dairy,Milk,120,"dairy,whitener,tea",4.5,⬜
+P406,Amul Cream Cheese,Dairy,Cheese,150,"dairy,cream,cheese",4.5,🧀
+P407,India Gate Tibar Basmati,Grains,Rice,140,"grains,basmati,value",4.5,🍚
+P408,Patanjali Basmati Rice,Grains,Rice,120,"grains,basmati,organic",4.4,🍚
+P409,Double Horse Rice Flakes,Grains,Poha,40,"grains,poha,thick",4.3,🌾
+P410,Kelloggs Special K,Health,Breakfast,250,"health,fiber,weight",4.4,🌾
+P411,Quaker Oats Masala,Grains,Oats,130,"grains,oats,savory",4.4,🌾
+P412,Saffola Masala Oats,Grains,Oats,120,"grains,oats,masala",4.5,🌶️
+P413,MTR Poha Mix Breakfast,Grains,Poha,45,"grains,breakfast,ready",4.3,🍽️
+P414,Tata Nano Suji,Grains,Suji,40,"grains,suji,fine",4.2,⬜
+P415,Everest Meat Masala,Spices,Masala,60,"spice,meat,blend",4.5,🥩
+P416,MDH Dal Makhani Masala,Spices,Masala,55,"spice,dal,punjabi",4.6,🫘
+P417,Catch Cardamom Powder,Spices,Single Spice,55,"spice,elaichi,dessert",4.5,💚
+P418,Patanjali Black Pepper Powder,Spices,Single Spice,50,"spice,pepper,black",4.4,⚫
+P419,Lipton Tulsi Green Tea,Beverages,Tea,120,"beverages,tulsi,green",4.4,🌿
+P420,Girnar Masala Tea Premix,Beverages,Tea,90,"beverages,masala,premix",4.5,🍵
+P421,Nescafe Latte Sachets,Beverages,Coffee,99,"beverages,latte,premix",4.4,☕
+P422,Bru Instant Coffee,Beverages,Coffee,180,"beverages,instant,south",4.5,☕
+P423,Coca Cola Juice Minute Maid,Drinks,Juice,20,"drinks,juice,orange",4.2,🍊
+P424,Rasna Soft Drink Concentrate,Drinks,Juice,45,"drinks,rasna,concentrate",4.3,🍹
+P425,McCain Smiles Potato,Frozen,Snacks,110,"frozen,potato,kids",4.5,😊
+P426,Amul Mithai Mate,Dairy,Sweets,80,"dairy,condensed,mithai",4.5,🍬
+P427,Baidyanath Triphala Churna,Health,Ayurvedic,90,"health,triphala,digest",4.5,🌿
+P428,Patanjali Giloy Juice,Health,Natural,110,"health,giloy,immunity",4.5,🌿
+P429,Himalaya Confido Tablets,Health,Ayurvedic,180,"health,herbal,tablet",4.3,💊
+P430,Revital H Capsules,Health,Vitamins,280,"health,multivitamin,men",4.5,💊
+P431,Harpic Power Plus Citrus,Home Care,Toilet Cleaner,95,"home,citrus,toilet",4.5,🍋
+P432,Surf Excel Liquid,Home Care,Detergent,180,"home,liquid,gentle",4.6,💧
+P433,Ariel Pods,Home Care,Detergent,299,"home,pods,convenient",4.5,🟣
+P434,Vim Lemon Gel,Home Care,Dishwash,90,"home,gel,lemon",4.5,🍋
+P435,Mortein Cockroach Spray,Home Care,Pest Control,175,"home,cockroach,spray",4.4,🪳
+P436,Dettol Surface Cleaner,Home Care,Cleaner,100,"home,surface,disinfect",4.6,🛡️
+P437,Scotch Brite Magic Eraser,Home Care,Kitchen,99,"home,eraser,clean",4.5,⬜
+P438,Ambi Pur Spray Lavender,Home Care,Air Freshener,195,"home,lavender,spray",4.5,💜
+P439,Godrej Aer Matic,Home Care,Air Freshener,280,"home,automatic,freshener",4.4,🌸
+P440,Kwality Walls Twister Ice Lolly,Frozen,Ice Cream,20,"frozen,lolly,kids",4.4,🍭
+P441,Amul Cone Ice Cream,Frozen,Ice Cream,40,"frozen,cone,vanilla",4.5,🍦
+P442,Frozen Fish Fingers Licious,Frozen,Snacks,249,"frozen,fish,crispy",4.3,🐟
+P443,Godrej Yummiez Chicken Nuggets,Frozen,Snacks,195,"frozen,chicken,nuggets",4.3,🍗
+P444,Haldiram Gulab Jamun Ready Mix,Frozen,Sweets,70,"frozen,gulabjamun,mix",4.4,🟤
+P445,Cream Bell Kulfi,Frozen,Ice Cream,30,"frozen,kulfi,malai",4.5,🍦
+P446,McCain Veggie Burger Patty,Frozen,Ready Meals,160,"frozen,veggie,burger",4.2,🍔
+P447,Himalaya Face Wash Purifying,Personal Care,Skincare,100,"care,neem,clean",4.6,🌿
+P448,Biotique Bio Morning Nectar,Personal Care,Skincare,135,"care,moisturizer,bio",4.4,🌸
+P449,Garnier Micellar Water,Personal Care,Skincare,175,"care,micellar,remove",4.5,💧
+P450,Lakme 9 to 5 Primer,Personal Care,Skincare,250,"care,primer,makeup",4.4,✨
+P451,Brylcreem Hair Cream,Personal Care,Haircare,75,"care,hair,style",4.4,💈
+P452,Mamaearth Onion Shampoo,Personal Care,Haircare,240,"care,onion,fall",4.5,🧅
+P453,WOW Apple Cider Shampoo,Personal Care,Haircare,275,"care,applecider,volume",4.4,🍎
+P454,Gillette Fusion Blades,Personal Care,Grooming,299,"care,blades,smooth",4.6,🪒
+P455,Park Avenue Perfume Spray,Personal Care,Grooming,180,"care,perfume,men",4.3,🌺
+P456,Sofy Anti Bacterial Pads,Personal Care,Hygiene,95,"care,sanitary,antibacterial",4.5,🌸
+P457,Johnson Baby Powder,Personal Care,Hygiene,120,"care,baby,soft",4.7,👶
+P458,Pigeon Baby Wipes,Personal Care,Hygiene,135,"care,baby,wipes",4.5,🌸
+P459,Sensodyne Rapid Relief Paste,Personal Care,Dental,175,"care,sensitive,rapid",4.6,🦷
+P460,Listerine Cool Mint Mouthwash,Personal Care,Dental,180,"care,mouthwash,mint",4.5,🌿
+P461,Haldiram Kaju Katli,Dairy,Sweets,350,"dairy,kaju,mithai",4.7,💎
+P462,Amul Basundi,Dairy,Sweets,55,"dairy,basundi,rich",4.5,🥛
+P463,Nestle KitKat Dark,Snacks,Crackers,45,"snack,dark,wafer",4.6,🍫
+P464,Cadbury Eclairs Toffee,Snacks,Crackers,2,"snack,toffee,caramel",4.5,🍬
+P465,Pulse Candy Kachcha Aam,Snacks,Crackers,1,"snack,candy,raw",4.6,🥭
+P466,Center Fresh Gum,Snacks,Crackers,2,"snack,gum,mint",4.3,💚
+P467,Alpenliebe Strawberry Candy,Snacks,Crackers,2,"snack,candy,strawberry",4.4,🍓
+P468,Big Babol Bubble Gum,Snacks,Crackers,5,"snack,bubblegum,fruit",4.2,🫧
+P469,Mapro Pineapple Crush,Drinks,Juice,80,"drinks,pineapple,syrup",4.4,🍍
+P470,Paper Boat Kokum Drink,Drinks,Juice,30,"drinks,kokum,traditional",4.4,🍇
+P471,Bonn Burger Buns,Bakery,Bread,35,"bakery,burger,bun",4.2,🍔
+P472,English Oven Sandwich Bread,Bakery,Bread,50,"bakery,sandwich,soft",4.4,🥪
+P473,Monginis Chocolate Muffin,Bakery,Cakes,30,"bakery,muffin,chocolate",4.3,🧁
+P474,Britannia Date & Nut Cake,Bakery,Cakes,55,"bakery,dates,nuts",4.3,🎂
+P475,Parle G Rusk Family Pack,Bakery,Rusk,60,"bakery,rusk,family",4.4,🫓
+P476,Tata Gluco Plus Orange,Health,Energy,65,"health,glucose,orange",4.4,🍊
+P477,Organic India Moringa Powder,Health,Natural,350,"health,moringa,organic",4.5,🌿
+P478,True Elements Flax Seeds,Health,Natural,180,"health,flax,omega3",4.4,🌱
+P479,Saffola FITTIFY Gourmet Soup,Health,Breakfast,75,"health,soup,diet",4.3,🍲
+P480,Dabur Vatika Enriched Hair Oil,Personal Care,Haircare,130,"care,vatika,conditioning",4.5,🌿
+P481,Livon Hair Serum,Personal Care,Haircare,150,"care,serum,frizz",4.5,✨
+P482,Axe Apollo Deo Spray,Personal Care,Grooming,210,"care,deodorant,fresh",4.5,🚀
+P483,Fogg Love Perfume Women,Personal Care,Grooming,250,"care,perfume,women",4.5,🌸
+P484,Sunsilk Conditioner,Personal Care,Haircare,160,"care,conditioner,smooth",4.3,💛
+P485,Dettol Liquid Handwash,Personal Care,Hygiene,80,"care,handwash,germ",4.6,🛡️
+P486,Savlon Antiseptic Liquid,Personal Care,Hygiene,65,"care,antiseptic,wound",4.6,💊
+P487,Easy Off Bang Bathroom Cleaner,Home Care,Cleaner,90,"home,bathroom,stain",4.4,🛁
+P488,Godrej Nupur Mehndi,Personal Care,Haircare,65,"care,mehndi,natural",4.5,🟢
+P489,Bertolli Olive Oil,Spices,Oil,520,"spice,olive,imported",4.6,🫒
+P490,Tata Himalayan Mineral Water,Drinks,Water,35,"drinks,mineral,natural",4.6,🏔️
+P491,Epigamia Greek Yogurt Mango,Dairy,Yogurt,60,"dairy,greek,mango",4.5,🥭
+P492,Daawat Rozana Basmati,Grains,Rice,110,"grains,basmati,daily",4.4,🍚
+P493,Amazon Brand Solimo Salt,Spices,Single Spice,20,"spice,salt,value",4.2,🧂
+P494,Tata Namak,Spices,Single Spice,22,"spice,salt,iodized",4.5,🧂
+P495,Nestle Munch Chocolate Bar,Snacks,Crackers,20,"snack,chocolate,crispy",4.5,🍫
+P496,Cadbury Gems,Snacks,Crackers,10,"snack,candy,colorful",4.6,🌈
+P497,MDH Shahi Paneer Masala,Spices,Masala,65,"spice,paneer,shahi",4.7,👑
+P498,ITC Aashirvaad Salt,Spices,Single Spice,28,"spice,salt,iodized",4.4,🧂
+P499,Gowardhan Paneer,Dairy,Paneer,95,"dairy,paneer,fresh",4.5,🧊
+P500,Amul Lassee,Dairy,Lassi,25,"dairy,lassi,sweet",4.4,🥛
