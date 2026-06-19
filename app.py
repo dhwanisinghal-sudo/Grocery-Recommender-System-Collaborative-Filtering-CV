@@ -910,18 +910,33 @@ def color_fallback(image: Image.Image):
     fg    = pix[mask] if mask.sum() > 50 else pix
     r, g, b  = fg.mean(axis=0)
     bright   = (r + g + b) / 3
-    img_arr  = np.array(image.convert("L"))
-    h, w     = img_arr.shape
-    aspect   = w / h if h > 0 else 1.0
-    is_elong = aspect > 1.5 or aspect < 0.65
 
-    if r > 170 and g > 140 and b < 100 and r > b * 1.8 and is_elong:
-        return [{"tag": "banana", "confidence": 65}, {"tag": "juice", "confidence": 55}]
-    if r > 160 and g > 110 and b < 100:
-        return [{"tag": "mango juice", "confidence": 65}, {"tag": "juice", "confidence": 60}]
+    # texture_std: how "busy" the color is. Low = uniform surface (fruit skin,
+    # liquid in a bottle). High = printed packaging with logo/text/multi-color
+    # panels (Maggi, chips, biscuits). This is the key signal that distinguishes
+    # banana / Maggi / mango juice — previously a flat r>160,g>110,b<100 check
+    # caught all three under one bucket ("mango juice") since they're all
+    # yellow-orange on average color alone.
+    texture_std = fg.std(axis=0).mean()
+
+    import colorsys
+    hue, sat, val = colorsys.rgb_to_hsv(r/255, g/255, b/255)
+    hue_deg = hue * 360
+
+    # ── yellow/orange family: banana, Maggi, mango juice all live here, so split them ──
+    if 30 <= hue_deg <= 70 and sat > 0.25 and val > 0.45:
+        if texture_std > 25:                       # busy print → packaged snack, not juice
+            return [{"tag": "noodles", "confidence": 40}, {"tag": "chips", "confidence": 35},
+                     {"tag": "biscuit", "confidence": 35}, {"tag": "namkeen", "confidence": 30}]
+        if hue_deg >= 45 and texture_std < 12:      # smooth + yellow-green → banana
+            return [{"tag": "banana", "confidence": 60}, {"tag": "juice", "confidence": 40}]
+        if hue_deg < 45 and texture_std < 20:       # smooth + orange-red → juice
+            return [{"tag": "mango juice", "confidence": 55}, {"tag": "juice", "confidence": 50}]
+        return [{"tag": "packaged food", "confidence": 40}, {"tag": "snack", "confidence": 35}]
+
     if g > r and g > b and g > 100 and g > r * 1.1:
         return [{"tag": "packaged food", "confidence": 55}]
-    if r > g * 1.4 and r > b * 1.4 and r > 140:
+    if r > g * 1.4 and r > b * 1.4 and r > 140 and hue_deg < 20:
         return [{"tag": "chilli powder", "confidence": 65}, {"tag": "masala", "confidence": 60}]
     if b > r * 1.1 and b > g * 1.1:
         return [{"tag": "milk", "confidence": 60}, {"tag": "dairy", "confidence": 55}]
