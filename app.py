@@ -75,14 +75,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# CONSTANTS
-# ═══════════════════════════════════════════════════════════════
 CATEGORY_EMOJI = {
     "Bakery": "🍪", "Snacks": "🥔", "Dairy": "🥛", "Grains": "🌾",
     "Spices": "🌶️", "Noodles": "🍜", "Drinks": "🥤", "Condiments": "🫙",
     "Personal Care": "🧴", "Health": "💊", "Home Care": "🧹",
-    "Frozen": "🧊", "Beverages": "☕",
+    "Frozen": "🧊", "Beverages": "☕", "Fruits": "🍌",
 }
 
 RELATED_CATEGORIES = {
@@ -99,14 +96,12 @@ RELATED_CATEGORIES = {
     "Health":        ["Health", "Personal Care", "Beverages", "Grains"],
     "Home Care":     ["Home Care", "Personal Care"],
     "Frozen":        ["Frozen", "Snacks", "Grains", "Noodles"],
+    "Fruits":        ["Fruits", "Drinks", "Health", "Snacks"],
 }
 
 def get_emoji(cat):
     return CATEGORY_EMOJI.get(cat, "🛒")
 
-# ═══════════════════════════════════════════════════════════════
-# DATA LOADING
-# ═══════════════════════════════════════════════════════════════
 @st.cache_data(ttl=0)
 def load_data():
     products_df = None
@@ -168,9 +163,6 @@ def load_data():
     return products, matrix
 
 
-# ═══════════════════════════════════════════════════════════════
-# CF MODEL
-# ═══════════════════════════════════════════════════════════════
 @st.cache_resource
 def train_model(_df):
     n_components = min(20, _df.shape[0] - 1, _df.shape[1] - 1)
@@ -204,9 +196,6 @@ def get_similar_products(product_id, item_sim_df, products, n=6, filter_categori
     return list(top.index), list(top.values)
 
 
-# ═══════════════════════════════════════════════════════════════
-# CART
-# ═══════════════════════════════════════════════════════════════
 def init_cart():
     if "cart" not in st.session_state:
         st.session_state["cart"] = {}
@@ -244,10 +233,19 @@ def render_cart_sidebar():
         st.rerun()
 
 
-# ═══════════════════════════════════════════════════════════════
-# PRODUCT KEYWORD MAP  (pid → keywords for reverse lookup)
-# ═══════════════════════════════════════════════════════════════
 GROCERY_KEYWORDS = {
+    # ── Fruits (NEW) ──
+    "banana":        ["P062", "P063", "P067", "P068"],
+    "kela":          ["P062", "P063", "P067"],
+    "ripe banana":   ["P062", "P063", "P067"],
+    "raw banana":    ["P062", "P063", "P067"],
+    "plantain":      ["P062", "P063", "P067"],
+    "banana chips":  ["P011", "P019"],
+    "fresh fruit":   ["P061", "P062", "P068"],
+    "apple":         ["P139", "P061"],
+    "orange":        ["P061"],
+    "guava":         ["P138"],
+    "pomegranate":   ["P137"],
     # ── Dairy ──
     "milk":["P021","P030","P136","P027"],
     "butter":["P021","P025"], "amul butter":["P021"],
@@ -449,6 +447,8 @@ JUNK_DESCRIPTORS = {
     "coil","spiral","loop","oval","circle","ellipse",
     "fried","grilled","boiled","baked","roasted","steamed",
     "stir fry","stir-fry","deep fried",
+    # NEW: fruit shape descriptors that are NOT the fruit itself
+    "curved","elongated","crescent","arc","peel","skin","bunch",
 }
 
 CUISINE_NOISE_WORDS = {
@@ -507,22 +507,48 @@ DAIRY_SPECIFIC = {
 }
 
 VISUAL_LABEL_TO_TAG = {
+    # ── Fruits (NEW) ──
+    "banana":           "banana",
+    "ripe banana":      "banana",
+    "yellow banana":    "banana",
+    "raw banana":       "banana",
+    "unripe banana":    "banana",
+    "green banana":     "banana",
+    "banana fruit":     "banana",
+    "kela":             "banana",
+    "plantain":         "banana",
+    "bunch of bananas": "banana",
+    "banana bunch":     "banana",
+    "apple":            "apple",
+    "red apple":        "apple",
+    "green apple":      "apple",
+    "granny smith":     "apple",
+    "mango fruit":      "mango juice",
+    "raw mango":        "mango juice",
+    "alphonso":         "mango juice",
+    "guava":            "guava juice",
+    "pomegranate":      "pomegranate juice",
+    "orange fruit":     "orange juice",
+    # ── Noodles ──
     "noodle":"noodles","noodles":"noodles","ramen":"noodles",
     "chow mein":"noodles","lo mein":"noodles",
     "pad thai":"noodles","spaghetti":"noodles","linguine":"noodles",
     "pho":"noodles","udon":"noodles","vermicelli":"vermicelli",
     "maggi":"maggi","pasta":"pasta","penne":"pasta",
     "macaroni":"pasta","fusilli":"pasta","instant noodles":"maggi",
+    # ── Bakery ──
     "biscuit":"biscuit","cookie":"biscuit","cracker":"biscuit",
     "wafer":"biscuit","bread":"bread","loaf":"bread",
     "toast":"bread","bun":"bread","naan":"bread",
     "roti":"bread","chapati":"bread","paratha":"bread",
     "chocolate bar":"biscuit","waffle":"biscuit",
+    # ── Snacks ──
     "potato chip":"chips","potato chips":"chips","chip":"chips",
     "crisp":"chips","crisps":"chips","tortilla chip":"nacho",
     "corn chip":"chips","popcorn":"snack",
     "bhujia":"bhujia","namkeen":"namkeen","boondi":"boondi",
     "french fries":"frozen fries","nachos":"nacho",
+    # ── Dairy ──
     "butter":"butter","margarine":"butter",
     "ghee":"ghee",
     "curd":"curd","yogurt":"yogurt","yoghurt":"yogurt",
@@ -530,31 +556,40 @@ VISUAL_LABEL_TO_TAG = {
     "milk":"milk","fresh cream":"cream","whipping cream":"cream",
     "lassi":"lassi","buttermilk":"lassi",
     "ice cream":"ice cream","gelato":"ice cream","kulfi":"kulfi",
+    # ── Grains ──
     "rice":"rice","basmati rice":"basmati",
     "dal":"dal","lentil":"lentil","lentils":"lentil",
     "porridge":"oats","oatmeal":"oats","oats":"oats",
     "granola":"muesli","muesli":"muesli",
     "poha":"poha","upma":"suji",
+    # ── Spices ──
     "turmeric":"turmeric","chilli":"chilli powder",
     "chili":"chilli powder","masala":"masala",
     "curry powder":"masala","garam masala":"garam masala",
+    # ── Oil / Condiments ──
     "cooking oil":"cooking oil","sunflower oil":"sunflower oil",
     "ketchup":"ketchup","mayonnaise":"mayonnaise",
     "honey":"honey","jam":"jam","jelly":"jam",
     "peanut butter":"peanut butter","nutella":"nutella",
     "chutney":"chutney","pickle":"pickle",
+    # ── Drinks ──
     "mango juice":"mango juice","orange juice":"orange juice",
     "lemonade":"soda","soda":"soda","water":"water",
     "energy drink":"energy drink",
+    # ── Beverages ──
     "tea":"tea","chai":"tea","green tea":"green tea",
     "coffee":"coffee","espresso":"coffee",
     "bournvita":"bournvita","horlicks":"horlicks","milo":"milo",
+    # ── Personal Care ──
     "soap":"soap","shampoo":"shampoo","toothpaste":"toothpaste",
     "toothbrush":"toothbrush","face wash":"face wash","razor":"razor",
+    # ── Home Care ──
     "detergent":"detergent","dishwash":"dishwash",
     "toilet cleaner":"toilet cleaner","floor cleaner":"floor cleaner",
+    # ── Grains (extra) ──
     "flour":"atta","wheat flour":"atta","whole wheat":"atta",
     "atta":"atta","maida":"maida",
+    # ── Generic ──
     "tube":"toothpaste","sauce":"sauce","syrup":"honey","powder":"masala",
 }
 
@@ -579,14 +614,6 @@ def detect_dairy_type(tag_texts):
 
 
 def find_products_from_tags(tag_dicts, products):
-    """
-    Improved product matching:
-    - Exact match gets full confidence score
-    - Substring match gets 80%
-    - Word-level match gets 60%
-    - Low-priority tags only used as fallback
-    - Returns up to 6 best matched products
-    """
     matched_high = {}
     matched_low  = set()
 
@@ -598,13 +625,11 @@ def find_products_from_tags(tag_dicts, products):
 
     tag_texts = [t for t, _ in raw_tags]
 
-    # Step 1: dairy-specific forced match
     dairy_type, forced_pids, blocked_tags = detect_dairy_type(tag_texts)
     for pid in forced_pids:
         if pid in products:
             matched_high[pid] = matched_high.get(pid, 0) + 200
 
-    # Step 2: keyword matching with improved scoring
     for (tag, conf) in raw_tags:
         if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE_WORDS:
             continue
@@ -674,9 +699,6 @@ def map_visual_label(raw_label: str) -> str:
     return ""
 
 
-# ═══════════════════════════════════════════════════════════════
-# GEMINI PROMPT — IMPROVED
-# ═══════════════════════════════════════════════════════════════
 GEMINI_PROMPT = """You are an expert Indian grocery product identifier.
 
 Look at this image carefully and identify EXACTLY what grocery/food/household product is shown.
@@ -690,7 +712,14 @@ IDENTIFICATION RULES:
 2. Specific product type second
 3. Category last
 
-STRICT DAIRY RULES (very important — do not confuse these):
+STRICT FRUIT RULES (highest priority):
+- Elongated curved yellow/green fruit with a peel = "banana" — NEVER call this mango juice, butter, or anything else
+- A bunch of curved yellow fruits hanging together = "banana"
+- Round orange citrus fruit = "orange fruit"
+- Small oval red/green fruit = "apple"
+- Yellow-green oval tropical fruit (mango shape) = "mango fruit"
+
+STRICT DAIRY RULES:
 - Rectangular solid block in paper/foil wrapper (yellow or white) → "butter" (NEVER yogurt, cream, or cheese)
 - White/cream liquid in packet or bottle → "milk"
 - Semi-solid white substance in cup or tub → "curd" or "yogurt"
@@ -711,6 +740,7 @@ STRICT SNACK RULES:
 - Mixed fried Indian snack = "namkeen"
 
 ALLOWED TAGS (use these exact words):
+FRUITS: banana, apple, orange fruit, mango fruit, grapes, papaya, guava, pomegranate, kela, plantain
 DAIRY: milk, butter, ghee, curd, yogurt, paneer, cheese, cream, lassi, condensed milk, ice cream, kulfi
 BAKERY: biscuit, bread, cookie, digestive biscuit, bourbon, marie biscuit, cracker, cake
 SNACKS: chips, lays, kurkure, bingo, pringles, namkeen, bhujia, sev, boondi, nacho, popcorn
@@ -727,14 +757,14 @@ HEALTH: muesli, oats, chyawanprash, vitamin, supplement, glucon d
 
 FORBIDDEN TAGS (never output these):
 band, bandage, block, slab, foil, wrapper, yellow, red, white, blue, strip, ribbon, tape, shape,
-fried, grilled, baked, donut, ring, coil, spiral, oval, paella, risotto, rectangular, solid, packaging
+fried, grilled, baked, donut, ring, coil, spiral, oval, paella, risotto, rectangular, solid, packaging,
+curved, elongated, crescent, peel, skin, bunch
 
 confidence is an integer 0-100. Higher = more certain.
 Return ONLY the JSON array."""
 
 
 def classify_image_with_gemini(image_bytes):
-    """Try Gemini models in order. Returns (tags_list, error_str)."""
     debug = []
     gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
     if not gemini_key:
@@ -804,7 +834,6 @@ def classify_image_with_gemini(image_bytes):
 
 
 def classify_image_with_hf(image_bytes):
-    """Try HuggingFace models. Returns (tags_list, error_str, debug_list)."""
     debug = []
     hf_token = str(st.secrets.get("HF_API_TOKEN", "")).strip()
     if not hf_token:
@@ -850,76 +879,77 @@ def classify_image_with_hf(image_bytes):
     return None, "HF Vision failed", debug
 
 
-def classify_image(image_bytes):
-    """
-    Full classification pipeline:
-    1. Gemini (best accuracy)
-    2. HuggingFace (fallback)
-    3. Color analysis (last resort)
-    Returns (tags_list, method_label, debug_list)
-    """
-    all_debug = []
-
-    # Try Gemini first
-    tags, err, dbg = classify_image_with_gemini(image_bytes)
-    all_debug.extend(dbg)
-    if tags:
-        return tags, "✨ Gemini Vision", all_debug
-
-    # Try HuggingFace
-    tags, err, dbg = classify_image_with_hf(image_bytes)
-    all_debug.extend(dbg)
-    if tags:
-        return tags, "🤗 HuggingFace Vision", all_debug
-
-    # Color-based fallback
-    all_debug.append("⚠️ Both APIs failed — using color fallback")
-    image = Image.open(__import__("io").BytesIO(image_bytes)).convert("RGB")
-    tags  = fallback_color_analysis(image)
-    return tags, "🎨 Color Fallback", all_debug
-
-
 def fallback_color_analysis(image: Image.Image):
     img  = image.resize((100, 100)).convert("RGB")
     pix  = np.array(img).reshape(-1, 3).astype(float)
     mask = ~((pix[:,0]>220) & (pix[:,1]>220) & (pix[:,2]>220))
     fg   = pix[mask] if mask.sum() > 50 else pix
     r, g, b = fg.mean(axis=0)
-    bright   = (r + g + b) / 3
-    if r > 160 and g > 130 and b < 110 and r > b * 1.7:
-        return [{"tag":"mango juice","confidence":65}, {"tag":"juice","confidence":60}]
+    bright  = (r + g + b) / 3
+
+    # Aspect ratio — banana is elongated, juice packet is squarish
+    img_arr      = np.array(image.convert("L"))
+    h, w         = img_arr.shape
+    aspect       = w / h if h > 0 else 1.0
+    is_elongated = aspect > 1.5 or aspect < 0.65
+
+    # Yellow + elongated shape = banana
+    is_yellow = r > 170 and g > 140 and b < 100 and r > b * 1.8
+    if is_yellow and is_elongated:
+        return [{"tag": "banana", "confidence": 68},
+                {"tag": "fruit", "confidence": 60}]
+
+    # Orange-yellow + squarish = mango juice packet/bottle
+    if r > 160 and g > 110 and b < 100 and r > g * 1.15:
+        return [{"tag": "mango juice", "confidence": 65},
+                {"tag": "juice", "confidence": 60}]
+
     if r > 190 and 90 < g < 170 and b < 90 and r > g * 1.2:
-        return [{"tag":"mango juice","confidence":65}, {"tag":"juice","confidence":60}]
+        return [{"tag": "mango juice", "confidence": 65},
+                {"tag": "juice", "confidence": 60}]
+
     if g > r and g > b and g > 100 and g > r * 1.1:
-        return [{"tag":"packaged food","confidence":55}]
+        return [{"tag": "packaged food", "confidence": 55}]
     if r > g * 1.4 and r > b * 1.4 and r > 140:
-        return [{"tag":"chilli powder","confidence":65}, {"tag":"masala","confidence":60}]
+        return [{"tag": "chilli powder", "confidence": 65},
+                {"tag": "masala", "confidence": 60}]
     if b > r * 1.1 and b > g * 1.1:
-        return [{"tag":"milk","confidence":62}, {"tag":"dairy product","confidence":58}]
+        return [{"tag": "milk", "confidence": 62},
+                {"tag": "dairy product", "confidence": 58}]
     if bright > 210 and abs(r-g) < 20 and abs(g-b) < 20:
-        return [{"tag":"butter","confidence":65}, {"tag":"dairy product","confidence":60}]
+        return [{"tag": "butter", "confidence": 65},
+                {"tag": "dairy product", "confidence": 60}]
     if bright < 80:
-        return [{"tag":"coffee","confidence":62}, {"tag":"tea","confidence":58}]
+        return [{"tag": "coffee", "confidence": 62},
+                {"tag": "tea", "confidence": 58}]
     if r > 130 and g > 90 and b < 90 and r > g and r > b * 1.5:
-        return [{"tag":"biscuit","confidence":60}]
-    return [{"tag":"snack","confidence":55}, {"tag":"packaged food","confidence":52}]
+        return [{"tag": "biscuit", "confidence": 60}]
+    return [{"tag": "snack", "confidence": 55},
+            {"tag": "packaged food", "confidence": 52}]
 
 
-# ═══════════════════════════════════════════════════════════════
-# SMART RECOMMENDATIONS after detection
-# ═══════════════════════════════════════════════════════════════
+def classify_image(image_bytes):
+    all_debug = []
+    tags, err, dbg = classify_image_with_gemini(image_bytes)
+    all_debug.extend(dbg)
+    if tags:
+        return tags, "✨ Gemini Vision", all_debug
+    tags, err, dbg = classify_image_with_hf(image_bytes)
+    all_debug.extend(dbg)
+    if tags:
+        return tags, "🤗 HuggingFace Vision", all_debug
+    all_debug.append("⚠️ Both APIs failed — using color fallback")
+    image = Image.open(__import__("io").BytesIO(image_bytes)).convert("RGB")
+    tags  = fallback_color_analysis(image)
+    return tags, "🎨 Color Fallback", all_debug
+
+
 def get_smart_recommendations(matched_pids, products, item_sim_df, n=8):
-    """
-    For each matched product, find CF similar products.
-    Aggregate and de-duplicate, sorted by average similarity score.
-    """
     if not matched_pids:
         return [], []
-
-    score_map = {}
+    score_map   = {}
     matched_set = set(matched_pids)
-
-    for base_pid in matched_pids[:3]:   # use top 3 matched products as seeds
+    for base_pid in matched_pids[:3]:
         base_cat     = products.get(base_pid, {}).get("category", "")
         allowed_cats = RELATED_CATEGORIES.get(base_cat, [base_cat])
         sim_pids, sim_scores = get_similar_products(
@@ -931,17 +961,13 @@ def get_smart_recommendations(matched_pids, products, item_sim_df, n=8):
                     score_map[pid] = max(score_map[pid], score)
                 else:
                     score_map[pid] = score
-
-    # Sort by score descending
-    sorted_pids   = sorted(score_map.keys(), key=lambda p: score_map[p], reverse=True)
-    top_pids      = sorted_pids[:n]
-    top_scores    = [score_map[p] for p in top_pids]
+    sorted_pids = sorted(score_map.keys(), key=lambda p: score_map[p], reverse=True)
+    top_pids    = sorted_pids[:n]
+    top_scores  = [score_map[p] for p in top_pids]
     return top_pids, top_scores
 
 
-# ═══════════════════════════════════════════════════════════════
-# SIDEBAR
-# ═══════════════════════════════════════════════════════════════
+# ── SIDEBAR ──
 with st.sidebar:
     st.markdown('<div class="sidebar-logo">🛒 GrocerAI</div>', unsafe_allow_html=True)
     st.markdown("---")
@@ -958,9 +984,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown('<p style="font-size:0.75rem;opacity:0.5;text-align:center;">Built with ❤️ using Streamlit<br>ML + CV Domain Project</p>', unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# LOAD DATA & MODEL
-# ═══════════════════════════════════════════════════════════════
 products, ratings_df = load_data()
 predicted_df, item_sim_df = train_model(ratings_df)
 init_cart()
@@ -968,9 +991,7 @@ users       = ratings_df.index.tolist()
 product_ids = list(products.keys())
 
 
-# ═══════════════════════════════════════════════════════════════
-# PAGE: HOME
-# ═══════════════════════════════════════════════════════════════
+# ── PAGE: HOME ──
 if page == "🏠 Home Dashboard":
     st.markdown('<h1 class="main-title">🛒 Smart Grocery Recommender</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Collaborative Filtering + Computer Vision — ML/CV Domain Project</p>', unsafe_allow_html=True)
@@ -999,9 +1020,7 @@ if page == "🏠 Home Dashboard":
                 st.toast(f"✅ {pdata['name']} added!", icon="🛒")
 
 
-# ═══════════════════════════════════════════════════════════════
-# PAGE: CF RECOMMENDATIONS
-# ═══════════════════════════════════════════════════════════════
+# ── PAGE: CF RECOMMENDATIONS ──
 elif page == "🤖 CF Recommendations":
     st.markdown('<h1 class="main-title">🤖 Collaborative Filtering</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">SVD-based Matrix Factorization • Cosine Similarity</p>', unsafe_allow_html=True)
@@ -1070,9 +1089,7 @@ elif page == "🤖 CF Recommendations":
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
 
 
-# ═══════════════════════════════════════════════════════════════
-# PAGE: IMAGE SCANNER  (FULLY IMPROVED)
-# ═══════════════════════════════════════════════════════════════
+# ── PAGE: IMAGE SCANNER ──
 elif page == "📸 Image Scanner":
     st.markdown('<h1 class="main-title">📸 Product Image Scanner</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Upload a grocery photo → CV identifies it → Shows matched products + CF suggestions</p>', unsafe_allow_html=True)
@@ -1104,13 +1121,12 @@ elif page == "📸 Image Scanner":
                 st.session_state.pop("cv_pids", None)
                 st.rerun()
 
-        # Manual search (always visible)
         st.markdown("---")
         st.markdown('<div class="section-header">🔎 Manual Product Search</div>', unsafe_allow_html=True)
         manual_col1, manual_col2 = st.columns([3, 1])
         with manual_col1:
             manual_query = st.text_input(
-                "Type product name if AI misidentifies (e.g. butter, maggi, chips)",
+                "Type product name if AI misidentifies (e.g. banana, butter, maggi, chips)",
                 key="manual_search"
             )
         with manual_col2:
@@ -1124,11 +1140,11 @@ elif page == "📸 Image Scanner":
                 if len(w) >= 3:
                     manual_tags.append({"tag": w, "confidence": 75})
             matched_pids = find_products_from_tags(manual_tags, products)
-            st.session_state["cv_tags"]        = manual_tags
-            st.session_state["cv_pids"]        = matched_pids
-            st.session_state["cv_method"]      = f"🔎 Manual Search: '{manual_query}'"
-            st.session_state["cv_debug"]       = []
-            st.session_state["cv_done"]        = True
+            st.session_state["cv_tags"]   = manual_tags
+            st.session_state["cv_pids"]   = matched_pids
+            st.session_state["cv_method"] = f"🔎 Manual Search: '{manual_query}'"
+            st.session_state["cv_debug"]  = []
+            st.session_state["cv_done"]   = True
 
         if analyze:
             pb = st.progress(0, text="🧠 Initializing AI Vision...")
@@ -1148,7 +1164,6 @@ elif page == "📸 Image Scanner":
             st.session_state["cv_debug"]  = debug_log
             st.session_state["cv_done"]   = True
 
-    # ── Results section ──
     if st.session_state.get("cv_done"):
         method  = st.session_state.get("cv_method", "")
         tags    = st.session_state.get("cv_tags", [])
@@ -1156,7 +1171,6 @@ elif page == "📸 Image Scanner":
 
         st.markdown("---")
 
-        # Detection summary banner
         primary_tag = ""
         if tags:
             t0 = tags[0]
@@ -1170,7 +1184,6 @@ elif page == "📸 Image Scanner":
             <span style="font-size:0.8rem;color:#aaa;margin-left:1rem;">via {method}</span>
         </div>""", unsafe_allow_html=True)
 
-        # All detected tags
         st.markdown('<div class="section-header">🏷️ All Detected Labels</div>', unsafe_allow_html=True)
         tags_html = ""
         for item in tags[:10]:
@@ -1187,13 +1200,11 @@ elif page == "📸 Image Scanner":
                 tags_html += f'<span class="badge badge-orange">{item}</span>'
         st.markdown(f'<div style="margin:0.5rem 0 1rem 0;">{tags_html}</div>', unsafe_allow_html=True)
 
-        # Debug log
         if st.session_state.get("cv_debug"):
             with st.expander("🔧 API Debug Log"):
                 for msg in st.session_state["cv_debug"]:
                     st.markdown(f"`{msg}`")
 
-        # Matched products
         st.markdown('<div class="section-header">🛒 Matched Products in Catalog</div>', unsafe_allow_html=True)
         if not matched:
             top_tag = primary_tag or "this item"
@@ -1204,7 +1215,7 @@ elif page == "📸 Image Scanner":
                 p = products.get(pid)
                 if not p: continue
                 with m_cols[i % 3]:
-                    cat_badge = f'<span class="badge badge-blue">{p["category"]}</span>'
+                    cat_badge  = f'<span class="badge badge-blue">{p["category"]}</span>'
                     tag_badges = "".join([f'<span class="badge badge-green">{t}</span>' for t in p["tags"][:2]])
                     st.markdown(f"""<div class="product-card">
                         <span class="product-emoji">{p['emoji']}</span>
@@ -1217,14 +1228,11 @@ elif page == "📸 Image Scanner":
                         add_to_cart(pid, products)
                         st.toast(f"✅ {p['name']} added!", icon="🛒")
 
-        # CF-based "You might also like" — IMPROVED: seeds from all matched products
         if matched:
             st.markdown('<div class="section-header">🤖 You Might Also Like</div>', unsafe_allow_html=True)
             base_cat = products.get(matched[0], {}).get("category", "")
             st.markdown(f'<small style="color:#7f8c8d;">Based on detected category: <b>{base_cat}</b> · Powered by Collaborative Filtering</small>', unsafe_allow_html=True)
-
             sim_pids, sim_scores = get_smart_recommendations(matched, products, item_sim_df, n=n_recs)
-
             if not sim_pids:
                 st.info("No CF suggestions found for this product.")
             else:
@@ -1244,9 +1252,7 @@ elif page == "📸 Image Scanner":
                             st.toast(f"✅ {p['name']} added!", icon="🛒")
 
 
-# ═══════════════════════════════════════════════════════════════
-# PAGE: ANALYTICS
-# ═══════════════════════════════════════════════════════════════
+# ── PAGE: ANALYTICS ──
 elif page == "📊 Analytics":
     st.markdown('<h1 class="main-title">📊 Analytics Dashboard</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Purchase patterns, model insights, and catalog stats</p>', unsafe_allow_html=True)
