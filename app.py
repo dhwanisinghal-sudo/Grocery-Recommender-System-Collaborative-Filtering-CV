@@ -378,11 +378,8 @@ DAIRY_SPECIFIC = {
     },
 }
 
-# Full GROCERY_KEYWORDS mapping all 500 products
 GROCERY_KEYWORDS = {
-    # ── Bakery ──
-    "biscuit":   ["P001","P002","P003","P004","P005","P006","P007","P008","P009","P010",
-                  "P132","P133","P134","P135","P160","P161","P162","P163","P369","P370","P371","P372"],
+    "biscuit":   ["P001","P002","P003","P004","P005","P006","P007","P008","P009","P010","P132","P133","P134","P135","P160","P161","P162","P163","P369","P370","P371","P372"],
     "parle":     ["P001","P010","P157","P162","P475"],
     "britannia": ["P003","P132","P133","P134","P151","P153","P156","P369"],
     "marie":     ["P003"],
@@ -398,7 +395,6 @@ GROCERY_KEYWORDS = {
     "oreo":      ["P372"],
     "dark fantasy": ["P371","P133"],
     "bakery":    ["P001","P002","P003","P004","P006","P007","P151","P152","P153"],
-    # ── Snacks ──
     "chips":     ["P011","P012","P013","P014","P143","P144","P168","P169","P170","P177","P178","P179"],
     "lays":      ["P011","P143"],
     "kurkure":   ["P012"],
@@ -420,7 +416,6 @@ GROCERY_KEYWORDS = {
     "chocolate bar": ["P373","P374","P375","P376","P463","P495","P496"],
     "candy":     ["P464","P465","P466","P467","P468"],
     "snack":     ["P011","P012","P013","P015","P016","P165","P166"],
-    # ── Dairy ──
     "butter":    ["P021","P181","P182","P183"],
     "amul butter": ["P021","P181","P182"],
     "ghee":      ["P025","P192","P193"],
@@ -438,7 +433,6 @@ GROCERY_KEYWORDS = {
     "kulfi":     ["P445"],
     "gulab jamun": ["P114","P202","P351","P444"],
     "dairy":     ["P021","P022","P023","P024","P025","P194","P195","P196"],
-    # ── Grains ──
     "rice":      ["P031","P032","P203","P204","P407","P408","P492"],
     "basmati":   ["P031","P032","P203","P204","P407","P408","P492"],
     "dal":       ["P033","P034","P205","P206","P207","P208","P377"],
@@ -457,9 +451,7 @@ GROCERY_KEYWORDS = {
     "soya":      ["P218"],
     "salt":      ["P219","P493","P494","P498"],
     "grains":    ["P031","P032","P033","P034","P035"],
-    # ── Spices ──
-    "masala":    ["P041","P042","P045","P047","P048","P147","P148","P220","P221","P222",
-                  "P223","P224","P225","P234","P235","P381","P415","P416","P497"],
+    "masala":    ["P041","P042","P045","P047","P048","P147","P148","P220","P221","P222","P223","P224","P225","P234","P235","P381","P415","P416","P497"],
     "mdh":       ["P041","P045","P147","P220","P221","P222","P234","P381","P416","P497"],
     "everest":   ["P042","P044","P046","P048","P148","P223","P224","P225","P228","P235","P415"],
     "garam masala": ["P041","P222"],
@@ -476,7 +468,6 @@ GROCERY_KEYWORDS = {
     "olive oil": ["P233","P380","P399","P489"],
     "mustard oil": ["P232","P379"],
     "spices":    ["P041","P042","P043","P044","P226","P227","P228"],
-    # ── Noodles ──
     "noodles":   ["P051","P052","P053","P054","P131","P236","P237","P238","P239","P240","P241","P242","P384"],
     "maggi":     ["P051","P131","P236","P237"],
     "yippee":    ["P052","P238","P239"],
@@ -487,9 +478,7 @@ GROCERY_KEYWORDS = {
     "cup noodles": ["P051","P052","P131"],
     "instant noodles": ["P051","P052","P053","P054","P131","P236","P237","P238","P384"],
     "soup":      ["P053","P383","P479"],
-    # ── Drinks ──
-    "juice":     ["P061","P062","P063","P066","P067","P137","P138","P246","P247","P248",
-                  "P249","P250","P386","P387","P396","P397","P423","P424","P469","P470"],
+    "juice":     ["P061","P062","P063","P066","P067","P137","P138","P246","P247","P248","P249","P250","P386","P387","P396","P397","P423","P424","P469","P470"],
     "mango juice": ["P062","P063","P066","P246","P249","P396"],
     "orange juice": ["P061","P248"],
     "frooti":    ["P063","P249"],
@@ -517,7 +506,6 @@ GROCERY_KEYWORDS = {
     "bisleri":   ["P069","P259"],
     "mango":     ["P062","P063","P066","P246","P249","P396"],
     "drinks":    ["P061","P062","P063","P064","P065","P066"],
-    # ── Condiments ──
     "jam":       ["P071","P261","P262","P263","P391"],
     "kissan":    ["P071","P261","P262"],
     "ketchup":   ["P073","P266","P267","P268"],
@@ -533,7 +521,6 @@ GROCERY_KEYWORDS = {
     "nutella":   ["P078","P275"],
     "peanut butter": ["P079","P276"],
     "condiments": ["P071","P073","P076","P077","P078","P079"],
-    # ── Beverages ──
     "tea":       ["P121","P122","P125","P126","P130","P352","P353","P354","P355","P356","P357","P419","P420"],
     "tata tea":  ["P121","P352"],
     "red label": ["P122","P353"],
@@ -547,7 +534,6 @@ GROCERY_KEYWORDS = {
     "horlicks":  ["P091","P306","P367"],
     "complan":   ["P092","P307"],
     "health drink": ["P091","P092","P093","P128","P129","P306","P307","P308","P366","P367","P368"],
-    # ── Personal Care ──
     "toothpaste": ["P081","P278","P279","P280","P459"],
     "colgate":   ["P081","P278","P282"],
     "toothbrush": ["P082","P281","P282"],
@@ -566,7 +552,6 @@ GROCERY_KEYWORDS = {
     "deo":       ["P300","P301","P455","P482","P483"],
     "hair oil":  ["P088","P291","P292","P480","P488"],
     "personal care": ["P081","P082","P083","P084","P085","P086"],
-    # ── Home Care ──
     "detergent": ["P101","P102","P321","P322","P323","P324","P325","P432","P433"],
     "surf excel": ["P101","P321","P432"],
     "ariel":     ["P102","P322","P433"],
@@ -581,7 +566,6 @@ GROCERY_KEYWORDS = {
     "freshener": ["P107","P337","P338","P438","P439"],
     "scrub":     ["P108","P333","P437"],
     "home care": ["P101","P102","P103","P104","P106","P107"],
-    # ── Health ──
     "muesli":    ["P094","P313"],
     "chyawanprash": ["P095","P314"],
     "patanjali": ["P059","P095","P193","P229","P232","P274","P315","P408","P427","P428"],
@@ -592,7 +576,6 @@ GROCERY_KEYWORDS = {
     "protein":   ["P093","P308","P309","P310"],
     "oatmeal":   ["P037","P038","P212","P213","P214"],
     "supplement": ["P091","P092","P093","P097","P308","P309","P310"],
-    # ── Frozen ──
     "frozen fries": ["P111","P340","P425"],
     "mccain":    ["P111","P340","P425","P446"],
     "samosa":    ["P343"],
@@ -612,7 +595,6 @@ LOW_PRIORITY_TAGS = {
 }
 
 VISUAL_LABEL_TO_TAG = {
-    # Dairy
     "butter":"butter","margarine":"butter","ghee":"ghee",
     "curd":"curd","yogurt":"yogurt","yoghurt":"yogurt","greek yogurt":"yogurt",
     "cheese":"cheese","paneer":"paneer","cottage cheese":"paneer",
@@ -620,58 +602,45 @@ VISUAL_LABEL_TO_TAG = {
     "lassi":"lassi","buttermilk":"lassi",
     "ice cream":"ice cream","gelato":"ice cream","kulfi":"kulfi",
     "condensed milk":"condensed milk",
-    # Bakery
     "biscuit":"biscuit","cookie":"biscuit","cracker":"biscuit","wafer":"biscuit",
     "bread":"bread","loaf":"bread","toast":"bread","bun":"bread",
     "roti":"bread","chapati":"bread","paratha":"bread","naan":"bread",
     "cake":"cake","muffin":"muffin","rusk":"rusk",
-    # Snacks
     "potato chip":"chips","potato chips":"chips","chip":"chips","crisp":"chips",
     "crisps":"chips","tortilla chip":"nacho","corn chip":"chips",
     "popcorn":"popcorn","bhujia":"bhujia","namkeen":"namkeen","boondi":"boondi",
     "french fries":"frozen fries","nachos":"nacho","wafer":"wafers",
     "chocolate bar":"chocolate bar","candy":"candy","toffee":"candy","gum":"candy",
-    # Noodles
     "noodle":"noodles","noodles":"noodles","ramen":"noodles","chow mein":"noodles",
     "lo mein":"noodles","spaghetti":"noodles","pasta":"pasta","penne":"pasta",
     "macaroni":"pasta","fusilli":"pasta","vermicelli":"noodles",
     "maggi":"maggi","instant noodles":"maggi","cup noodles":"maggi",
-    # Grains
     "rice":"rice","basmati rice":"basmati","dal":"dal","lentil":"dal","lentils":"dal",
     "oatmeal":"oats","porridge":"oats","oats":"oats","granola":"muesli","muesli":"muesli",
     "poha":"poha","upma":"suji","flour":"atta","wheat flour":"atta","atta":"atta",
     "maida":"maida","besan":"besan","salt":"salt",
-    # Spices
     "turmeric":"turmeric","chilli":"chilli powder","chili":"chilli powder",
     "masala":"masala","curry powder":"masala","garam masala":"garam masala",
-    # Oil & Condiments
     "cooking oil":"cooking oil","sunflower oil":"sunflower oil","olive oil":"olive oil",
     "mustard oil":"mustard oil",
     "ketchup":"ketchup","mayonnaise":"mayonnaise","honey":"honey","jam":"jam",
     "jelly":"jam","peanut butter":"peanut butter","nutella":"nutella",
     "chutney":"chutney","pickle":"pickle","sauce":"sauce",
-    # Drinks
     "mango juice":"mango juice","orange juice":"orange juice","energy drink":"energy drink",
     "lemonade":"soda","soda":"soda","water":"water","cold drink":"soda",
     "fruit juice":"juice",
-    # Beverages
     "tea":"tea","chai":"tea","green tea":"green tea","coffee":"coffee","espresso":"coffee",
     "bournvita":"bournvita","horlicks":"horlicks","milo":"milo",
-    # Personal Care
     "soap":"soap","shampoo":"shampoo","toothpaste":"toothpaste","toothbrush":"toothbrush",
     "face wash":"face wash","razor":"razor","body lotion":"body lotion",
     "deo":"deo","deodorant":"deo","hair oil":"hair oil","coconut oil":"coconut oil",
-    # Home Care
     "detergent":"detergent","dishwash":"dishwash","toilet cleaner":"toilet cleaner",
     "floor cleaner":"floor cleaner","glass cleaner":"glass cleaner",
     "mosquito repellent":"mosquito","air freshener":"freshener","scrub":"scrub",
-    # Health
     "supplement":"supplement","protein":"protein","vitamin":"vitamin",
     "corn flakes":"corn flakes","muesli":"muesli","chyawanprash":"chyawanprash",
-    # Frozen
     "frozen fries":"frozen fries","samosa":"samosa","momo":"momo","nuggets":"nuggets",
     "ice cream":"ice cream","kulfi":"kulfi","biryani":"biryani","paratha":"paratha",
-    # Generic
     "tube":"toothpaste","powder":"masala","syrup":"honey",
 }
 
@@ -910,30 +879,19 @@ def color_fallback(image: Image.Image):
     fg    = pix[mask] if mask.sum() > 50 else pix
     r, g, b  = fg.mean(axis=0)
     bright   = (r + g + b) / 3
-
-    # texture_std: how "busy" the color is. Low = uniform surface (fruit skin,
-    # liquid in a bottle). High = printed packaging with logo/text/multi-color
-    # panels (Maggi, chips, biscuits). This is the key signal that distinguishes
-    # banana / Maggi / mango juice — previously a flat r>160,g>110,b<100 check
-    # caught all three under one bucket ("mango juice") since they're all
-    # yellow-orange on average color alone.
     texture_std = fg.std(axis=0).mean()
-
     import colorsys
     hue, sat, val = colorsys.rgb_to_hsv(r/255, g/255, b/255)
     hue_deg = hue * 360
-
-    # ── yellow/orange family: banana, Maggi, mango juice all live here, so split them ──
     if 30 <= hue_deg <= 70 and sat > 0.25 and val > 0.45:
-        if texture_std > 25:                       # busy print → packaged snack, not juice
+        if texture_std > 25:
             return [{"tag": "noodles", "confidence": 40}, {"tag": "chips", "confidence": 35},
                      {"tag": "biscuit", "confidence": 35}, {"tag": "namkeen", "confidence": 30}]
-        if hue_deg >= 45 and texture_std < 12:      # smooth + yellow-green → banana
+        if hue_deg >= 45 and texture_std < 12:
             return [{"tag": "banana", "confidence": 60}, {"tag": "juice", "confidence": 40}]
-        if hue_deg < 45 and texture_std < 20:       # smooth + orange-red → juice
+        if hue_deg < 45 and texture_std < 20:
             return [{"tag": "mango juice", "confidence": 55}, {"tag": "juice", "confidence": 50}]
         return [{"tag": "packaged food", "confidence": 40}, {"tag": "snack", "confidence": 35}]
-
     if g > r and g > b and g > 100 and g > r * 1.1:
         return [{"tag": "packaged food", "confidence": 55}]
     if r > g * 1.4 and r > b * 1.4 and r > 140 and hue_deg < 20:
@@ -1177,7 +1135,13 @@ if mode == "🎯 User Recommendations":
 
         with right:
             st.markdown('<div class="sec-hdr">📜 Rating History</div>', unsafe_allow_html=True)
-            hist = ratings[ratings['user_id'] == user_id].merge(products_df, on='product_id').sort_values('rating', ascending=False)
+
+            # ── FIX: rename 'rating' in ratings df before merging with products_df
+            # Both DataFrames have a 'rating' column → merge creates rating_x, rating_y
+            # Solution: rename ratings column to 'user_rating' before merge
+            _user_ratings = ratings[ratings['user_id'] == user_id].rename(columns={'rating': 'user_rating'})
+            hist = _user_ratings.merge(products_df, on='product_id').sort_values('user_rating', ascending=False)
+
             st.markdown("**Category Preferences**")
             cat_counts = hist['category'].value_counts()
             for cat, cnt in cat_counts.items():
@@ -1197,10 +1161,10 @@ if mode == "🎯 User Recommendations":
                 st.markdown(f"""
                 <div style="padding:6px 0;border-bottom:1px solid #f5f5f5">
                     <span style="font-size:0.85rem;font-weight:500;color:#1a1a2e">{row.get('emoji','')} {row['name']}</span><br>
-                    <span style="color:#f9a825;font-size:0.78rem">{stars(row['rating'])}</span>
-                    <span style="font-size:0.72rem;color:#aaa"> {row['rating']} · {row['category']}</span>
+                    <span style="color:#f9a825;font-size:0.78rem">{stars(row['user_rating'])}</span>
+                    <span style="font-size:0.72rem;color:#aaa"> {row['user_rating']} · {row['category']}</span>
                 </div>""", unsafe_allow_html=True)
-            avg = hist['rating'].mean()
+            avg = hist['user_rating'].mean()
             st.markdown(f"""
             <div style="margin-top:14px;background:#f8f9ff;border-radius:10px;padding:12px;text-align:center">
                 <div style="font-size:1.4rem;font-weight:700;color:#4f7ef8">{avg:.2f}</div>
