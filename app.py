@@ -31,75 +31,150 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-h1,h2,h3,h4 { font-family: 'Poppins', sans-serif; }
-.stApp { background: linear-gradient(135deg, #f0f4ff 0%, #fef9f0 100%); }
+h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; }
 
+.stApp {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0d0d2b 50%, #0a0f1e 100%);
+    min-height: 100vh;
+}
+
+/* Cards */
 .prod-card {
-    background: white; border-radius: 16px; padding: 16px 20px;
-    margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    border-left: 4px solid #4f7ef8; transition: all 0.2s ease;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 16px; padding: 16px 20px; margin-bottom: 12px;
+    border-left: 3px solid #8b5cf6;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
 }
-.prod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(79,126,248,0.18); }
+.prod-card:hover {
+    transform: translateY(-3px);
+    background: rgba(139,92,246,0.08);
+    border-color: rgba(139,92,246,0.5);
+    box-shadow: 0 8px 32px rgba(139,92,246,0.2);
+}
 .prod-card-cv {
-    background: white; border-radius: 16px; padding: 16px;
-    margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    border-left: 4px solid #2ECC71; text-align: center; transition: all 0.2s ease;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 16px; padding: 16px; margin-bottom: 12px;
+    text-align: center; backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
 }
-.prod-card-cv:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(46,204,113,0.2); }
-.prod-name { font-family:'Poppins',sans-serif; font-weight:600; font-size:1rem; color:#1a1a2e; }
-.prod-name-cv { font-family:'Poppins',sans-serif; font-weight:600; font-size:0.9rem; color:#1a1a2e; margin:6px 0 4px 0; }
-.prod-meta { font-size:0.8rem; color:#666; margin-top:5px; }
+.prod-card-cv:hover {
+    transform: translateY(-3px);
+    background: rgba(99,102,241,0.08);
+    box-shadow: 0 8px 32px rgba(99,102,241,0.2);
+}
 
+/* Text */
+.prod-name { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; color:#f1f5f9; }
+.prod-name-cv { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.9rem; color:#f1f5f9; margin:6px 0 4px 0; }
+.prod-meta { font-size:0.8rem; color:#94a3b8; margin-top:5px; }
+
+/* Badges */
 .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.72rem; font-weight:600; margin-right:4px; }
-.b-cat   { background:#e8eeff; color:#4f7ef8; }
-.b-sub   { background:#fff3e0; color:#f57c00; }
-.b-price { background:#e8f5e9; color:#2e7d32; }
-.b-rank  { background:#f3e5f5; color:#7b1fa2; }
-.b-algo  { background:linear-gradient(90deg,#4f7ef8,#7b5ea7); color:white; padding:3px 14px; border-radius:20px; font-size:0.78rem; font-weight:600; }
-.b-green { background:#d5f5e3; color:#1e8449; }
-.b-conf  { background:#eaf4fb; color:#1a6ea8; font-size:0.65rem; }
+.b-cat   { background:rgba(139,92,246,0.15); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3); }
+.b-sub   { background:rgba(251,146,60,0.15); color:#fdba74; border:1px solid rgba(251,146,60,0.3); }
+.b-price { background:rgba(52,211,153,0.15); color:#6ee7b7; border:1px solid rgba(52,211,153,0.3); }
+.b-rank  { background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); }
+.b-algo  { background:linear-gradient(90deg,#7c3aed,#4f46e5); color:white; padding:4px 16px; border-radius:20px; font-size:0.78rem; font-weight:600; box-shadow:0 0 20px rgba(124,58,237,0.4); }
+.b-green { background:rgba(52,211,153,0.15); color:#6ee7b7; border:1px solid rgba(52,211,153,0.3); }
+.b-conf  { background:rgba(99,102,241,0.1); color:#a5b4fc; font-size:0.65rem; border:1px solid rgba(99,102,241,0.2); }
 
-.tag { background:#f0f4ff; color:#4f7ef8; padding:2px 8px; border-radius:10px; font-size:0.7rem; margin-right:3px; display:inline-block; }
+.tag { background:rgba(139,92,246,0.1); color:#c4b5fd; padding:2px 8px; border-radius:8px; font-size:0.7rem; margin-right:3px; display:inline-block; border:1px solid rgba(139,92,246,0.2); }
 
-.mbox { background:white; border-radius:14px; padding:18px 14px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
-.mnum { font-family:'Poppins',sans-serif; font-size:1.9rem; font-weight:800; color:#4f7ef8; }
-.mlbl { font-size:0.75rem; color:#888; margin-top:2px; }
-
-.sec-hdr { font-family:'Poppins',sans-serif; font-weight:700; font-size:1.1rem; color:#1a1a2e;
-           border-bottom:2px solid #e8eeff; padding-bottom:8px; margin-bottom:14px; }
-.sec-hdr-green { font-family:'Poppins',sans-serif; font-weight:700; font-size:1.1rem; color:#1a1a2e;
-                 border-bottom:2px solid #2ECC71; padding-bottom:8px; margin-bottom:14px; }
-
-.eval-card { background:white; border-radius:14px; padding:20px; margin-bottom:12px;
-             box-shadow:0 2px 10px rgba(0,0,0,0.06); border-top:3px solid #4f7ef8; }
-.eval-val  { font-family:'Poppins',sans-serif; font-size:1.7rem; font-weight:700; color:#1a1a2e; }
-.eval-lbl  { font-size:0.8rem; color:#666; margin-top:2px; }
-.eval-hint { font-size:0.72rem; color:#aaa; margin-top:4px; }
-
-.prog-wrap { background:#f0f0f0; border-radius:10px; height:10px; margin:4px 0; overflow:hidden; }
-.prog-fill  { height:10px; border-radius:10px; background:linear-gradient(90deg,#4f7ef8,#7b5ea7); }
-.conf-bar-wrap { background:#e8f8f2; border-radius:6px; height:6px; margin:3px 0 6px 0; }
-.conf-bar { background:#2ECC71; height:6px; border-radius:6px; }
-
-[data-testid="stSidebar"] { background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%); }
-[data-testid="stSidebar"] label { color:#cdd3ff !important; font-size:0.85rem; }
-[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color:white !important; }
-[data-testid="stSidebar"] .stRadio > label { color:#cdd3ff !important; }
-
-.search-hit { background:white; border-radius:12px; padding:12px 16px; margin-bottom:8px;
-              box-shadow:0 1px 8px rgba(0,0,0,0.06); cursor:pointer; border-left:3px solid #4f7ef8; }
-.cs-card { background:linear-gradient(135deg,#667eea,#764ba2); border-radius:16px;
-           padding:20px; color:white; margin-bottom:16px; }
-.cv-banner {
-    background:linear-gradient(135deg,#1a1a2e,#16213e);
-    border:2px solid #2ECC71; border-radius:12px; padding:1rem 1.5rem;
-    margin:1rem 0; color:white;
+/* Metric boxes */
+.mbox {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 16px; padding: 20px 14px; text-align:center;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
 }
-.img-preview { border:2px dashed #2ECC71; border-radius:12px; padding:0.5rem;
-               background:#f8fffe; text-align:center; margin-bottom:0.75rem; }
+.mbox:hover { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.06); }
+.mnum { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:700; background:linear-gradient(135deg,#a78bfa,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.mlbl { font-size:0.75rem; color:#64748b; margin-top:4px; letter-spacing:0.05em; text-transform:uppercase; }
+
+/* Section headers */
+.sec-hdr { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; color:#e2e8f0;
+           border-bottom:1px solid rgba(139,92,246,0.3); padding-bottom:8px; margin-bottom:14px; }
+.sec-hdr-green { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; color:#e2e8f0;
+                 border-bottom:1px solid rgba(52,211,153,0.4); padding-bottom:8px; margin-bottom:14px; }
+
+/* Eval cards */
+.eval-card {
+    background: rgba(255,255,255,0.03); border:1px solid rgba(139,92,246,0.2);
+    border-radius:14px; padding:20px; margin-bottom:12px;
+    border-top:2px solid #7c3aed; backdrop-filter:blur(10px);
+}
+.eval-val  { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; color:#e2e8f0; }
+.eval-lbl  { font-size:0.8rem; color:#94a3b8; margin-top:4px; }
+.eval-hint { font-size:0.72rem; color:#475569; margin-top:4px; }
+
+/* Progress bars */
+.prog-wrap { background:rgba(255,255,255,0.06); border-radius:10px; height:8px; margin:4px 0; overflow:hidden; }
+.prog-fill  { height:8px; border-radius:10px; background:linear-gradient(90deg,#7c3aed,#4f46e5); }
+.conf-bar-wrap { background:rgba(52,211,153,0.1); border-radius:6px; height:5px; margin:3px 0 6px 0; }
+.conf-bar { background:linear-gradient(90deg,#34d399,#059669); height:5px; border-radius:6px; }
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg,#0a0a1a 0%,#0d0d2b 100%) !important;
+    border-right: 1px solid rgba(139,92,246,0.15);
+}
+[data-testid="stSidebar"] label { color:#94a3b8 !important; font-size:0.85rem; }
+[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color:#e2e8f0 !important; }
+[data-testid="stSidebar"] .stRadio > label { color:#94a3b8 !important; }
+[data-testid="stSidebar"] p { color:#64748b !important; }
+
+/* Misc */
+.search-hit {
+    background: rgba(255,255,255,0.03); border-radius:12px; padding:12px 16px; margin-bottom:8px;
+    cursor:pointer; border-left:3px solid #7c3aed;
+    border: 1px solid rgba(139,92,246,0.2);
+}
+.cs-card {
+    background: linear-gradient(135deg,rgba(124,58,237,0.3),rgba(79,70,229,0.3));
+    border:1px solid rgba(139,92,246,0.4);
+    border-radius:16px; padding:20px; color:white; margin-bottom:16px;
+    backdrop-filter:blur(10px);
+}
+.cv-banner {
+    background: linear-gradient(135deg,rgba(10,10,26,0.9),rgba(13,13,43,0.9));
+    border:1px solid rgba(52,211,153,0.4); border-radius:12px; padding:1rem 1.5rem;
+    margin:1rem 0; color:white; backdrop-filter:blur(10px);
+}
+.img-preview {
+    border:2px dashed rgba(52,211,153,0.4); border-radius:12px; padding:0.5rem;
+    background:rgba(52,211,153,0.03); text-align:center; margin-bottom:0.75rem;
+}
+
+/* Streamlit overrides */
+.stButton > button {
+    background: linear-gradient(135deg,#7c3aed,#4f46e5) !important;
+    color: white !important; border: none !important;
+    border-radius: 10px !important; font-weight: 600 !important;
+    box-shadow: 0 0 20px rgba(124,58,237,0.3) !important;
+    transition: all 0.2s ease !important;
+}
+.stButton > button:hover {
+    box-shadow: 0 0 30px rgba(124,58,237,0.5) !important;
+    transform: translateY(-1px) !important;
+}
+.stSelectbox > div > div, .stMultiSelect > div > div {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(139,92,246,0.3) !important;
+    border-radius: 10px !important; color: #e2e8f0 !important;
+}
+div[data-testid="stMetric"] { background: rgba(255,255,255,0.03); border-radius:12px; padding:12px; }
+.stTabs [data-baseweb="tab"] { color: #64748b !important; }
+.stTabs [aria-selected="true"] { color: #a78bfa !important; border-bottom-color: #7c3aed !important; }
+.stDataFrame { background: rgba(255,255,255,0.02) !important; }
+p, li, span { color: #94a3b8; }
+h1, h2, h3 { color: #e2e8f0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -970,8 +1045,8 @@ def product_card(pid, rank=None):
             <span class="badge b-cat">{cat}</span>
             <span class="badge b-sub">{sub}</span>
             <span class="badge b-price">₹{price}</span>
-            <span style="color:#f9a825">{stars(rating)}</span>
-            <span style="font-size:0.75rem;color:#aaa"> {rating}/5</span>
+            <span style="color:#f59e0b">{stars(rating)}</span>
+            <span style="font-size:0.75rem;color:#475569"> {rating}/5</span>
         </div>
         <div style="margin-top:8px">{tag_html}</div>
     </div>
@@ -985,14 +1060,14 @@ def product_card_cv(pid, score=None, score_label=""):
     price  = p.get('price', '')
     rating = p.get('rating', '')
     emoji  = p.get('emoji', '🛒')
-    score_html = f'<div style="font-size:0.75rem;color:#2ECC71;margin-top:2px">{score_label}: {score:.3f}</div>' if score is not None else ''
+    score_html = f'<div style="font-size:0.75rem;color:#34d399;margin-top:2px">{score_label}: {score:.3f}</div>' if score is not None else ''
     st.markdown(f"""
     <div class="prod-card-cv">
         <span style="font-size:2rem">{emoji}</span>
         <div class="prod-name-cv">{name}</div>
         <div style="color:#e74c3c;font-weight:700;font-size:0.85rem">₹{price}</div>
         <span class="badge b-green" style="margin-top:4px">{cat}</span>
-        <div style="color:#f9a825;font-size:0.75rem;margin-top:4px">{stars(rating)} {rating}/5</div>
+        <div style="color:#f59e0b;font-size:0.75rem;margin-top:4px">{stars(rating)} {rating}/5</div>
         {score_html}
     </div>
     """, unsafe_allow_html=True)
@@ -1012,7 +1087,7 @@ def metric_card(value, label, hint="", color="#4f7ef8"):
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🛒 Grocery AI")
-    st.markdown("<p style='color:#8892b0;font-size:0.78rem'>Smart Recommender System</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#475569;font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase'>Smart Recommender</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     mode = st.radio("📌 Select Mode", [
@@ -1052,18 +1127,18 @@ with st.sidebar:
         sim_btn     = st.button("🔍 Find Similar Products", use_container_width=True)
 
     elif mode == "📸 Image Scanner":
-        st.markdown("<p style='color:#8892b0;font-size:0.82rem'>Upload karo, AI identify karega aur CF recommendations dega!</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#8892b0;font-size:0.82rem'>Upload an image — AI identifies it and gives CF recommendations!</p>", unsafe_allow_html=True)
         n_cv_recs = st.slider("CF Suggestions", 4, 12, 8)
 
     elif mode == "🆕 Cold Start (New User)":
-        st.markdown("<p style='color:#8892b0;font-size:0.82rem'>Categories choose karo → popularity-based recs!</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#8892b0;font-size:0.82rem'>Select categories → get popularity-based recommendations!</p>", unsafe_allow_html=True)
         cs_cats  = st.multiselect("🗂️ Preferred Categories", categories, default=["Snacks", "Dairy"])
         cs_top_n = st.slider("Recommendations", 5, 20, 10)
         cs_btn   = st.button("✨ Get Recommendations", use_container_width=True)
 
     elif mode == "📊 Evaluation Metrics":
         eval_btn = st.button("📊 Compute Metrics", use_container_width=True)
-        st.markdown("<p style='color:#8892b0;font-size:0.75rem'>80/20 train-test split. Thoda time lagega.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#8892b0;font-size:0.75rem'>80/20 train-test split. May take a few seconds.</p>", unsafe_allow_html=True)
 
     elif mode == "🔎 Search":
         search_type = st.radio("Search for", ["Products", "Users"])
@@ -1074,7 +1149,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("""
-    <div style="color:#4a5568;font-size:0.72rem;text-align:center">
+    <div style="color:#334155;font-size:0.72rem;text-align:center;letter-spacing:0.03em">
         500 Products · 150 Users · 6,796 Ratings<br>
         CF · SVD · CV Pipeline · Cold Start
     </div>""", unsafe_allow_html=True)
@@ -1084,10 +1159,10 @@ with st.sidebar:
 # HEADER
 # ─────────────────────────────────────────────
 st.markdown("""
-<h1 style="font-family:'Poppins',sans-serif;font-weight:800;color:#1a1a2e;margin-bottom:2px">
+<h1 style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#e2e8f0;margin-bottom:2px">
     🛒 Smart Grocery Recommender
 </h1>
-<p style="color:#666;font-size:0.92rem;margin-bottom:20px">
+<p style="color:#475569;font-size:0.92rem;margin-bottom:20px;letter-spacing:0.02em">
     Collaborative Filtering · Matrix Factorization · Computer Vision · Cold Start
 </p>
 """, unsafe_allow_html=True)
@@ -1151,26 +1226,26 @@ if mode == "🎯 User Recommendations":
                 w   = min(pct * 2.5, 100)
                 st.markdown(f"""
                 <div style="margin-bottom:6px">
-                    <span style="font-size:0.78rem;color:#444;display:inline-block;width:110px">{cat}</span>
+                    <span style="font-size:0.78rem;color:#94a3b8;display:inline-block;width:110px">{cat}</span>
                     <div class="prog-wrap" style="display:inline-block;width:120px;vertical-align:middle">
                         <div class="prog-fill" style="width:{w}%"></div>
                     </div>
-                    <span style="font-size:0.72rem;color:#888;margin-left:6px">{cnt}</span>
+                    <span style="font-size:0.72rem;color:#64748b;margin-left:6px">{cnt}</span>
                 </div>""", unsafe_allow_html=True)
             st.markdown("---")
             st.markdown("**Top Rated by This User**")
             for _, row in hist.head(8).iterrows():
                 st.markdown(f"""
-                <div style="padding:6px 0;border-bottom:1px solid #f5f5f5">
-                    <span style="font-size:0.85rem;font-weight:500;color:#1a1a2e">{row.get('emoji','')} {row['name']}</span><br>
-                    <span style="color:#f9a825;font-size:0.78rem">{stars(row['user_rating'])}</span>
-                    <span style="font-size:0.72rem;color:#aaa"> {row['user_rating']} · {row['category']}</span>
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                    <span style="font-size:0.85rem;font-weight:500;color:#f1f5f9">{row.get('emoji','')} {row['name']}</span><br>
+                    <span style="color:#f59e0b;font-size:0.78rem">{stars(row['user_rating'])}</span>
+                    <span style="font-size:0.72rem;color:#475569"> {row['user_rating']} · {row['category']}</span>
                 </div>""", unsafe_allow_html=True)
             avg = hist['user_rating'].mean()
             st.markdown(f"""
-            <div style="margin-top:14px;background:#f8f9ff;border-radius:10px;padding:12px;text-align:center">
-                <div style="font-size:1.4rem;font-weight:700;color:#4f7ef8">{avg:.2f}</div>
-                <div style="font-size:0.75rem;color:#888">Avg Rating · {len(hist)} products rated</div>
+            <div style="margin-top:14px;background:rgba(139,92,246,0.08);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(139,92,246,0.2)">
+                <div style="font-size:1.4rem;font-weight:700;color:#a78bfa">{avg:.2f}</div>
+                <div style="font-size:0.75rem;color:#64748b">Avg Rating · {len(hist)} products rated</div>
             </div>""", unsafe_allow_html=True)
     else:
         st.info("👈 Select a user and algorithm from the sidebar, then click **Get Recommendations**.")
@@ -1183,15 +1258,15 @@ elif mode == "🔍 Similar Products":
     if sim_btn:
         p = product_map.get(sel_pid, {})
         st.markdown(f"""
-        <div style="background:white;border-radius:16px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07)">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;backdrop-filter:blur(10px)">
             <div style="font-size:2.2rem">{p.get('emoji','🛒')}</div>
-            <div style="font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:700;color:#1a1a2e;margin-top:4px">{p.get('name','')}</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:#f1f5f9;margin-top:4px">{p.get('name','')}</div>
             <div style="margin-top:8px">
                 <span class="badge b-cat">{p.get('category','')}</span>
                 <span class="badge b-sub">{p.get('subcategory','')}</span>
                 <span class="badge b-price">₹{p.get('price','')}</span>
-                <span style="color:#f9a825"> {stars(p.get('rating',0))}</span>
-                <span style="font-size:0.78rem;color:#aaa"> {p.get('rating','')}/5</span>
+                <span style="color:#f59e0b"> {stars(p.get('rating',0))}</span>
+                <span style="font-size:0.78rem;color:#475569"> {p.get('rating','')}/5</span>
             </div>
         </div>""", unsafe_allow_html=True)
         st.markdown('<span class="badge b-algo">📦 Item-Based Similarity</span>', unsafe_allow_html=True)
@@ -1212,21 +1287,21 @@ elif mode == "🔍 Similar Products":
 # MODE 3 — IMAGE SCANNER
 # ═══════════════════════════════════════════════
 elif mode == "📸 Image Scanner":
-    st.markdown('<div class="sec-hdr-green">📸 Product Image Scanner</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hdr-green">📸 Image Scanner</div>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="background:#e8f8f2;border-radius:12px;padding:12px 16px;margin-bottom:16px;border-left:4px solid #2ECC71">
-        <b style="color:#1b5e20">ℹ️ How it works:</b>
-        <span style="font-size:0.85rem;color:#555">
-        Image upload karo → Gemini Vision identify karta hai →
+    <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:12px 16px;margin-bottom:16px;border-left:4px solid #34d399">
+        <b style="color:#34d399">ℹ️ How it works:</b>
+        <span style="font-size:0.85rem;color:#94a3b8">
+        Upload image → Gemini Vision identifies it →
         HuggingFace fallback → Color analysis fallback →
-        Matched products + CF-based "You Might Also Like" suggestions.
+        Matched products + CF-based suggestions appear instantly.
         </span>
     </div>
     """, unsafe_allow_html=True)
 
     up_col, prev_col = st.columns([1, 1])
     with up_col:
-        uploaded_file = st.file_uploader("📤 Upload grocery product image", type=["jpg","jpeg","png","webp"])
+        uploaded_file = st.file_uploader("📤 Upload a grocery product image", type=["jpg","jpeg","png","webp"])
 
     if uploaded_file:
         image     = Image.open(uploaded_file).convert("RGB")
@@ -1246,10 +1321,10 @@ elif mode == "📸 Image Scanner":
                 st.rerun()
 
         st.markdown("---")
-        st.markdown('<div class="sec-hdr-green">🔎 Manual Override Search</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sec-hdr-green">🔎 Manual Search Override</div>', unsafe_allow_html=True)
         mc1, mc2 = st.columns([3, 1])
         with mc1:
-            manual_q = st.text_input("AI misidentify kiya? Type karo manually (e.g. maggi, butter, chips)", key="manual_cv")
+            manual_q = st.text_input("AI got it wrong? Type manually (e.g. maggi, butter, chips)", key="manual_cv")
         with mc2:
             st.markdown("<br>", unsafe_allow_html=True)
             manual_btn = st.button("🔍 Search", use_container_width=True)
@@ -1292,10 +1367,10 @@ elif mode == "📸 Image Scanner":
         st.markdown("---")
         st.markdown(f"""<div class="cv-banner">
             <span style="font-size:1.4rem">🔎</span>
-            <span style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:#2ECC71;margin-left:0.5rem">
+            <span style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:#2ECC71;margin-left:0.5rem">
                 Detected: {primary.title() if primary else "Unknown"}
             </span>
-            <span style="font-size:0.8rem;color:#aaa;margin-left:1rem">via {method}</span>
+            <span style="font-size:0.8rem;color:#475569;margin-left:1rem">via {method}</span>
         </div>""", unsafe_allow_html=True)
 
         st.markdown('<div class="sec-hdr-green">🏷️ Detected Labels</div>', unsafe_allow_html=True)
@@ -1332,10 +1407,10 @@ elif mode == "📸 Image Scanner":
             st.markdown("---")
             st.markdown('<div class="sec-hdr-green">🤖 You Might Also Like (CF-Powered)</div>', unsafe_allow_html=True)
             base_cat = product_map.get(matched[0], {}).get('category', '')
-            st.markdown(f'<small style="color:#7f8c8d">Based on detected category: <b>{base_cat}</b> · Powered by Item-Based Collaborative Filtering</small>', unsafe_allow_html=True)
+            st.markdown(f'<small style="color:#64748b">Based on detected category: <b>{base_cat}</b> · Powered by Item-Based Collaborative Filtering</small>', unsafe_allow_html=True)
             cf_pids = get_cv_cf_recs(matched, n=n_cv_recs)
             if not cf_pids:
-                st.info("CF suggestions nahi mili.")
+                st.info("No CF suggestions found.")
             else:
                 cf_cols = st.columns(4)
                 for i, pid in enumerate(cf_pids):
@@ -1345,17 +1420,17 @@ elif mode == "📸 Image Scanner":
                         product_card_cv(pid, score=sim_score, score_label="🔗 Sim")
 
         st.markdown("""
-        <div style="background:#e8f5e9;border-radius:12px;padding:14px 18px;margin-top:16px;border-left:4px solid #4caf50">
-            <b style="color:#1b5e20">💡 Internship Note (CV Pipeline):</b>
-            <span style="font-size:0.85rem;color:#555">
-            Image → Gemini Vision API (primary, JSON tags) →
-            HuggingFace Inference API fallback (food/grocery models) →
-            Color analysis fallback (always works).
-            Tags → GROCERY_KEYWORDS map → product_ids → Item-CF similarity for "You Might Also Like".
+        <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:16px;border-left:4px solid #34d399">
+            <b style="color:#34d399">💡 CV Pipeline:</b>
+            <span style="font-size:0.85rem;color:#94a3b8">
+            Image → Gemini Vision API (primary) →
+            HuggingFace Inference API (fallback) →
+            Color analysis (always-on fallback).
+            Tags → GROCERY_KEYWORDS → product_ids → Item-CF similarity for "You Might Also Like".
             </span>
         </div>""", unsafe_allow_html=True)
     elif not uploaded_file:
-        st.info("👈 Sidebar mein **Image Scanner** selected hai. Upar image upload karo.")
+        st.info("👈 **Image Scanner** is selected. Upload an image above to get started.")
 
 
 # ═══════════════════════════════════════════════
@@ -1364,15 +1439,15 @@ elif mode == "📸 Image Scanner":
 elif mode == "🆕 Cold Start (New User)":
     st.markdown("""
     <div class="cs-card">
-        <h3 style="color:white;margin:0;font-family:'Poppins',sans-serif">🆕 New User? No Problem!</h3>
+        <h3 style="color:white;margin:0;font-family:'Space Grotesk',sans-serif">🆕 New User? No Problem!</h3>
         <p style="color:rgba(255,255,255,0.8);margin-top:8px;font-size:0.88rem">
-            Naya user hai toh koi purchase history nahi hoti. Isliye hum <b>Popularity-Based recommendations</b>
-            dete hain preferred categories ke basis pe — Cold Start problem ka classic solution.
+            No purchase history? No problem. We use <b>Popularity-Based recommendations</b>
+            from your preferred categories — the classic Cold Start solution.
         </p>
     </div>""", unsafe_allow_html=True)
     if cs_btn:
         if not cs_cats:
-            st.warning("Kam se kam ek category select karo!")
+            st.warning("Please select at least one category!")
         else:
             st.markdown(f'<span class="badge b-algo">🔥 Popularity-Based (Cold Start)</span>', unsafe_allow_html=True)
             st.markdown(f'<div class="sec-hdr">Top Picks in: {", ".join(cs_cats)}</div>', unsafe_allow_html=True)
@@ -1383,15 +1458,15 @@ elif mode == "🆕 Cold Start (New User)":
                     with cols[i % 2]:
                         product_card(pid, rank=i+1)
             else:
-                st.warning("Selected categories mein products nahi mile.")
+                st.warning("No products found in selected categories.")
             st.markdown("""
-            <div style="background:#fffde7;border-radius:12px;padding:14px 18px;margin-top:16px;border-left:4px solid #f9a825">
-                <b style="color:#e65100">💡 Internship Note:</b>
-                <span style="font-size:0.85rem;color:#555"> Cold start problem tab aata hai jab naye user ki koi history nahi hoti.
-                Solutions: (1) Popularity-based fallback, (2) Content-based on profile, (3) Ask preferences at onboarding.</span>
+            <div style="background:rgba(251,191,36,0.06);border-radius:12px;padding:14px 18px;margin-top:16px;border-left:4px solid #f59e0b">
+                <b style="color:#fdba74">💡 Cold Start:</b>
+                <span style="font-size:0.85rem;color:#94a3b8"> Cold start occurs when a new user has no purchase history.
+                Solutions: (1) Popularity-based fallback, (2) Content-based filtering, (3) Onboarding preference survey.</span>
             </div>""", unsafe_allow_html=True)
     else:
-        st.info("👈 Categories choose karo sidebar mein aur click karo **Get Recommendations**.")
+        st.info("👈 Select categories in the sidebar and click **Get Recommendations**.")
 
 
 # ═══════════════════════════════════════════════
@@ -1400,10 +1475,10 @@ elif mode == "🆕 Cold Start (New User)":
 elif mode == "📊 Evaluation Metrics":
     st.markdown('<div class="sec-hdr">📊 Model Evaluation — 80/20 Train-Test Split</div>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="background:#e8f4fd;border-radius:12px;padding:14px 18px;margin-bottom:20px;border-left:4px solid #2196f3">
-        <b style="color:#1565c0">ℹ️ Methodology:</b>
-        <span style="font-size:0.85rem;color:#555"> Ratings ko 80% train / 20% test mein split kiya.
-        Train data pe models train hue, test data pe evaluate kiye. Threshold ≥ 3.5 = relevant item.</span>
+    <div style="background:rgba(99,102,241,0.08);border-radius:12px;padding:14px 18px;margin-bottom:20px;border-left:4px solid #6366f1">
+        <b style="color:#93c5fd">ℹ️ Methodology:</b>
+        <span style="font-size:0.85rem;color:#94a3b8"> Ratings split into 80% train / 20% test.
+        Models trained on train set, evaluated on test set. Threshold ≥ 3.5 = relevant item.</span>
     </div>""", unsafe_allow_html=True)
     if eval_btn:
         with st.spinner("⏳ Computing metrics... (thoda time lagega)"):
@@ -1416,25 +1491,25 @@ elif mode == "📊 Evaluation Metrics":
                         "Root Mean Squared Error between predicted & actual ratings", color="#7b1fa2")
         with c2:
             metric_card(f"{metrics['rmse_ub']:.4f}", "RMSE — User-Based CF",
-                        "Lower RMSE = predicted ratings actual ke zyada close", color="#1565c0")
+                        "Lower RMSE = predictions closer to actual ratings", color="#1565c0")
         st.markdown(f"### 🎯 Ranking Metrics @ K={K} (Higher is Better)")
         c1, c2, c3 = st.columns(3)
         with c1:
             metric_card(f"{metrics['precision_at_k']:.4f}", f"Precision@{K}",
-                        f"Top-{K} mein se kitne % relevant the", color="#2e7d32")
+                        f"What % of top-{K} recommendations were relevant", color="#2e7d32")
         with c2:
             metric_card(f"{metrics['recall_at_k']:.4f}", f"Recall@{K}",
-                        "Relevant items mein se kitne Top-K mein aye", color="#e65100")
+                        "How many relevant items appeared in top-K", color="#e65100")
         with c3:
             metric_card(f"{metrics['f1']:.4f}", "F1 Score",
-                        "Precision aur Recall ka harmonic mean", color="#6a1b9a")
+                        "Harmonic mean of Precision and Recall", color="#6a1b9a")
         st.markdown("### 🌐 Coverage (Higher is Better)")
         cov_pct = metrics['coverage'] * 100
         st.markdown(f"""
         <div class="eval-card">
-            <div class="eval-val" style="color:#00695c">{cov_pct:.1f}%</div>
+            <div class="eval-val" style="color:#34d399">{cov_pct:.1f}%</div>
             <div class="eval-lbl">Catalog Coverage</div>
-            <div class="eval-hint">Total products mein se kitne % recommend ho paye (sample 50 users)</div>
+            <div class="eval-hint">% of catalog covered by recommendations (50-user sample)</div>
             <div class="prog-wrap" style="margin-top:10px">
                 <div class="prog-fill" style="width:{min(cov_pct,100)}%"></div>
             </div>
@@ -1457,14 +1532,13 @@ elif mode == "📊 Evaluation Metrics":
         })
         st.dataframe(summary, use_container_width=True, hide_index=True)
         st.markdown("""
-        <div style="background:#e8f5e9;border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #4caf50">
-            <b style="color:#1b5e20">✅ Presentation Tip:</b>
-            <span style="font-size:0.85rem;color:#555"> Yeh metrics internship presentation mein dikhao.
-            SVD ka RMSE higher hona normal hai synthetic data pe — real data pe 0.8–1.2 range hoga.
-            Precision@K aur Coverage industry mein zyada important metrics hain.</span>
+        <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
+            <b style="color:#34d399">✅ Note:</b>
+            <span style="font-size:0.85rem;color:#94a3b8"> Higher SVD RMSE is expected on synthetic/sparse data — real-world data typically yields 0.8–1.2.
+            Precision@K and Coverage are the most industry-relevant metrics.</span>
         </div>""", unsafe_allow_html=True)
     else:
-        st.info("👈 Sidebar mein **Compute Metrics** click karo.")
+        st.info("👈 Click **Compute Metrics** in the sidebar.")
 
 
 # ═══════════════════════════════════════════════
@@ -1482,7 +1556,7 @@ elif mode == "🔎 Search":
         ]
         st.markdown(f"**{len(results)} results** for `{search_q}`")
         if len(results) == 0:
-            st.warning("Koi product nahi mila. Doosra keyword try karo.")
+            st.warning("No products found. Try a different keyword.")
         else:
             cols = st.columns(2)
             for i, (_, row) in enumerate(results.head(20).iterrows()):
@@ -1493,7 +1567,7 @@ elif mode == "🔎 Search":
         matched_users = [u for u in all_users if q in u]
         st.markdown(f"**{len(matched_users)} users** found")
         if not matched_users:
-            st.warning("Koi user nahi mila.")
+            st.warning("No users found.")
         else:
             for uid in matched_users[:20]:
                 hist = ratings[ratings['user_id'] == uid]
@@ -1502,11 +1576,11 @@ elif mode == "🔎 Search":
                 top_cat = merged['category'].value_counts().idxmax() if len(merged) else "N/A"
                 st.markdown(f"""
                 <div class="search-hit">
-                    <b style="font-family:'Poppins',sans-serif;color:#1a1a2e">{uid}</b>
-                    <span style="font-size:0.78rem;color:#888;margin-left:10px">{len(hist)} ratings · Avg {avg:.2f} · Top: {top_cat}</span>
+                    <b style="font-family:'Space Grotesk',sans-serif;color:#f1f5f9">{uid}</b>
+                    <span style="font-size:0.78rem;color:#64748b;margin-left:10px">{len(hist)} ratings · Avg {avg:.2f} · Top: {top_cat}</span>
                 </div>""", unsafe_allow_html=True)
     elif not search_q:
-        st.info("👆 Kuch type karo — product name, category, tag ya user ID.")
+        st.info("👆 Type a product name, category, tag, or user ID to search.")
 
 
 # ═══════════════════════════════════════════════
