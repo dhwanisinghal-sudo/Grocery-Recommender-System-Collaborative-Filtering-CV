@@ -159,7 +159,7 @@ def build_all_models(ratings_hash):
 
 @st.cache_data
 def compute_eval_metrics():
-    ratings  = pd.read_csv("user_ratings.csv")
+    ratings  = pd.read_csv(find_file("user_ratings.csv"))
     train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
     train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     train_mat   = train_pivot.values.astype(float)
@@ -780,7 +780,7 @@ def classify_image_gemini(image_bytes):
         debug.append("⚠️ GEMINI_API_KEY not set in secrets")
         return None, "no key", debug
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
+    for gmodel in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"]:
         url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
                f"{gmodel}:generateContent?key={gemini_key}")
         payload = {
