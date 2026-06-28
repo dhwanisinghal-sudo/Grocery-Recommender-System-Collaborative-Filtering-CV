@@ -780,8 +780,10 @@ def classify_image_gemini(image_bytes):
         debug.append("⚠️ GEMINI_API_KEY not set in secrets")
         return None, "no key", debug
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    for gmodel in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash-8b"]:
-        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+    # AQ. prefix = new Google AI Studio key format → use v1 endpoint
+    api_ver = "v1" if gemini_key.startswith("AQ.") else "v1beta"
+    for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]:
+        url = (f"https://generativelanguage.googleapis.com/{api_ver}/models/"
                f"{gmodel}:generateContent?key={gemini_key}")
         payload = {
             "contents": [{"parts": [
