@@ -1147,8 +1147,7 @@ def metric_card(value, label, hint="", color="#4f7ef8"):
 # SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("<p style='color:#e2e8f0 !important;font-size:0.95rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:700'>Smart Grocery Recommender System</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#a78bfa;font-size:0.75rem;font-style:italic;margin-top:4px'>✨ \"Your cart knows you better than you know yourself.\"</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#a78bfa;font-size:1rem;font-style:italic;font-weight:600;line-height:1.5'>✨ \"Your cart knows you better than you know yourself.\"</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     mode = st.radio("📌 Select Mode", [
