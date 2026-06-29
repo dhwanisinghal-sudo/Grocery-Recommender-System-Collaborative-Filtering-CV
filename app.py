@@ -493,6 +493,7 @@ GROCERY_KEYWORDS = {
     "snack":     ["P011","P012","P013","P015","P016","P165","P166"],
     "butter":    ["P021","P181","P182","P183"],
     "amul butter": ["P021","P181","P182"],
+    "amul":      ["P021","P023","P025","P026","P027","P181","P182","P183","P184","P185","P186","P187","P188","P189","P190","P191","P192","P193","P194","P195","P196","P197","P198","P199","P200","P201"],
     "ghee":      ["P025","P192","P193"],
     "curd":      ["P023","P187","P188","P189","P402","P403"],
     "yogurt":    ["P023","P187","P188","P189","P491"],
@@ -848,6 +849,62 @@ def map_visual_label(raw_label: str) -> str:
     return ""
 
 
+# ─────────────────────────────────────────────
+# OCR CLASSIFICATION (PRIORITY #1)
+# ─────────────────────────────────────────────
+def classify_image_ocr(image_bytes):
+    """Extract text from image using pytesseract and match to grocery keywords.
+    This runs FIRST before Gemini/HF to give priority to on-pack text."""
+    debug = []
+    try:
+        import pytesseract
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        # Try multiple PSM modes — different modes work better for different layouts
+        for psm in [6, 3, 11]:
+            raw_text = pytesseract.image_to_string(image, config=f'--psm {psm}')
+            text = re.sub(r'[^a-z0-9\s]', ' ', raw_text.lower())
+            words = text.split()
+
+            matched_tags = []
+            seen_kw = set()
+
+            # Check multi-word keywords first (higher specificity)
+            for keyword in sorted(GROCERY_KEYWORDS.keys(), key=lambda k: -len(k)):
+                kw = normalize_tag(keyword)
+                if kw in seen_kw:
+                    continue
+                kw_words = kw.split()
+
+                if len(kw_words) == 1:
+                    # Single word: must appear as a full word in OCR output
+                    if kw in words:
+                        conf = 92 if len(kw) >= 5 else 80
+                        matched_tags.append({"tag": kw, "confidence": conf})
+                        seen_kw.add(kw)
+                else:
+                    # Multi-word: check if full phrase appears in text
+                    if kw in text:
+                        matched_tags.append({"tag": kw, "confidence": 95})
+                        seen_kw.add(kw)
+
+            if matched_tags:
+                # Sort by confidence descending, deduplicate
+                final = sorted(matched_tags, key=lambda x: x["confidence"], reverse=True)
+                debug.append(f"✅ OCR (PSM {psm}) — matched: {[t['tag'] for t in final[:4]]}")
+                return final[:6], None, debug
+
+        debug.append("⚠️ OCR: no grocery keywords found in image text")
+        return None, "no match", debug
+
+    except ImportError:
+        debug.append("⚠️ pytesseract not installed — skipping OCR step")
+        return None, "no pytesseract", debug
+    except Exception as ex:
+        debug.append(f"⚠️ OCR error: {str(ex)[:80]}")
+        return None, str(ex), debug
+
+
 def classify_image_gemini(image_bytes):
     debug = []
     gemini_key = str(st.secrets.get("GEMINI_API_KEY", "")).strip()
@@ -984,17 +1041,32 @@ def color_fallback(image: Image.Image):
     return [{"tag": "snack", "confidence": 52}, {"tag": "packaged food", "confidence": 50}]
 
 
+# ─────────────────────────────────────────────
+# MAIN CLASSIFY PIPELINE — OCR FIRST
+# ─────────────────────────────────────────────
 def classify_image(image_bytes):
     all_debug = []
+
+    # ── STEP 1: OCR (highest priority — reads actual text on packaging)
+    tags, err, dbg = classify_image_ocr(image_bytes)
+    all_debug.extend(dbg)
+    if tags:
+        return tags, "📝 OCR Text Detection", all_debug
+
+    # ── STEP 2: Gemini Vision API
     tags, err, dbg = classify_image_gemini(image_bytes)
     all_debug.extend(dbg)
     if tags:
         return tags, "✨ Gemini Vision", all_debug
+
+    # ── STEP 3: HuggingFace Vision API
     tags, err, dbg = classify_image_hf(image_bytes)
     all_debug.extend(dbg)
     if tags:
         return tags, "🤗 HuggingFace Vision", all_debug
-    all_debug.append("⚠️ Both APIs failed — using color fallback")
+
+    # ── STEP 4: Color Fallback (always-on last resort)
+    all_debug.append("⚠️ All methods failed — using color fallback")
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     tags  = color_fallback(image)
     return tags, "🎨 Color Fallback", all_debug
@@ -1212,10 +1284,6 @@ if mode == "🎯 User Recommendations":
 
         with right:
             st.markdown('<div class="sec-hdr">📜 Rating History</div>', unsafe_allow_html=True)
-
-            # ── FIX: rename 'rating' in ratings df before merging with products_df
-            # Both DataFrames have a 'rating' column → merge creates rating_x, rating_y
-            # Solution: rename ratings column to 'user_rating' before merge
             _user_ratings = ratings[ratings['user_id'] == user_id].rename(columns={'rating': 'user_rating'})
             hist = _user_ratings.merge(products_df, on='product_id').sort_values('user_rating', ascending=False)
 
@@ -1292,8 +1360,8 @@ elif mode == "📸 Image Scanner":
     <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:12px 16px;margin-bottom:16px;border-left:4px solid #34d399">
         <b style="color:#34d399">ℹ️ How it works:</b>
         <span style="font-size:0.85rem;color:#94a3b8">
-        Upload image → Gemini Vision identifies it →
-        HuggingFace fallback → Color analysis fallback →
+        Upload image → <b>OCR reads on-pack text (highest priority)</b> →
+        Gemini Vision fallback → HuggingFace fallback → Color analysis fallback →
         Matched products + CF-based suggestions appear instantly.
         </span>
     </div>
@@ -1345,7 +1413,7 @@ elif mode == "📸 Image Scanner":
         if analyze_btn:
             pb = st.progress(0, text="🧠 Initializing AI Vision...")
             import time; time.sleep(0.2)
-            pb.progress(20, text="🤖 Sending to Gemini Vision...")
+            pb.progress(20, text="📝 Reading text on packaging (OCR)...")
             tags, method, debug_log = classify_image(img_bytes)
             pb.progress(75, text="🔍 Matching products in catalog...")
             time.sleep(0.2)
@@ -1423,7 +1491,8 @@ elif mode == "📸 Image Scanner":
         <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:16px;border-left:4px solid #34d399">
             <b style="color:#34d399">💡 CV Pipeline:</b>
             <span style="font-size:0.85rem;color:#94a3b8">
-            Image → Gemini Vision API (primary) →
+            Image → <b>OCR text extraction (priority)</b> →
+            Gemini Vision API (fallback) →
             HuggingFace Inference API (fallback) →
             Color analysis (always-on fallback).
             Tags → GROCERY_KEYWORDS → product_ids → Item-CF similarity for "You Might Also Like".
