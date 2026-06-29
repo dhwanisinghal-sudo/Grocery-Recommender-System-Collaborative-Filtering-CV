@@ -20,7 +20,7 @@ from scipy.sparse.linalg import svds
 # PAGE CONFIG
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="🛒 Smart Grocery Recommender",
+    page_title="🛒 Smart Grocery Recommender System",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -128,7 +128,9 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; }
 [data-testid="stSidebar"] label { color:#94a3b8 !important; font-size:0.85rem; }
 [data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color:#e2e8f0 !important; }
 [data-testid="stSidebar"] .stRadio > label { color:#94a3b8 !important; }
-[data-testid="stSidebar"] p { color:#64748b !important; }
+[data-testid="stSidebar"] p { color:#64748b; }
+[data-testid="stSidebar"] .stButton > button { color: white !important; }
+[data-testid="stSidebar"] .stButton > button p { color: white !important; }
 
 /* Misc */
 .search-hit {
@@ -1145,8 +1147,8 @@ def metric_card(value, label, hint="", color="#4f7ef8"):
 # SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🛒 AI")
-    st.markdown("<p style='color:#475569;font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase'>Smart Recommender</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#e2e8f0 !important;font-size:0.95rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:700'>Smart Grocery Recommender System</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#a78bfa;font-size:0.75rem;font-style:italic;margin-top:4px'>✨ \"Your cart knows you better than you know yourself.\"</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     mode = st.radio("📌 Select Mode", [
@@ -1197,7 +1199,7 @@ with st.sidebar:
 
     elif mode == "📊 Evaluation Metrics":
         eval_btn = st.button("📊 Compute Metrics", use_container_width=True)
-        st.markdown("<p style='color:#ffffff;font-size:0.75rem'>80/20 train-test split. May take a few seconds.</p>", unsafe_allow_html=True)
+        st.markdown("<span style='color:#ffffff !important;font-size:0.75rem;display:block'>80/20 train-test split. May take a few seconds.</span>", unsafe_allow_html=True)
 
     elif mode == "🔎 Search":
         search_type = st.radio("Search for", ["Products", "Users"])
@@ -1219,7 +1221,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 st.markdown("""
 <h1 style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#e2e8f0;margin-bottom:2px">
-    🛒 Smart Grocery Recommender
+    🛒 Smart Grocery Recommender System
 </h1>
 <p style="color:#475569;font-size:0.92rem;margin-bottom:20px;letter-spacing:0.02em">
     Collaborative Filtering · Matrix Factorization · Computer Vision · Cold Start
