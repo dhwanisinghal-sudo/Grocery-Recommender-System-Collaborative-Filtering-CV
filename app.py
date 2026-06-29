@@ -112,7 +112,7 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; }
 }
 .eval-val  { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; color:#e2e8f0; }
 .eval-lbl  { font-size:0.8rem; color:#94a3b8; margin-top:4px; }
-.eval-hint { font-size:0.72rem; color:#475569; margin-top:4px; }
+.eval-hint { font-size:0.72rem; color:#ffffff; margin-top:4px; }
 
 /* Progress bars */
 .prog-wrap { background:rgba(255,255,255,0.06); border-radius:10px; height:8px; margin:4px 0; overflow:hidden; }
@@ -185,7 +185,6 @@ h1, h2, h3 { color: #e2e8f0 !important; }
 import os
 
 def find_file(filename):
-    """Search for CSV in common Streamlit Cloud + local paths."""
     candidates = [
         filename,
         os.path.join("data", filename),
@@ -853,14 +852,11 @@ def map_visual_label(raw_label: str) -> str:
 # OCR CLASSIFICATION (PRIORITY #1)
 # ─────────────────────────────────────────────
 def classify_image_ocr(image_bytes):
-    """Extract text from image using pytesseract and match to grocery keywords.
-    This runs FIRST before Gemini/HF to give priority to on-pack text."""
     debug = []
     try:
         import pytesseract
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-        # Try multiple PSM modes — different modes work better for different layouts
         for psm in [6, 3, 11]:
             raw_text = pytesseract.image_to_string(image, config=f'--psm {psm}')
             text = re.sub(r'[^a-z0-9\s]', ' ', raw_text.lower())
@@ -869,7 +865,6 @@ def classify_image_ocr(image_bytes):
             matched_tags = []
             seen_kw = set()
 
-            # Check multi-word keywords first (higher specificity)
             for keyword in sorted(GROCERY_KEYWORDS.keys(), key=lambda k: -len(k)):
                 kw = normalize_tag(keyword)
                 if kw in seen_kw:
@@ -877,19 +872,16 @@ def classify_image_ocr(image_bytes):
                 kw_words = kw.split()
 
                 if len(kw_words) == 1:
-                    # Single word: must appear as a full word in OCR output
                     if kw in words:
                         conf = 92 if len(kw) >= 5 else 80
                         matched_tags.append({"tag": kw, "confidence": conf})
                         seen_kw.add(kw)
                 else:
-                    # Multi-word: check if full phrase appears in text
                     if kw in text:
                         matched_tags.append({"tag": kw, "confidence": 95})
                         seen_kw.add(kw)
 
             if matched_tags:
-                # Sort by confidence descending, deduplicate
                 final = sorted(matched_tags, key=lambda x: x["confidence"], reverse=True)
                 debug.append(f"✅ OCR (PSM {psm}) — matched: {[t['tag'] for t in final[:4]]}")
                 return final[:6], None, debug
@@ -912,7 +904,6 @@ def classify_image_gemini(image_bytes):
         debug.append("⚠️ GEMINI_API_KEY not set in secrets")
         return None, "no key", debug
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    # AQ. prefix = new Google AI Studio key format → use v1 endpoint
     api_ver = "v1" if gemini_key.startswith("AQ.") else "v1beta"
     for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]:
         url = (f"https://generativelanguage.googleapis.com/{api_ver}/models/"
@@ -1047,25 +1038,21 @@ def color_fallback(image: Image.Image):
 def classify_image(image_bytes):
     all_debug = []
 
-    # ── STEP 1: OCR (highest priority — reads actual text on packaging)
     tags, err, dbg = classify_image_ocr(image_bytes)
     all_debug.extend(dbg)
     if tags:
         return tags, "📝 OCR Text Detection", all_debug
 
-    # ── STEP 2: Gemini Vision API
     tags, err, dbg = classify_image_gemini(image_bytes)
     all_debug.extend(dbg)
     if tags:
         return tags, "✨ Gemini Vision", all_debug
 
-    # ── STEP 3: HuggingFace Vision API
     tags, err, dbg = classify_image_hf(image_bytes)
     all_debug.extend(dbg)
     if tags:
         return tags, "🤗 HuggingFace Vision", all_debug
 
-    # ── STEP 4: Color Fallback (always-on last resort)
     all_debug.append("⚠️ All methods failed — using color fallback")
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     tags  = color_fallback(image)
@@ -1158,7 +1145,7 @@ def metric_card(value, label, hint="", color="#4f7ef8"):
 # SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🛒 Grocery AI")
+    st.markdown("## 🛒 AI")
     st.markdown("<p style='color:#475569;font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase'>Smart Recommender</p>", unsafe_allow_html=True)
     st.markdown("---")
 
@@ -1210,7 +1197,7 @@ with st.sidebar:
 
     elif mode == "📊 Evaluation Metrics":
         eval_btn = st.button("📊 Compute Metrics", use_container_width=True)
-        st.markdown("<p style='color:#8892b0;font-size:0.75rem'>80/20 train-test split. May take a few seconds.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#ffffff;font-size:0.75rem'>80/20 train-test split. May take a few seconds.</p>", unsafe_allow_html=True)
 
     elif mode == "🔎 Search":
         search_type = st.radio("Search for", ["Products", "Users"])
@@ -1578,7 +1565,7 @@ elif mode == "📊 Evaluation Metrics":
         <div class="eval-card">
             <div class="eval-val" style="color:#34d399">{cov_pct:.1f}%</div>
             <div class="eval-lbl">Catalog Coverage</div>
-            <div class="eval-hint">% of catalog covered by recommendations (50-user sample)</div>
+            <div class="eval-hint" style="color:#ffffff">% of catalog covered by recommendations (50-user sample)</div>
             <div class="prog-wrap" style="margin-top:10px">
                 <div class="prog-fill" style="width:{min(cov_pct,100)}%"></div>
             </div>
