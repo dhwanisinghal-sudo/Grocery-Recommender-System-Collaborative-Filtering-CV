@@ -344,6 +344,18 @@ def svd_recommend(user_id, top_n=10, cat_filter=None):
         preds = preds[[p for p in preds.index if product_map.get(p, {}).get('category') in cat_filter]]
     return preds.sort_values(ascending=False).head(top_n).index.tolist()
 
+# ─────────────────────────────────────────────
+# HYBRID MODEL CONFIG
+# (previously lived in config.py as SVD_WEIGHT/ITEM_ITEM_WEIGHT, which didn't
+#  match these real values and was never imported anywhere — removed in favor
+#  of documenting the actual defaults here, next to where they're used.)
+#
+#   alpha (User-Based CF weight) = 0.40  -- default, adjustable via sidebar slider
+#   beta  (Item-Based CF weight) = 0.35  -- default, adjustable via sidebar slider
+#   gamma (SVD weight)           = 1 - alpha - beta = 0.25  -- derived, not independently set
+#
+# Combined via rank-reciprocal fusion: score(item) += weight * 1/(rank + 1)
+# ─────────────────────────────────────────────
 def hybrid_recommend(user_id, top_n=10, alpha=0.4, beta=0.35, cat_filter=None):
     ub  = user_based_recommend(user_id, top_n=top_n*3, cat_filter=cat_filter)
     ib  = item_based_recommend(user_id, top_n=top_n*3, cat_filter=cat_filter)
