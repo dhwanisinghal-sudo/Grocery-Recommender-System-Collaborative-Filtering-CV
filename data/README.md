@@ -1,70 +1,38 @@
 # 📦 Dataset Setup
 
-This project uses the **Instacart Market Basket Analysis** dataset from Kaggle.
+This project uses a **curated, synthetic Indian grocery catalog** — not the Instacart Market Basket Analysis dataset referenced in the earlier exploratory notebook (`experiments/Smart_Grocery_Recommender_CV.ipynb`).
 
-> ⚠️ The CSV files are **not included** in this repo due to large file size (~1.3 GB total).
+Both data files are committed to this repo and require no download:
 
----
-
-## 🔽 How to Download
-
-1. Go to Kaggle: [https://www.kaggle.com/c/instacart-market-basket-analysis/data](https://www.kaggle.com/c/instacart-market-basket-analysis/data)
-2. Sign in / create a free Kaggle account
-3. Click **"Download All"**
-4. Extract the zip — you'll get a folder with these files
-
----
-
-## 📁 Required Files
-
-Place these CSV files in the `/content/` folder (if using Google Colab) or update the paths in the notebook:
-
-| File | Size (approx) | Description |
-|---|---|---|
-| `orders.csv` | ~106 MB | All orders with user_id, timestamps |
-| `order_products__prior.csv` | ~564 MB | Products in each prior order (main training data) |
-| `order_products__train.csv` | ~24 MB | Products in training orders (evaluation data) |
-| `products.csv` | ~2.1 MB | Product names and department info |
-| `departments.csv` | ~1 KB | Department IDs and names |
-| `aisles.csv` | ~3 KB | Aisle IDs and names |
-
----
+| File | Description |
+|---|---|
+| `products_500plus.csv` | 500 products across 13 categories, with brand/name/price/rating/tags |
+| `user_ratings.csv` | 6,796 explicit ratings from 150 users on a 1.5–5.0 scale |
 
 ## 📊 Dataset Stats
 
 | Metric | Value |
 |---|---|
-| Total Orders | 3,421,083 |
-| Total Products | 49,688 |
-| Total Users | 206,209 |
-| Users used in this project | 4,628 (user_id ≤ 5000) |
+| Products | 500 |
+| Categories | 13 |
+| Users | 150 |
+| Ratings | 6,796 |
+| Rating scale | 1.5 – 5.0 |
+| Mean rating | 3.79 |
+| Matrix sparsity | 90.9% |
+| Avg. ratings / user | 45.3 |
+| Avg. ratings / product | 13.6 |
+
+## Loading
+
+`app.py` reads both files directly from this folder at runtime (via `find_file()`), so no separate download or setup step is needed — just run:
+
+```bash
+streamlit run app.py
+```
+
+from the repo root, with these two CSVs present in `data/`.
 
 ---
 
-## 🚀 Quick Setup (Google Colab)
-
-```python
-# Option 1: Upload manually to Colab
-from google.colab import files
-uploaded = files.upload()
-# Upload: orders.csv, products.csv, order_products__prior.csv, order_products__train.csv
-
-# Option 2: Use Kaggle API in Colab
-!pip install kaggle
-!kaggle competitions download -c instacart-market-basket-analysis
-!unzip instacart-market-basket-analysis.zip
-```
-
----
-
-## 📂 After Downloading — Folder Structure
-
-```
-/content/
-├── orders.csv
-├── order_products__prior.csv
-├── order_products__train.csv
-├── products.csv
-├── departments.csv
-└── aisles.csv
-```
+> The Instacart-based setup previously documented here (orders.csv, order_products__prior.csv, products.csv, ~1.3GB total) belonged to the earlier offline exploration notebook only, and does not apply to the deployed app. See `experiments/README.md`.
