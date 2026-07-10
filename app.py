@@ -681,7 +681,24 @@ LOW_PRIORITY_TAGS = {
     "food item","indian","staple","packaged","packaged food","processed food",
     "dairy product","dairy products","cooking ingredient","indian food",
     "breakfast","ready to eat","condiment","fruit juice","staples","drink",
-    "masala","magic","spicy","tangy",
+    "masala","magic","spicy","tangy","snack","dairy",
+}
+
+def _fuzzy_boundary_match(short: str, long_: str) -> bool:
+    """True if `short` is a prefix/suffix of `long_` (min length 5) — used
+    instead of plain 'in' containment, which lets short unrelated words
+    collide inside longer ones (e.g. "bru" hiding inside "toothbrush")."""
+    if len(short) < 5 or len(long_) <= len(short):
+        return False
+    return long_.startswith(short) or long_.endswith(short)
+
+# Keyword pairs that share a substring/prefix relationship but mean
+# completely different things (e.g. "haldi" the spice vs the "Haldiram"
+# brand name) — string rules alone can't tell these apart, so they're
+# explicitly excluded from fuzzy-matching each other.
+AMBIGUOUS_KEYWORD_PAIRS = {
+    "haldi": {"haldiram"},
+    "haldiram": {"haldi"},
 }
 
 VISUAL_LABEL_TO_TAG = {
@@ -821,13 +838,33 @@ def find_products_from_tags(tag_dicts, product_map):
     for (tag, conf) in raw_tags:
         if tag in JUNK_DESCRIPTORS or tag in CUISINE_NOISE: continue
         if dairy_type and tag in blocked_tags: continue
+        tag_is_generic = tag in LOW_PRIORITY_TAGS
         tag_words = [w for w in tag.split() if len(w) >= 3]
         for keyword, pids in GROCERY_KEYWORDS.items():
             kw = normalize_tag(keyword)
             kw_words = [w for w in kw.split() if len(w) >= 3]
-            exact   = (kw == tag)
-            substr  = (len(kw) >= 4 and kw in tag) or (len(tag) >= 4 and tag in kw)
-            word_hit = any((tw in kw) or any(kw_w in tw for kw_w in kw_words) for tw in tag_words)
+            exact = (kw == tag)
+            if AMBIGUOUS_KEYWORD_PAIRS.get(tag) and kw in AMBIGUOUS_KEYWORD_PAIRS[tag] and not exact:
+                continue
+            if len(kw_words) > 1:
+                # Compound keyword (e.g. "garam masala", "ice cream", "peanut butter"):
+                # only match if ALL of its words are present among the detected tags.
+                # A single shared generic word (e.g. "masala", "cream", "milk") must not
+                # silently match every compound keyword that happens to contain it.
+                substr   = False
+                word_hit = all(
+                    any(kw_w == tw or _fuzzy_boundary_match(kw_w, tw) for tw in tag_words)
+                    for kw_w in kw_words
+                )
+            else:
+                # Single-word keyword: only allow non-exact matches at a word
+                # boundary (prefix/suffix, min length 5) — plain "contains"
+                # matching lets short unrelated words collide accidentally
+                # (e.g. "bru" hiding inside "toothbrush").
+                substr   = _fuzzy_boundary_match(kw, tag) or _fuzzy_boundary_match(tag, kw)
+                word_hit = any(_fuzzy_boundary_match(kw, tw) for tw in tag_words)
+            if tag_is_generic and not exact:
+                continue
             if exact or substr or word_hit:
                 for pid in pids:
                     if pid not in product_map: continue
