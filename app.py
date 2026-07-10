@@ -681,6 +681,7 @@ LOW_PRIORITY_TAGS = {
     "food item","indian","staple","packaged","packaged food","processed food",
     "dairy product","dairy products","cooking ingredient","indian food",
     "breakfast","ready to eat","condiment","fruit juice","staples","drink",
+    "masala","magic","spicy","tangy",
 }
 
 VISUAL_LABEL_TO_TAG = {
@@ -1023,11 +1024,11 @@ def color_fallback(image: Image.Image):
     hue, sat, val = colorsys.rgb_to_hsv(r/255, g/255, b/255)
     hue_deg = hue * 360
     if 30 <= hue_deg <= 70 and sat > 0.25 and val > 0.45:
-        if texture_std > 25:
+        if hue_deg >= 45 and texture_std < 22:
+            return [{"tag": "banana", "confidence": 60}, {"tag": "juice", "confidence": 40}]
+        if texture_std > 35:
             return [{"tag": "noodles", "confidence": 40}, {"tag": "chips", "confidence": 35},
                      {"tag": "biscuit", "confidence": 35}, {"tag": "namkeen", "confidence": 30}]
-        if hue_deg >= 45 and texture_std < 12:
-            return [{"tag": "banana", "confidence": 60}, {"tag": "juice", "confidence": 40}]
         if hue_deg < 45 and texture_std < 20:
             return [{"tag": "mango juice", "confidence": 55}, {"tag": "juice", "confidence": 50}]
         return [{"tag": "packaged food", "confidence": 40}, {"tag": "snack", "confidence": 35}]
