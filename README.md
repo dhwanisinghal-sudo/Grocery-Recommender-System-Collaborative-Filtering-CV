@@ -108,6 +108,37 @@ Data files, expected under `data/`:
 - `products_500plus.csv`
 - `user_ratings.csv`
 
+## 🛠️ Tech Stack
+
+### Programming Language
+- Python 3.x
+
+### Frontend
+- Streamlit
+
+### Machine Learning & Recommendation
+- Surprise (User-Based CF, Item-Based CF, SVD)
+- Scikit-learn
+- Pandas
+- NumPy
+
+### Computer Vision & OCR
+- OpenCV
+- Tesseract OCR
+- Pillow (PIL)
+
+### AI Models
+- Google Gemini API
+- Hugging Face Transformers
+
+### Data Visualization
+- Matplotlib
+- Plotly
+
+### Version Control
+- Git
+- GitHub
+
 ## Evaluation
 
 The evaluation dashboard runs `compute_eval_metrics()` in `app.py` against
