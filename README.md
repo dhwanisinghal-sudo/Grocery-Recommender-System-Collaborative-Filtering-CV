@@ -1,204 +1,163 @@
-# 🛒 Smart Grocery Recommender System
+Smart Grocery Recommender
 
-### Hybrid Collaborative Filtering + Multi-Stage Computer Vision
+A Streamlit application that combines a multi-stage computer-vision product
+identification pipeline with a hybrid collaborative-filtering recommendation
+engine over a curated 500-product Indian grocery catalog.
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red?style=for-the-badge&logo=streamlit)
-![Scikit-learn](https://img.shields.io/badge/Scikit--learn-CF-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge)
 
-> This project is written up as a short conference-style paper, *"Smart Grocery Recommender: A Hybrid Collaborative Filtering System with a Multi-Stage Vision Pipeline for Personalized Grocery Recommendations"* (Dhwani Singhal). This README summarizes it; see `PROJECT_REPORT.md` for the fuller write-up including the ablation study and worked example.
+Full methodology and evaluation results: see
+Smart_Grocery_Recommender_Paper_Corrected.docx / the accompanying paper.
 
----
 
-## 📌 Project Overview
 
-A **Smart Grocery Recommendation System**, deployed as a Streamlit app, that combines a **hybrid collaborative-filtering engine** with a **four-stage computer-vision identification pipeline** over a curated 500-product Indian grocery catalog. The system addresses two discovery problems at once: generic, non-personalized recommendations, and the inability to identify a product from a photo when its exact catalog name/brand spelling isn't known.
+What it does
 
-**Users can:**
-- 📷 Upload a photo of a grocery item and have it identified via OCR → Gemini Vision → HuggingFace → color-heuristic fallback
-- 🛒 Get personalized recommendations via a tunable hybrid CF model (user-based + item-based + SVD)
-- 🔁 See "you might also like" suggestions restricted to plausibly-related categories
-- 📊 Run live evaluation metrics against the real rating data
-- 🔎 Search the catalog and browse raw data
 
-> ⚠️ **Note:** this repo also contains `Smart_Grocery_Recommender_CV.ipynb`, an early exploratory notebook built on the Instacart dataset with a stock MobileNetV2 classifier. It is architecturally distinct from — and superseded by — the deployed app below. See [Notebook vs. App](#-notebook-vs-app).
+Identify a product from a photo. Upload an image and the app resolves
+it to a catalog product through a four-stage fallback pipeline (see
+below), then uses that product as an anchor for "you might also like"
+suggestions.
+Recommend products for a user. A hybrid collaborative-filtering
+engine blends three independent signals into a single ranked list.
+Explore and evaluate. Search the catalog and rating data directly,
+and inspect the recommender's own accuracy metrics from a built-in
+evaluation dashboard.
 
----
 
-## 📦 Dataset
+App modes
 
-| Attribute | Value |
-|---|---|
-| Source | Curated, synthetic Indian grocery catalog (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali, and others) |
-| Products | 500 |
-| Categories | 13 — Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home Care, Grains, Bakery, Frozen, Condiments, Beverages, Noodles |
-| Users | 150 |
-| Ratings | 6,796 explicit ratings |
-| Rating scale | 1.5 – 5.0 |
-| Mean rating | 3.79 |
-| Matrix sparsity | 90.9% |
-| Avg. ratings / user | 45.3 |
-| Avg. ratings / product | 13.6 |
+The app is a single-page Streamlit application (app.py, ~1,700 lines)
+with seven sidebar modes:
 
----
 
-## 🔁 Pipeline
+User recommendations (hybrid CF)
+Similar-product lookup (item-based CF)
+Image-based scanning
+Cold-start recommendations for new users
+Evaluation-metrics dashboard
+Catalog / user search
+Raw data explorer (Products, Ratings, Insights tabs)
 
-**1. Image Recognition (4-stage fallback chain)** — each stage runs only if the previous one fails to produce a confident match:
 
-```
-📷 Image Upload
-      ↓
-📝 OCR (Tesseract) ── matches on-package text against 150+ brand/product keywords
-      ↓ (no confident match)
-✨ Gemini Vision ── vision-language model, closed tag vocabulary, structured JSON output
-      ↓ (unavailable / fails)
-🤗 HuggingFace Inference ── general-purpose classifier, labels normalized to the same vocabulary
-      ↓ (unavailable / fails)
-🎨 Color-Heuristic Fallback ── hue/brightness/texture rule-based guess
-      ↓
-🗂️ Product Catalog Match (+ manual search override in the UI)
-```
+Vision pipeline
 
-Packaging text is largely invariant to lighting and camera angle, making it a more reliable identity signal than appearance alone for packaged goods — so OCR is tried first, with vision-model and heuristic stages reserved for cases where text is absent, occluded, or illegible (e.g. loose produce).
+Product identification proceeds through four ordered stages, each attempted
+only if the previous stage fails to produce a confident match:
 
-**2. Recommendation (Hybrid Collaborative Filtering)** — three signals, computed independently and combined:
 
-```
-🤖 User-Based CF (cosine similarity, 15 nearest neighbors)   — weight α = 0.40
-🤖 Item-Item CF (cosine similarity over item vectors)        — weight β = 0.35
-🤖 SVD (scipy.sparse.linalg.svds, k=20 latent factors)       — weight γ = 1 − α − β = 0.25
-      ↓
-Rank-reciprocal fusion: score(item) += weight × 1 / (rank + 1)
-      ↓
-✅ Top-N Personalized Recommendations
-```
+OCR (highest priority). Tesseract extracts on-package text, matched
+against GROCERY_KEYWORDS, a curated dictionary of 150+ brand and
+product keywords mapped to product IDs.
+Gemini Vision fallback. A structured prompt constrains output to a
+fixed vocabulary of allowed tags with confidence scores, plus a
+forbidden-tag list to suppress generic visual descriptors (e.g.
+"block", "foil", "rectangular").
+Hugging Face Inference fallback. A general-purpose vision classifier
+supplies ImageNet-style labels, normalized onto the same controlled
+product-tag vocabulary.
+Color-heuristic fallback. If both API stages are unavailable, a
+rule-based classifier inspects hue, brightness, and texture for a
+coarse guess.
 
-α and β are adjustable live via sidebar sliders. New users with no rating history fall back to popularity-based recommendations (interaction count × average rating), filtered to their selected categories.
 
----
+A DAIRY_SPECIFIC priority-ordered, mutually-exclusive tag structure
+disambiguates visually similar dairy products (butter, ghee, paneer, curd,
+cheese, cream, milk). A manual text-search override lets a user correct a
+misclassification directly.
 
-## 📊 Evaluation
+Recommendation engine
 
-Evaluated on an 80/20 train-test split (seed=42) of the 6,796 ratings. RMSE is computed on the intersection of test users/products present in the fitted prediction matrix; ranking metrics use a 50-user sample and a relevance threshold of rating ≥ 3.5.
+Three signals are computed independently and combined:
 
-**Baseline (zero-fill SVD, as implemented in the deployed app's `compute_eval_metrics()`):**
 
-| Metric | SVD (zero-fill) | User-Based CF |
-|--------|------------------|---------------|
-| RMSE | 3.6145 | 0.8820 |
+User-based CF — cosine similarity between user rating vectors; the
+15 nearest neighbors' ratings are aggregated over items the target user
+hasn't rated.
+Item-based CF — cosine similarity between item vectors (columns of
+the rating matrix), restricted at inference time to RELATED_CATEGORIES
+for post-scan suggestions.
+SVD matrix factorization — truncated SVD (k=20 latent factors, via
+scipy.sparse.linalg.svds) reconstructed to a dense predicted-rating
+matrix.
 
-| Metric | Value |
-|--------|-------|
-| Precision@10 | 3.40% |
-| Recall@10 | 3.66% |
-| F1 Score | 3.53% |
-| Catalog Coverage | 48.2% |
 
-**Key finding — the SVD RMSE gap is a zero-fill artifact, not a model-quality difference.** Treating unrated entries as "rated zero" biases factorization toward under-prediction. Re-running SVD after mean-centering each user's ratings (subtracting their mean before factorization, adding it back after, clipped to [1.5, 5.0]) closes the RMSE gap entirely and improves ranking quality:
+The three ranked lists are combined via a rank-reciprocal hybrid score:
 
-| Metric | Zero-Fill SVD | Mean-Centered SVD |
-|--------|---------------|--------------------|
-| RMSE | 3.6145 | **0.8789** (≈ matches User-Based CF's 0.8820) |
-| Precision@10 | 3.40% | 3.40% |
-| Recall@10 | 3.66% | **5.51%** (+49%) |
-| F1 Score | 3.53% | **4.21%** (+19%) |
-| Coverage | 48.2% | 40.6% |
+score(item) = α · (1 / rank_user_based)
+            + β · (1 / rank_item_based)
+            + (1 − α − β) · (1 / rank_svd)
 
-Precision stays flat and coverage drops modestly, indicating mean-centering sharpens rather than broadens SVD's confident predictions. **Note:** this mean-centered variant is a reported ablation/analysis from the paper, not (yet) the code path executing in the deployed app's `compute_eval_metrics()`, which currently reports the zero-fill numbers above. See `PROJECT_REPORT.md` for the full ablation write-up, K-sensitivity analysis (K ∈ {5, 10, 20}), and a breakdown by user activity level.
+with default weights α = 0.40, β = 0.35, both adjustable at runtime.
+New users with no rating history receive popularity-based recommendations
+(interaction count × average rating), filtered to their selected preferred
+categories.
 
-Precision@10 remains low (3.4%) primarily because of dataset scale — 150 users and 90.9% sparsity leave limited overlap between predicted top-10 lists and held-out relevant items, and a 3.5 threshold captures most observed ratings (mean 3.79), enlarging the relevant-item set relative to any fixed K. This is a data-scale limitation, not a sign the models are behaving incorrectly — see the worked example in `PROJECT_REPORT.md`.
+Data loading and all three CF models are wrapped in @st.cache_data, keyed
+on a hash of the ratings table length, so models are computed once per data
+version rather than recomputed on every interaction.
 
----
+Dataset
 
-## ✅ Features
+AttributeValueProducts500Categories13Users150Ratings6,796Rating scale1.5 – 5.0Mean rating3.79Matrix sparsity90.9%Avg. ratings / user45.3
 
-| Feature | Description |
-|---------|-------------|
-| 🔍 Multi-stage Image Recognition | OCR → Gemini Vision → HuggingFace → color fallback, plus manual search override |
-| 🤝 Tunable Hybrid CF | User-CF + Item-CF + SVD, weights adjustable via sidebar sliders |
-| 👤 Personalized | Recommendations based on individual rating history |
-| ❄️ Cold Start | Popularity-based recommendations for new users, by selected category |
-| 🔁 Cross-Category "You Might Also Like" | `RELATED_CATEGORIES`-driven item-based suggestions after an image match |
-| 📊 Live Evaluation | RMSE, Precision@K, Recall@K, F1, Coverage computed on demand |
-| 🔎 Search | Product and user search |
-| 📋 Data Explorer | Browse products, ratings, and dataset insights |
+Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home
+Care, Grains, Bakery, Frozen, Condiments, Beverages, and Noodles, including
+branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali, etc.).
 
-Seven interactive modes in total: recommendations, similar-product lookup, image scan, cold start, evaluation metrics, search, and data explorer.
+Data files, expected under data/:
 
----
 
-## 🛠️ Tech Stack
+products_500plus.csv
+user_ratings.csv
 
-| Category | Libraries |
-|----------|-----------|
-| App Framework | Streamlit (single-file app, `@st.cache_data` keyed on ratings-table length) |
-| Collaborative Filtering | scikit-learn (cosine similarity), scipy (`svds`) |
-| Image Recognition | pytesseract (OCR), Gemini Vision API, HuggingFace Inference API |
-| Image Processing | Pillow |
-| Data Processing | Pandas, NumPy |
-| HTTP | requests |
 
-See [`requirements.txt`](requirements.txt) for exact packages, and note the system-level `tesseract-ocr` binary requirement below.
+Evaluation
 
----
+The evaluation dashboard runs compute_eval_metrics() in app.py against
+an 80/20 train-test split (seed=42) of the 6,796 ratings.
 
-## 🚀 Setup
+MetricSVD (zero-fill)User-Based CFRMSE3.610.88
 
-### 1. Install dependencies
+MetricValue (K=10)Precision@103.4%Recall@103.7%F13.5%Catalog Coverage48.2%
 
-```bash
-pip install -r requirements.txt
-```
+Precision@10 stays low mainly because the dataset is small and 90.9%
+sparse — not because the underlying models are broken. Additional
+ablations (mean-centered SVD, K-sensitivity, activity-level breakdown) are
+reported in the paper but currently live in standalone analysis scripts,
+not the deployed evaluation dashboard (see Limitations below).
 
-OCR requires the **Tesseract OCR engine** as a system binary (pip alone won't install this):
+Running locally
 
-```bash
-# Debian/Ubuntu
-sudo apt-get install tesseract-ocr
-
-# macOS
-brew install tesseract
-```
-
-For Streamlit Community Cloud, this repo includes a `packages.txt` (containing `tesseract-ocr`) which Streamlit Cloud installs automatically at deploy time.
-
-### 2. Configure API keys
-
-The app uses `st.secrets["GEMINI_API_KEY"]` and `st.secrets["HF_API_TOKEN"]` for the Gemini Vision and HuggingFace fallback stages. Neither is required for OCR or the color fallback to work, but both improve identification coverage.
-
-1. Copy the template:
-   ```bash
-   mkdir -p .streamlit
-   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-   ```
-2. Get a free-tier **Gemini API key** from [Google AI Studio](https://aistudio.google.com/app/apikey) and paste it into `GEMINI_API_KEY`.
-3. Get a free **HuggingFace access token** from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) and paste it into `HF_API_TOKEN`.
-4. `secrets.toml` is git-ignored — never commit real keys.
-
-### 3. Run
-
-```bash
+bashpip install -r requirements.txt
 streamlit run app.py
-```
 
----
+Vision fallback stages (Gemini, Hugging Face) require API credentials; the
+app degrades gracefully to the color-heuristic stage if these are absent.
 
-## 📁 Notebook vs. App
+Repository contents
 
-`Smart_Grocery_Recommender_CV.ipynb` is an early offline exploration built on the Instacart Market Basket Analysis dataset (3.4M orders, ~49,700 products, 206K users) with a stock, ImageNet-pretrained MobileNetV2 classifier. It is retained in the repository as an offline experimentation artifact but is architecturally distinct from, and superseded by, the deployed system: a curated 500-product catalog and the text-first, four-stage vision pipeline described above. See [`experiments/README.md`](experiments/README.md).
 
----
+app.py — the deployed application described above.
+data/products_500plus.csv, data/user_ratings.csv — catalog and rating
+data used by the deployed app.
+Smart_Grocery_Recommender_CV.ipynb — an earlier, superseded
+offline experiment (Instacart dataset + MobileNetV2 classifier), retained
+for reference only. It is architecturally unrelated to the deployed
+vision pipeline in app.py. See PROJECT_REPORT.md for details on this
+earlier phase.
 
-## 📄 Paper & Limitations
 
-The full methodology, ablation study, K-sensitivity analysis, per-user-activity breakdown, and a worked recommendation example are documented in `PROJECT_REPORT.md`, adapted from the project's write-up. Known limitations (also discussed there): Precision@10 is bottlenecked by dataset scale rather than model quality; the HuggingFace and color-heuristic vision fallback stages are meaningfully weaker than OCR/Gemini; the hybrid weights (α, β) are fixed defaults rather than learned/grid-searched; and no formal labeled-image accuracy evaluation of the vision pipeline has been conducted.
+Limitations / known gaps
 
----
 
-## 👩‍💻 Author
+The vision pipeline has not been formally accuracy-evaluated (no labeled
+image test set currently exists for this catalog).
+Hybrid CF weights (α, β) are fixed defaults, not learned or
+grid-searched.
+Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
+standalone scripts, not yet wired into the deployed evaluation dashboard.
 
-**Dhwani Singhal**
 
-[@dhwanisinghal-sudo](https://github.com/dhwanisinghal-sudo)
+License / Attribution
+
+See project paper for full references and methodology.
