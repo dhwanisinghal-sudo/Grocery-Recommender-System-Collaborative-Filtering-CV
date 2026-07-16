@@ -1641,8 +1641,7 @@ elif mode == "📊 Evaluation Metrics":
         st.markdown("""
         <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
             <b style="color:#34d399">✅ Note:</b>
-            <span style="font-size:0.85rem;color:#94a3b8"> Higher SVD RMSE is expected on synthetic/sparse data — real-world data typically yields 0.8–1.2.
-            Precision@K and Coverage are the most industry-relevant metrics.</span>
+            <span style="font-size:0.85rem;color:#94a3b8"> RMSE reflects the 90.9% sparsity of this real ratings matrix — Precision@K and Coverage are the more informative metrics for a sparse, real-world dataset like this one.</span>
         </div>""", unsafe_allow_html=True)
     else:
         st.info("👈 Click **Compute Metrics** in the sidebar.")
