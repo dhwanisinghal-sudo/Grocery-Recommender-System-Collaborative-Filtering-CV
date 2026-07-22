@@ -1430,7 +1430,7 @@ elif mode == "📸 Image Scanner":
         st.markdown('<div class="sec-hdr-green">🔎 Manual Search Override</div>', unsafe_allow_html=True)
         mc1, mc2 = st.columns([3, 1])
         with mc1:
-            manual_q = st.text_input("AI got it wrong? Type manually (e.g. maggi, butter, chips)", key="manual_cv")
+            manual_q = st.text_input("Analyzed wrong? Type manually (e.g. maggi, butter, chips)", key="manual_cv")
         with mc2:
             st.markdown("<br>", unsafe_allow_html=True)
             manual_btn = st.button("🔍 Search", use_container_width=True)
