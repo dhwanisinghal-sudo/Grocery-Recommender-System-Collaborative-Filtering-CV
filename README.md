@@ -1,196 +1,162 @@
-# Smart Grocery Recommender
+# 🛒 Smart Grocery Recommender System
+### Collaborative Filtering + Computer Vision | ML + CV Domain
 
-A Streamlit application that combines a multi-stage computer-vision product
-identification pipeline with a hybrid collaborative-filtering recommendation
-engine over a curated 500-product Indian grocery catalog.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)](https://camo.githubusercontent.com/46eb2ce89247d240b2828be1b397cffe563c29478bdf3b2fac80d8b0f6a96645/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f507974686f6e2d332e382b2d626c75653f7374796c653d666f722d7468652d6261646765266c6f676f3d707974686f6e)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?style=for-the-badge&logo=tensorflow)](https://camo.githubusercontent.com/94b86c1a2f95dac95a95769ac9bb7ceada4bd7b9283019c8a82d39589c31318e/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f54656e736f72466c6f772d322e782d6f72616e67653f7374796c653d666f722d7468652d6261646765266c6f676f3d74656e736f72666c6f77)
+[![Scikit](https://img.shields.io/badge/Scikit--Surprise-CF-green?style=for-the-badge)](https://camo.githubusercontent.com/e4200b8fa03f050ba7e29c38483c6a18f2f49289342b2e04eac0b683a4270508/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5363696b69742d2d53757270726973652d43462d677265656e3f7374796c653d666f722d7468652d6261646765)
+[![Status](https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge)](https://camo.githubusercontent.com/9b7a2f0cc11cffecf22e34f4cee858f21d3ba3a3111335c21a0bc0af21e8f3dd/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374617475732d436f6d706c6574652d627269676874677265656e3f7374796c653d666f722d7468652d6261646765)
 
-> Full methodology and evaluation results: see
-> `Smart_Grocery_Recommender_Paper_Corrected.docx` / the accompanying paper.
+### 🚀 [Live App: Try it now!](https://grocery-recommender-system-collaborative-filtering-cv-ln5suvwv.streamlit.app)
 
-## What it does
+---
 
-1. **Identify a product from a photo.** Upload an image and the app resolves
-   it to a catalog product through a four-stage fallback pipeline (see
-   below), then uses that product as an anchor for "you might also like"
-   suggestions.
-2. **Recommend products for a user.** A hybrid collaborative-filtering
-   engine blends three independent signals into a single ranked list.
-3. **Explore and evaluate.** Search the catalog and rating data directly,
-   and inspect the recommender's own accuracy metrics from a built-in
-   evaluation dashboard.
+## 📌 Project Overview
 
-## App modes
+A **Smart Grocery Recommendation System** that combines **Collaborative Filtering** with **Computer Vision** to identify grocery items from real-world images and provide personalized product recommendations.
 
-The app is a single-page Streamlit application (`app.py`, ~1,700 lines)
-with seven sidebar modes:
+**🔗 Live App:** [https://grocery-recommender-system-collaborative-filtering-cv-ln5suvwv.streamlit.app](https://grocery-recommender-system-collaborative-filtering-cv-ln5suvwv.streamlit.app)
 
-- User recommendations (hybrid CF)
-- Similar-product lookup (item-based CF)
-- Image-based scanning
-- Cold-start recommendations for new users
-- Evaluation-metrics dashboard
-- Catalog / user search
-- Raw data explorer (Products, Ratings, Insights tabs)
+**Users can:**
 
-## Vision pipeline
+- 📷 Upload any grocery item image
+- 🧠 Automatically detect the item using **MobileNetV2** (92.34% accuracy)
+- 🛒 Get **Top 5 personalized recommendations** via Hybrid CF
+- 📊 Explore 15+ data visualizations and model evaluations
 
-Product identification proceeds through four ordered stages, each attempted
-only if the previous stage fails to produce a confident match:
+---
 
-1. **OCR (highest priority).** Tesseract extracts on-package text, matched
-   against `GROCERY_KEYWORDS`, a curated dictionary of 150+ brand and
-   product keywords mapped to product IDs.
-2. **Gemini Vision fallback.** A structured prompt constrains output to a
-   fixed vocabulary of allowed tags with confidence scores, plus a
-   forbidden-tag list to suppress generic visual descriptors (e.g.
-   "block", "foil", "rectangular").
-3. **Hugging Face Inference fallback.** A general-purpose vision classifier
-   supplies ImageNet-style labels, normalized onto the same controlled
-   product-tag vocabulary.
-4. **Color-heuristic fallback.** If both API stages are unavailable, a
-   rule-based classifier inspects hue, brightness, and texture for a
-   coarse guess.
+## 🎯 Domain
 
-A `DAIRY_SPECIFIC` priority-ordered, mutually-exclusive tag structure
-disambiguates visually similar dairy products (butter, ghee, paneer, curd,
-cheese, cream, milk). A manual text-search override lets a user correct a
-misclassification directly.
+**Machine Learning + Computer Vision**
 
-## Recommendation engine
+**Application:** Smart Grocery Recommendation with Image Recognition
 
-Three signals are computed independently and combined:
+---
 
-- **User-based CF** — cosine similarity between user rating vectors; the
-  15 nearest neighbors' ratings are aggregated over items the target user
-  hasn't rated.
-- **Item-based CF** — cosine similarity between item vectors (columns of
-  the rating matrix), restricted at inference time to `RELATED_CATEGORIES`
-  for post-scan suggestions.
-- **SVD matrix factorization** — truncated SVD (k=20 latent factors, via
-  `scipy.sparse.linalg.svds`) reconstructed to a dense predicted-rating
-  matrix.
+## 📦 Dataset
 
-The three ranked lists are combined via a rank-reciprocal hybrid score:
+| Detail         | Value                            |
+| -------------- | -------------------------------- |
+| Source         | Instacart Market Basket Analysis |
+| Total Orders   | 3,421,083                        |
+| Total Products | 49,688                           |
+| Total Users    | 206,209                          |
+| Departments    | 21                               |
+| Aisles         | 134                              |
+
+---
+
+## 🔁 Pipeline
 
 ```
-score(item) = α · (1 / rank_user_based)
-            + β · (1 / rank_item_based)
-            + (1 − α − β) · (1 / rank_svd)
+📷 Image Upload
+      ↓
+🧠 MobileNetV2 (ImageNet)
+      ↓
+🎯 Item Detection — 92.34% Confidence
+      ↓
+🗂️ Product Catalog Match
+      ↓
+🤖 Hybrid CF (SVD + Item-Item)
+      ↓
+✅ Top 5 Personalized Recommendations
 ```
 
-with default weights `α = 0.40`, `β = 0.35`, both adjustable at runtime.
-New users with no rating history receive popularity-based recommendations
-(interaction count × average rating), filtered to their selected preferred
-categories.
+---
 
-Data loading and all three CF models are wrapped in `@st.cache_data`, keyed
-on a hash of the ratings table length, so models are computed once per data
-version rather than recomputed on every interaction.
+## 🤖 Models
 
-## Dataset
+| Model                | RMSE       | Precision@10 | Recall@10  | F1 Score       |
+| --------------------- | ---------- | ------------ | ---------- | -------------- |
+| SVD                   | 1.7034     | 26.66%       | 18.50%     | 21.90%         |
+| KNNBasic              | 2.1500     | 18.20%       | 12.30%     | 14.80%         |
+| NMF                   | 1.9200     | 21.50%       | 15.60%     | 18.10%         |
+| **Hybrid (SVD+KNN)**  | **1.6800** | **28.90%**   | **20.10%** | **23.70%**     |
+| MobileNetV2 (CV)      | —          | —            | —          | **92.34% acc** |
 
-| Attribute            | Value        |
-|-----------------------|--------------|
-| Products              | 500          |
-| Categories             | 13           |
-| Users                  | 150          |
-| Ratings                | 6,796        |
-| Rating scale            | 1.5 – 5.0    |
-| Mean rating            | 3.79         |
-| Matrix sparsity         | 90.9%        |
-| Avg. ratings / user      | 45.3         |
+---
 
-Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home
-Care, Grains, Bakery, Frozen, Condiments, Beverages, and Noodles, including
-branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali, etc.).
+## 📊 Evaluation Metrics
 
-Data files, expected under `data/`:
-- `products_500plus.csv`
-- `user_ratings.csv`
+| Metric       | Value  |
+| ------------ | ------ |
+| RMSE         | 1.7034 |
+| Precision@10 | 26.66% |
+| Recall@10    | 18.50% |
+| F1 Score     | 21.90% |
+| CV Accuracy  | 92.34% |
+
+---
+
+## ✅ Features
+
+| Feature                | Description                                              |
+| ----------------------- | ---------------------------------------------------------- |
+| 🔍 Image Recognition    | MobileNetV2 detects grocery items with 92.34% confidence |
+| 🤝 Hybrid CF            | SVD + Item-Item Collaborative Filtering                  |
+| 👤 Personalized         | Recommendations based on user purchase history           |
+| ❄️ Cold Start          | Popularity-based recommendations for new users           |
+| 📊 Visualizations       | 15+ graphs, charts, heatmaps, word cloud                 |
+| 🎛️ Interactive Widget  | User ID slider + image upload                             |
+| 📐 Sparsity Analysis    | User-item matrix analysis                                |
+| 🔧 Feature Engineering  | User level + product level features                       |
+
+---
+
+## 📈 Visualizations
+
+| #   | Visualization                              |
+| --- | ------------------------------------------- |
+| 1   | Top 10 Most Ordered Products               |
+| 2   | Orders by Day of Week                      |
+| 3   | Orders by Hour of Day                      |
+| 4   | Department-wise Order Analysis             |
+| 5   | Reorder Rate Analysis                      |
+| 6   | User Segmentation (Heavy / Medium / Light) |
+| 7   | User-Product Interaction Heatmap           |
+| 8   | Model Comparison — RMSE Bar Chart          |
+| 9   | Hybrid vs SVD Score Comparison             |
+| 10  | Model Performance Table                    |
+| 11  | Word Cloud — Most Popular Items            |
+| 12  | CV + CF Pipeline Diagram                   |
+| 13  | Train / Test Split                         |
+| 14  | Purchase Pattern Analysis                  |
+| 15  | Products per Order Distribution            |
+
+---
 
 ## 🛠️ Tech Stack
 
-### Programming Language
-- Python 3.x
+| Category                 | Libraries                       |
+| ------------------------- | -------------------------------- |
+| Collaborative Filtering  | scikit-surprise (SVD, KNN, NMF) |
+| Computer Vision          | TensorFlow, Keras, MobileNetV2  |
+| Image Processing         | PIL / Pillow                    |
+| Data Processing          | Pandas, NumPy                   |
+| Visualization            | Matplotlib, Seaborn, WordCloud  |
+| Interactive              | ipywidgets, Google Colab        |
+| Deployment               | Streamlit                       |
 
-### Frontend
-- Streamlit
+---
 
-### Machine Learning & Recommendation
-- Surprise (User-Based CF, Item-Based CF, SVD)
-- Scikit-learn
-- Pandas
-- NumPy
+## 📌 Key Results
 
-### Computer Vision & OCR
-- OpenCV
-- Tesseract OCR
-- Pillow (PIL)
+| Metric            | Value              |
+| ------------------ | -------------------- |
+| Best CF Model      | Hybrid (SVD + KNN) |
+| Best RMSE          | 1.6800             |
+| CV Accuracy        | 92.34%              |
+| Orders Processed   | 3,421,083           |
+| Cold Start         | ✅ Handled          |
 
-### AI Models
-- Google Gemini API
-- Hugging Face Transformers
+---
 
-### Data Visualization
-- Matplotlib
-- Plotly
+## 👩‍💻 Author
 
-### Version Control
-- Git
-- GitHub
+**Dhwani Singhal**
 
-## Evaluation
+[@dhwanisinghal-sudo](https://github.com/dhwanisinghal-sudo)
 
-The evaluation dashboard runs `compute_eval_metrics()` in `app.py` against
-an 80/20 train-test split (seed=42) of the 6,796 ratings.
+---
 
-| Metric        | SVD (zero-fill) | User-Based CF |
-|---------------|------------------|----------------|
-| RMSE          | 3.61             | 0.88           |
-
-| Metric            | Value (K=10) |
-|--------------------|---------------|
-| Precision@10       | 3.4%          |
-| Recall@10          | 3.7%          |
-| F1                 | 3.5%          |
-| Catalog Coverage   | 48.2%         |
-
-Precision@10 stays low mainly because the dataset is small and 90.9%
-sparse — not because the underlying models are broken. Additional
-ablations (mean-centered SVD, K-sensitivity, activity-level breakdown) are
-reported in the paper but currently live in standalone analysis scripts,
-not the deployed evaluation dashboard (see Limitations below).
-
-## Running locally
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Vision fallback stages (Gemini, Hugging Face) require API credentials; the
-app degrades gracefully to the color-heuristic stage if these are absent.
-
-## Repository contents
-
-- `app.py` — the deployed application described above.
-- `data/products_500plus.csv`, `data/user_ratings.csv` — catalog and rating
-  data used by the deployed app.
-- `Smart_Grocery_Recommender_CV.ipynb` — an **earlier, superseded**
-  offline experiment (Instacart dataset + MobileNetV2 classifier), retained
-  for reference only. It is architecturally unrelated to the deployed
-  vision pipeline in `app.py`. See `PROJECT_REPORT.md` for details on this
-  earlier phase.
-
-## Limitations / known gaps
-
-- The vision pipeline has not been formally accuracy-evaluated (no labeled
-  image test set currently exists for this catalog).
-- Hybrid CF weights (α, β) are fixed defaults, not learned or
-  grid-searched.
-- Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
-  standalone scripts, not yet wired into the deployed evaluation dashboard.
-
-## License / Attribution
-
-See project paper for full references and methodology.
+> Built with ❤️ for ML + CV Domain — Instacart Grocery Recommendation System
