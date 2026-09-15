@@ -155,8 +155,6 @@ A **Smart Grocery Recommendation System** that combines **Collaborative Filterin
 
 ---
 
-> Built with ❤️ for ML + CV Domain — Instacart Grocery Recommendation System
-
 <div align="center">
 
 ⭐ **If you like this project, don't forget to star the repository!**
