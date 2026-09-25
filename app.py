@@ -8,6 +8,7 @@ import re
 import json
 import io
 import warnings
+import random
 warnings.filterwarnings("ignore")
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -271,7 +272,9 @@ def compute_eval_metrics():
     precisions, recalls = [], []
     threshold   = 3.5
     test_grouped = test_r[test_r['rating'] >= threshold].groupby('user_id')['product_id'].apply(set).to_dict()
-    for uid in list(test_grouped.keys())[:50]:
+    # Fixed random draw (seed=42), not the first 50 in groupby insertion order.
+    sampled_users = random.Random(42).sample(list(test_grouped.keys()), min(50, len(test_grouped)))
+    for uid in sampled_users:
         if uid not in pred_train_df.index: continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
         preds_uid   = pred_train_df.loc[uid].drop(list(rated_train), errors='ignore')
@@ -286,7 +289,8 @@ def compute_eval_metrics():
     f1     = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
 
     all_recommended = set()
-    for uid in list(pred_train_df.index)[:50]:
+    sampled_users_coverage = random.Random(42).sample(list(pred_train_df.index), min(50, len(pred_train_df.index)))
+    for uid in sampled_users_coverage:
         rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
         top   = pred_train_df.loc[uid].drop(list(rated), errors='ignore').sort_values(ascending=False).head(K).index
         all_recommended.update(top)
