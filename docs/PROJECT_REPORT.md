@@ -46,6 +46,15 @@ Data files, under `data/`:
 - `products_500plus.csv`
 - `user_ratings.csv`
 
+Both are curated/synthetic rather than scraped. `data/generate_catalog.py`
+and `data/generate_ratings.py` document and reproduce that process in code
+(seeded, `random_state=42`) — see `data/README.md` for what each script
+does and why the catalog's names/taxonomy are treated as curated input
+while price, product rating, and all of `user_ratings.csv` are generated
+from a documented distribution. Running either script prints a comparison
+against the real file's summary statistics rather than just asserting a
+match.
+
 ---
 
 ## 3. System Architecture
