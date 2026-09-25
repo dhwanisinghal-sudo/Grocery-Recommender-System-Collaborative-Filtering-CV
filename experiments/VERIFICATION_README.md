@@ -14,6 +14,7 @@ already reproducible by running the deployed app directly (Section VIII-A,
 | `verify_ablation.py` | VIII-B | Table IV — zero-fill vs. mean-centered SVD (RMSE, Precision/Recall/F1@10, coverage) |
 | `verify_k_sensitivity.py` | VIII-C | Table V — Precision/Recall/F1 at K ∈ {5, 10, 20} |
 | `verify_worked_example.py` | VIII-E | Table VI — top-5 recommendations per model + hybrid, for user U097 |
+| `verify_grid_search.py` | — (not in current paper) | Grid search over hybrid weights α, β — see `docs/PROJECT_REPORT.md` §4.2 |
 
 Section VIII-D (breakdown by user activity level, Table V-D... actually
 Table labeled "heavy vs. light raters") is a straightforward re-slice of
@@ -43,6 +44,7 @@ From the repo root:
 python experiments/verify_ablation.py
 python experiments/verify_k_sensitivity.py
 python experiments/verify_worked_example.py
+python experiments/verify_grid_search.py
 ```
 
 Each script reads `data/user_ratings.csv` and (where relevant)
@@ -65,5 +67,13 @@ approximation of it.
 - `verify_worked_example.py` builds models on the full ratings matrix
   (no split), matching how the live app generates recommendations for a
   real user in the UI.
-- All three were run against the current `data/` files at the time this
-  README was written and reproduced the paper's tables exactly.
+- `verify_grid_search.py` also uses the same 80/20 split (seed=42), fits
+  the user-based/item-based/SVD models on the train split only (fitting on
+  the full matrix would leak test ratings into the similarity matrices),
+  and evaluates on the same first-50-test-users sample the other scripts
+  use — see Gap #3 in `docs/PROJECT_REPORT.md` §8: this sample is not yet
+  random, so all four scripts' numbers will shift slightly, together, once
+  that fix lands.
+- All three paper-reproducing scripts were run against the current `data/`
+  files at the time this README was written and reproduced the paper's
+  tables exactly.
