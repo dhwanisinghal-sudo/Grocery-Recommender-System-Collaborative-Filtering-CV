@@ -10,6 +10,7 @@ Run from the repo root or from experiments/:
     python experiments/verify_ablation.py
 """
 import os
+import random
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -60,15 +61,19 @@ def evaluate(pred_df, train_pivot, test_pivot, test_r):
     mask = actual_flat > 0
     rmse = float(np.sqrt(mean_squared_error(actual_flat[mask], pred_flat[mask])))
 
-    # Precision/Recall/F1@K and coverage, first 50 test users with rating >= threshold
+    # Precision/Recall/F1@K and coverage, a fixed random sample (seed=42) of
+    # test users with rating >= threshold -- not the first N in groupby order.
     test_grouped = (
         test_r[test_r["rating"] >= THRESHOLD]
         .groupby("user_id")["product_id"]
         .apply(set)
         .to_dict()
     )
+    sampled_users = random.Random(RANDOM_STATE).sample(
+        list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
+    )
     precisions, recalls = [], []
-    for uid in list(test_grouped.keys())[:SAMPLE_USERS]:
+    for uid in sampled_users:
         if uid not in pred_df.index:
             continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -84,7 +89,10 @@ def evaluate(pred_df, train_pivot, test_pivot, test_r):
     f1 = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
 
     all_recommended = set()
-    for uid in list(pred_df.index)[:SAMPLE_USERS]:
+    sampled_users_coverage = random.Random(RANDOM_STATE).sample(
+        list(pred_df.index), min(SAMPLE_USERS, len(pred_df.index))
+    )
+    for uid in sampled_users_coverage:
         rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
         top = pred_df.loc[uid].drop(list(rated), errors="ignore").sort_values(ascending=False).head(K).index
         all_recommended.update(top)
