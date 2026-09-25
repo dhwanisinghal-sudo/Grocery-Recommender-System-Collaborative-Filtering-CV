@@ -113,30 +113,35 @@ preferred categories.
 **Grid search over α, β:** `experiments/verify_grid_search.py` sweeps
 `α ∈ {0.20, 0.30, 0.40, 0.50, 0.60}` × `β ∈ {0.15, 0.25, 0.35, 0.45}`
 (keeping `α + β ≤ 0.95`, the same bound the UI sliders enforce, so
-`γ = 1 − α − β ≥ 0.05`), on the same 80/20 split (seed=42) and 50-user
-sample used elsewhere in this report. Top results by F1:
+`γ = 1 − α − β ≥ 0.05`), on the same 80/20 split (seed=42) and the same
+fixed *random* 50-user sample (seed=42) used elsewhere in this report (see
+§5, Gap #3 fix). Top results by F1:
 
 | α    | β    | γ    | Precision@10 | Recall@10 | F1    |
 | ---- | ---- | ---- | ------------- | --------- | ----- |
-| 0.40 | 0.35 | 0.25 | 4.40%         | 7.51%     | 5.55% |
-| 0.40 | 0.45 | 0.15 | 4.40%         | 7.51%     | 5.55% |
-| 0.50 | 0.45 | 0.05 | 4.20%         | 7.37%     | 5.35% |
-| 0.60 | 0.35 | 0.05 | 4.20%         | 7.37%     | 5.35% |
-| 0.20 | 0.35 | 0.45 | 4.20%         | 7.24%     | 5.32% |
+| 0.40 | 0.35 | 0.25 | 4.40%         | 8.53%     | 5.81% |
+| 0.50 | 0.25 | 0.25 | 4.00%         | 7.85%     | 5.30% |
+| 0.30 | 0.45 | 0.25 | 4.00%         | 7.75%     | 5.28% |
+| 0.40 | 0.45 | 0.15 | 3.80%         | 7.60%     | 5.07% |
+| 0.30 | 0.35 | 0.35 | 3.80%         | 7.57%     | 5.06% |
 
 Full 19-combo table in `experiments/grid_search_results.csv`. The current
-defaults (α=0.40, β=0.35) tie for the best F1 in this grid, so they're
-kept as-is — this is a defended choice, not an untested guess. (Note these
-absolute Precision/Recall numbers are higher than the SVD-only baseline in
-§5 because the hybrid blend of all three models outperforms SVD alone on
-this dataset, not because of a different evaluation methodology.)
+defaults (α=0.40, β=0.35) are the outright best by F1 in this grid, so
+they're kept as-is — this is a defended choice, not an untested guess.
+(Note these absolute Precision/Recall numbers are higher than the
+SVD-only baseline in §5 because the hybrid blend of all three models
+outperforms SVD alone on this dataset, not because of a different
+evaluation methodology.)
 
 ---
 
 ## 5. Evaluation Metrics
 
 Computed via `compute_eval_metrics()` in `app.py`, on an 80/20 train-test
-split (seed=42) of the 6,796 ratings.
+split (seed=42) of the 6,796 ratings. Precision@10/Recall@10/F1/Coverage
+are measured on a **fixed random sample of 50 test users** (`seed=42`,
+drawn with `random.Random(42).sample(...)`) — not the first 50 users in
+groupby insertion order, which was the earlier (non-random) methodology.
 
 | Metric | SVD (zero-fill) | User-Based CF |
 | ------- | ----------------- | --------------- |
@@ -144,10 +149,10 @@ split (seed=42) of the 6,796 ratings.
 
 | Metric                | Value (K=10) |
 | ------------------------ | -------------- |
-| Precision@10                | 3.4%           |
-| Recall@10                       | 3.7%           |
-| F1                                    | 3.5%           |
-| Catalog Coverage                          | 48.2%          |
+| Precision@10                | 3.2%           |
+| Recall@10                       | 4.5%           |
+| F1                                    | 3.7%           |
+| Catalog Coverage                          | 49.2%          |
 
 Precision@10 stays low mainly because the dataset is small and 90.9%
 sparse — not because the underlying models are broken. Additional
