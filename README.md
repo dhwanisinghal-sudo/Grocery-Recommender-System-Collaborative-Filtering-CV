@@ -160,6 +160,7 @@ Reads `data/products_500plus.csv` and `data/user_ratings.csv` directly — no se
 ## 📚 Further Reading
 
 - [`docs/PROJECT_REPORT.md`](docs/PROJECT_REPORT.md) — full architecture, models, evaluation, and known limitations
+- [`docs/DEVELOPMENT_LOG.md`](docs/DEVELOPMENT_LOG.md) — project timeline reconstructed from commit history
 - [`data/README.md`](data/README.md) — dataset details and generation scripts
 - [`experiments/`](experiments) — ablation, K-sensitivity, and grid-search verification scripts
 
