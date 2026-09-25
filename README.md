@@ -1,24 +1,25 @@
 # 🛒 Smart Grocery Recommender System
 
-### Collaborative Filtering + Computer Vision | ML + CV Domain
+### Hybrid Collaborative Filtering + Multi-Stage Computer Vision
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?style=for-the-badge&logo=tensorflow)
-![Scikit](https://img.shields.io/badge/Scikit--Surprise-CF-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red?style=for-the-badge&logo=streamlit)
+![Status](https://img.shields.io/badge/Status-Deployed-brightgreen?style=for-the-badge)
 
 ---
 
 ## 📌 Project Overview
 
-A **Smart Grocery Recommendation System** that combines **Collaborative Filtering** with **Computer Vision** to identify grocery items from real-world images and provide personalized product recommendations.
+A **Smart Grocery Recommendation System**, deployed as an interactive Streamlit app, that identifies grocery products from real-world photos and generates personalized recommendations from a hybrid collaborative-filtering engine.
 
 **Users can:**
 
-- 📷 Upload any grocery item image
-- 🧠 Automatically detect the item using **MobileNetV2** (92.34% accuracy)
-- 🛒 Get **Top 5 personalized recommendations** via Hybrid CF
-- 📊 Explore 15+ data visualizations and model evaluations
+- 📷 Upload a photo of a grocery item and have it matched against a 500-product catalog through a 4-stage vision pipeline (OCR → Gemini Vision → Hugging Face → color heuristic)
+- 🛒 Get **Top 10 personalized recommendations** via a hybrid of user-based CF, item-based CF, and SVD
+- ❄️ Get popularity-based recommendations as a new user with no rating history
+- 📊 Explore an evaluation-metrics dashboard, catalog/user search, and a raw-data explorer
+
+Full methodology, architecture, and evaluation detail live in [`docs/PROJECT_REPORT.md`](docs/PROJECT_REPORT.md) — this README is a quick-start summary.
 
 ---
 
@@ -26,20 +27,26 @@ A **Smart Grocery Recommendation System** that combines **Collaborative Filterin
 
 **Machine Learning + Computer Vision**
 
-**Application:** Smart Grocery Recommendation with Image Recognition
+**Application:** Smart Grocery Recommendation with Image Recognition, deployed as a Streamlit app (`app.py`)
 
 ---
 
 ## 📦 Dataset
 
-| Detail         | Value                            |
-| -------------- | --------------------------------- |
-| Source         | Instacart Market Basket Analysis |
-| Total Orders   | 3,421,083                        |
-| Total Products | 49,688                           |
-| Total Users    | 206,209                          |
-| Departments    | 21                                |
-| Aisles         | 134                               |
+| Detail               | Value                     |
+| --------------------- | -------------------------- |
+| Products               | 500                          |
+| Categories                 | 13                              |
+| Users                          | 150                                |
+| Ratings                           | 6,796                                 |
+| Rating scale                          | 1.5 – 5.0                                |
+| Mean rating                               | 3.79                                        |
+| Matrix sparsity                               | 90.9%                                          |
+| Avg. ratings / user                               | 45.3                                                |
+
+Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home Care, Grains, Bakery, Frozen, Condiments, Beverages, and Noodles, including branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali, etc.).
+
+Both `data/products_500plus.csv` and `data/user_ratings.csv` are curated/synthetic rather than scraped, and the generation process is documented and reproducible in code — see [`data/README.md`](data/README.md), `data/generate_catalog.py`, and `data/generate_ratings.py`.
 
 ---
 
@@ -48,102 +55,146 @@ A **Smart Grocery Recommendation System** that combines **Collaborative Filterin
 ```
 📷 Image Upload
       ↓
-🧠 MobileNetV2 (ImageNet)
+🔎 4-Stage Vision Pipeline
+   1. OCR (Tesseract) — match on-package text to keyword dictionary
+   2. Gemini Vision fallback — constrained tag vocabulary + confidence
+   3. Hugging Face Inference fallback — ImageNet-style labels, normalized
+   4. Color-heuristic fallback — hue/brightness/texture rule-based guess
       ↓
-🎯 Item Detection — 92.34% Confidence
+🗂️ Catalog Match (500-product Indian grocery catalog)
       ↓
-🗂️ Product Catalog Match
+🤖 Hybrid Collaborative Filtering
+   User-based CF + Item-based CF + SVD (rank-reciprocal blend)
       ↓
-🤖 Hybrid CF (SVD + Item-Item)
-      ↓
-✅ Top 5 Personalized Recommendations
+✅ Top 10 Personalized Recommendations
 ```
+
+The vision pipeline has **not yet been formally accuracy-evaluated** end-to-end — no labeled image test set currently exists for this catalog (see `docs/PROJECT_REPORT.md` §8, Limitations).
 
 ---
 
 ## 🤖 Models
+
+| Model                | Method                                                                 |
+| --------------------- | ------------------------------------------------------------------------ |
+| User-based CF          | Cosine similarity between user rating vectors, 15 nearest neighbors        |
+| Item-based CF               | Cosine similarity between item vectors                                       |
+| SVD                              | Truncated SVD, k=20 latent factors (`scipy.sparse.linalg.svds`)                  |
+| **Hybrid (default)**                 | Rank-reciprocal blend: `α·CF_user + β·CF_item + (1−α−β)·SVD`, α=0.40, β=0.35 |
+
+`α`/`β` defaults are grid-searched, not guesswork — `experiments/verify_grid_search.py` sweeps a 19-combo grid and the current defaults come out best by F1 on this dataset. Full detail in `docs/PROJECT_REPORT.md` §4.2.
+
+---
+
+## 📊 Evaluation Metrics
+
+Computed via `compute_eval_metrics()` in `app.py`, on an 80/20 train-test split (seed=42), evaluated on a fixed *random* sample of 50 test users (`random.Random(42).sample(...)`).
+
+| Metric               | SVD (zero-fill) | User-Based CF |
+| ---------------------- | ------------------ | --------------- |
+| RMSE                       | 3.61                  | 0.88            |
+
+| Metric                | Value (K=10) |
+| ------------------------ | -------------- |
+| Precision@10                | 3.2%           |
+| Recall@10                       | 4.5%           |
+| F1                                    | 3.7%           |
+| Catalog Coverage                          | 49.2%          |
+
+Precision@10 stays low mainly because the dataset is small and 90.9% sparse — not because the underlying models are broken. See `docs/PROJECT_REPORT.md` §5 for the full discussion and `experiments/` for ablations (mean-centered SVD, K-sensitivity, grid search).
+
+---
+
+## ✅ Features
+
+| Feature                | Description                                                   |
+| ----------------------- | ----------------------------------------------------------------- |
+| 🔍 Multi-stage vision    | OCR → Gemini Vision → Hugging Face → color heuristic, in priority order |
+| 🤝 Hybrid CF            | User-based + Item-based CF + SVD, rank-reciprocal blend             |
+| 👤 Personalized         | Recommendations based on user rating history                        |
+| ❄️ Cold Start           | Popularity-based recommendations for new users                     |
+| 📊 Evaluation Dashboard | RMSE, Precision/Recall/F1@K, Coverage, computed live in-app         |
+| 🎛️ Interactive Widget   | User ID selector, image upload, adjustable α/β sliders              |
+| 📐 Sparsity Analysis    | User-item matrix analysis                                           |
+| 🔎 Search               | Catalog and user search, raw-data explorer                          |
+
+---
+
+## 🛠️ Tech Stack
+
+| Category                | Libraries                                             |
+| ------------------------ | -------------------------------------------------------- |
+| Language                    | Python 3.x                                                    |
+| Frontend                        | Streamlit                                                          |
+| Collaborative Filtering             | scikit-learn, Pandas, NumPy, SciPy                                     |
+| Computer Vision & OCR                   | OpenCV, Tesseract OCR, Pillow (PIL)                                        |
+| AI Models                                   | Google Gemini API, Hugging Face Transformers                                  |
+| Visualization                                   | Matplotlib, Plotly                                                                |
+| Version Control                                     | Git, GitHub                                                                          |
+
+---
+
+## 📌 Key Results
+
+| Metric                | Value                        |
+| ------------------------ | ------------------------------- |
+| Best CF setup               | Hybrid (User-CF + Item-CF + SVD)  |
+| Best RMSE                       | 0.88 (User-Based CF)                 |
+| Hybrid weights (α, β)               | 0.40, 0.35 — grid-search validated        |
+| Catalog Coverage@10                     | 49.2%                                        |
+| Cold Start                                  | ✅ Handled                                       |
+
+---
+
+## 🚀 Running the App
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Reads `data/products_500plus.csv` and `data/user_ratings.csv` directly — no separate download or setup step needed.
+
+---
+
+## 📚 Further Reading
+
+- [`docs/PROJECT_REPORT.md`](docs/PROJECT_REPORT.md) — full architecture, models, evaluation, and known limitations
+- [`data/README.md`](data/README.md) — dataset details and generation scripts
+- [`experiments/`](experiments) — ablation, K-sensitivity, and grid-search verification scripts
+
+---
+
+## 🕰️ Earlier Exploratory Phase (Superseded)
+
+> ⚠️ **Historical only.** The badges, numbers, and pipeline above describe the **current, deployed app** (`app.py`). Everything below describes a retired, architecturally unrelated notebook that predates and was superseded by that system — it does not reflect what's currently deployed.
+
+The project's first exploratory phase used the public **Instacart Market Basket Analysis** dataset with a generic **MobileNetV2** ImageNet classifier, run as a Google Colab notebook, before moving to the curated 500-product catalog and purpose-built vision pipeline described above.
+
+**Dataset (notebook phase):**
+
+| Attribute      | Value                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Source              | [Instacart Market Basket Analysis](https://www.kaggle.com/c/instacart-market-basket-analysis) |
+| Total Orders            | 3,421,083                                                                                     |
+| Total Products              | 49,688                                                                                            |
+| Total Users                     | 206,209                                                                                               |
+| Departments                         | 21                                                                                                        |
+| Aisles                                  | 134                                                                                                           |
+
+**Models (notebook phase):**
 
 | Model                | RMSE       | Precision@10 | Recall@10  | F1 Score       |
 | --------------------- | ---------- | ------------ | ---------- | -------------- |
 | SVD                   | 1.7034     | 26.66%       | 18.50%     | 21.90%         |
 | KNNBasic              | 2.1500     | 18.20%       | 12.30%     | 14.80%         |
 | NMF                   | 1.9200     | 21.50%       | 15.60%     | 18.10%         |
-| **Hybrid (SVD+KNN)**  | **1.6800** | **28.90%**   | **20.10%** | **23.70%**     |
-| MobileNetV2 (CV)      | —          | —            | —          | **92.34% acc** |
+| Hybrid (SVD+KNN)      | 1.6800     | 28.90%       | 20.10%     | 23.70%         |
+| MobileNetV2 (ImageNet) | —         | —            | —          | 92.34% acc     |
 
----
+**Why the project moved on:** this notebook validated the CV + CF concept at scale, but relied on a large third-party dataset not tied to a specific deployable catalog, and a generic ImageNet classifier not tuned to any particular product set or packaging. The project then moved to the curated catalog and multi-stage OCR/Gemini/Hugging Face vision pipeline described above, which is better suited to real product-package recognition and to deployment as an interactive app.
 
-## 📊 Evaluation Metrics
-
-| Metric       | Value  |
-| ------------ | ------ |
-| RMSE         | 1.7034 |
-| Precision@10 | 26.66% |
-| Recall@10    | 18.50% |
-| F1 Score     | 21.90% |
-| CV Accuracy  | 92.34% |
-
----
-
-## ✅ Features
-
-| Feature                | Description                                                |
-| ----------------------- | ----------------------------------------------------------- |
-| 🔍 Image Recognition    | MobileNetV2 detects grocery items with 92.34% confidence   |
-| 🤝 Hybrid CF            | SVD + Item-Item Collaborative Filtering                     |
-| 👤 Personalized         | Recommendations based on user purchase history              |
-| ❄️ Cold Start           | Popularity-based recommendations for new users              |
-| 📊 Visualizations       | 15+ graphs, charts, heatmaps, word cloud                    |
-| 🎛️ Interactive Widget   | User ID slider + image upload                                |
-| 📐 Sparsity Analysis    | User-item matrix analysis                                    |
-| 🔧 Feature Engineering  | User level + product level features                          |
-
----
-
-## 📈 Visualizations
-
-| #  | Visualization                              |
-| --- | ------------------------------------------ |
-| 1  | Top 10 Most Ordered Products               |
-| 2  | Orders by Day of Week                      |
-| 3  | Orders by Hour of Day                      |
-| 4  | Department-wise Order Analysis             |
-| 5  | Reorder Rate Analysis                      |
-| 6  | User Segmentation (Heavy / Medium / Light) |
-| 7  | User-Product Interaction Heatmap           |
-| 8  | Model Comparison — RMSE Bar Chart          |
-| 9  | Hybrid vs SVD Score Comparison             |
-| 10 | Model Performance Table                    |
-| 11 | Word Cloud — Most Popular Items            |
-| 12 | CV + CF Pipeline Diagram                   |
-| 13 | Train / Test Split                         |
-| 14 | Purchase Pattern Analysis                  |
-| 15 | Products per Order Distribution            |
-
----
-
-## 🛠️ Tech Stack
-
-| Category                | Libraries                       |
-| ------------------------ | --------------------------------- |
-| Collaborative Filtering  | scikit-surprise (SVD, KNN, NMF)  |
-| Computer Vision          | TensorFlow, Keras, MobileNetV2   |
-| Image Processing         | PIL / Pillow                      |
-| Data Processing          | Pandas, NumPy                     |
-| Visualization            | Matplotlib, Seaborn, WordCloud    |
-| Interactive              | ipywidgets, Google Colab          |
-
----
-
-## 📌 Key Results
-
-| Metric            | Value              |
-| ------------------ | ------------------- |
-| Best CF Model      | Hybrid (SVD + KNN) |
-| Best RMSE          | 1.6800              |
-| CV Accuracy        | 92.34%              |
-| Orders Processed   | 3,421,083            |
-| Cold Start         | ✅ Handled           |
+The notebook (`notebooks/Smart_Grocery_Recommender_(ML,CV).ipynb`) is retained in the repository for reference only and is not maintained or evaluated against current app data.
 
 ---
 
