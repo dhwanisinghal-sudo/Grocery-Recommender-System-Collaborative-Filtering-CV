@@ -7,10 +7,11 @@
 > This report describes the **current, deployed system** (`app.py`). Full
 > methodology and evaluation results also live in
 > `Smart_Grocery_Recommender_Paper_Corrected.docx`; a user-facing summary is
-> in [`README.md`](README.md). An earlier, superseded exploratory phase
-> (Instacart dataset + MobileNetV2 classifier) is documented separately in
-> **§9 — Earlier Exploratory Phase (Superseded)** below, for historical
-> reference only.
+> in [`README.md`](README.md), and the project's build timeline is in
+> [`DEVELOPMENT_LOG.md`](DEVELOPMENT_LOG.md). An earlier, superseded
+> exploratory phase (Instacart dataset + MobileNetV2 classifier) is
+> documented separately in **§9 — Earlier Exploratory Phase (Superseded)**
+> below, for historical reference only.
 
 ---
 
