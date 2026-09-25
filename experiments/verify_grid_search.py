@@ -8,9 +8,8 @@ It reconstructs the SAME three ranked lists the deployed app blends
 (user-based CF, item-based CF, zero-fill SVD), built on the SAME 80/20
 train/test split (seed=42) used everywhere else in experiments/, then
 sweeps alpha x beta over a small grid and reports Precision@10/Recall@10/F1
-for each combo on the same 50-user evaluation sample app.py currently uses
-(the first 50 users in groupby insertion order -- see Gap #3; this is not
-yet a random sample, so these numbers will shift slightly once that lands).
+for each combo on the same fixed random 50-user sample (seed=42) that
+app.py's compute_eval_metrics() and the other verify_*.py scripts use.
 
 gamma (SVD weight) = 1 - alpha - beta, and the UI already enforces
 alpha + beta <= 0.95, so gamma >= 0.05; combos violating that are skipped.
@@ -19,6 +18,7 @@ Run from the repo root or from experiments/:
     python experiments/verify_grid_search.py
 """
 import os
+import random
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -135,9 +135,11 @@ def evaluate_combo(alpha, beta, train_pivot, user_sim_df, item_sim_df, pred_df, 
         .apply(set)
         .to_dict()
     )
-    # NOTE: first 50, not a random sample -- matches app.py's current
-    # (unfixed) methodology. See Gap #3.
-    sample_uids = list(test_grouped.keys())[:SAMPLE_USERS]
+    # Fixed random sample (seed=42), matching app.py's compute_eval_metrics()
+    # and the other verify_*.py scripts (Gap #3 fix).
+    sample_uids = random.Random(RANDOM_STATE).sample(
+        list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
+    )
 
     precisions, recalls = [], []
     for uid in sample_uids:
