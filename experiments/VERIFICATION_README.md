@@ -67,13 +67,19 @@ approximation of it.
 - `verify_worked_example.py` builds models on the full ratings matrix
   (no split), matching how the live app generates recommendations for a
   real user in the UI.
-- `verify_grid_search.py` also uses the same 80/20 split (seed=42), fits
-  the user-based/item-based/SVD models on the train split only (fitting on
-  the full matrix would leak test ratings into the similarity matrices),
-  and evaluates on the same first-50-test-users sample the other scripts
-  use — see Gap #3 in `docs/PROJECT_REPORT.md` §8: this sample is not yet
-  random, so all four scripts' numbers will shift slightly, together, once
-  that fix lands.
-- All three paper-reproducing scripts were run against the current `data/`
-  files at the time this README was written and reproduced the paper's
-  tables exactly.
+- `verify_grid_search.py` also uses the same 80/20 split (seed=42) and
+  fits the user-based/item-based/SVD models on the train split only
+  (fitting on the full matrix would leak test ratings into the similarity
+  matrices).
+- `verify_ablation.py`, `verify_k_sensitivity.py`, and
+  `verify_grid_search.py` all evaluate Precision/Recall/F1/Coverage on a
+  **fixed random sample of 50 users** (`random.Random(42).sample(...)`),
+  matching `compute_eval_metrics()` in `app.py`. This replaced an earlier
+  methodology that took the first 50 users in groupby insertion order
+  (not random) — if you see numbers from before that fix, expect a small
+  shift; these are the current, correct values.
+- All were run against the current `data/` files at the time this README
+  was written and reflect the sample-fix above; the IEEE paper's original
+  reference tables (printed alongside each script's output) predate the
+  fix and are kept as a historical baseline for comparison, not as the
+  current expected output.
