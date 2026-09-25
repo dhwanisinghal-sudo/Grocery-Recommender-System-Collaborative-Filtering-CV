@@ -9,6 +9,7 @@ Run from the repo root or from experiments/:
     python experiments/verify_k_sensitivity.py
 """
 import os
+import random
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -55,8 +56,12 @@ def precision_recall_f1_at_k(train_pivot, pred_df, test_r, K):
         .apply(set)
         .to_dict()
     )
+    # Fixed random sample (seed=42), not the first N in groupby order.
+    sampled_users = random.Random(RANDOM_STATE).sample(
+        list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
+    )
     precisions, recalls = [], []
-    for uid in list(test_grouped.keys())[:SAMPLE_USERS]:
+    for uid in sampled_users:
         if uid not in pred_df.index:
             continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
