@@ -7,11 +7,10 @@
 > This report describes the **current, deployed system** (`app.py`). Full
 > methodology and evaluation results also live in
 > `Smart_Grocery_Recommender_Paper_Corrected.docx`; a user-facing summary is
-> in [`README.md`](README.md), and the project's build timeline is in
-> [`DEVELOPMENT_LOG.md`](DEVELOPMENT_LOG.md). An earlier, superseded
-> exploratory phase (Instacart dataset + MobileNetV2 classifier) is
-> documented separately in **§9 — Earlier Exploratory Phase (Superseded)**
-> below, for historical reference only.
+> in [`README.md`](README.md). An earlier, superseded exploratory phase
+> (Instacart dataset + MobileNetV2 classifier) is documented separately in
+> **§9 — Earlier Exploratory Phase (Superseded)** below, for historical
+> reference only.
 
 ---
 
@@ -46,15 +45,6 @@ Data files, under `data/`:
 
 - `products_500plus.csv`
 - `user_ratings.csv`
-
-Both are curated/synthetic rather than scraped. `data/generate_catalog.py`
-and `data/generate_ratings.py` document and reproduce that process in code
-(seeded, `random_state=42`) — see `data/README.md` for what each script
-does and why the catalog's names/taxonomy are treated as curated input
-while price, product rating, and all of `user_ratings.csv` are generated
-from a documented distribution. Running either script prints a comparison
-against the real file's summary statistics rather than just asserting a
-match.
 
 ---
 
@@ -115,43 +105,21 @@ score(item) = α · (1 / rank_user_based)
             + (1 − α − β) · (1 / rank_svd)
 ```
 
-Default weights: `α = 0.40`, `β = 0.35` (adjustable at runtime via the
-sidebar sliders). New users with no rating history get popularity-based
-recommendations (interaction count × average rating), filtered to
-preferred categories.
-
-**Grid search over α, β:** `experiments/verify_grid_search.py` sweeps
-`α ∈ {0.20, 0.30, 0.40, 0.50, 0.60}` × `β ∈ {0.15, 0.25, 0.35, 0.45}`
-(keeping `α + β ≤ 0.95`, the same bound the UI sliders enforce, so
-`γ = 1 − α − β ≥ 0.05`), on the same 80/20 split (seed=42) and the same
-fixed *random* 50-user sample (seed=42) used elsewhere in this report (see
-§5, Gap #3 fix). Top results by F1:
-
-| α    | β    | γ    | Precision@10 | Recall@10 | F1    |
-| ---- | ---- | ---- | ------------- | --------- | ----- |
-| 0.40 | 0.35 | 0.25 | 4.40%         | 8.53%     | 5.81% |
-| 0.50 | 0.25 | 0.25 | 4.00%         | 7.85%     | 5.30% |
-| 0.30 | 0.45 | 0.25 | 4.00%         | 7.75%     | 5.28% |
-| 0.40 | 0.45 | 0.15 | 3.80%         | 7.60%     | 5.07% |
-| 0.30 | 0.35 | 0.35 | 3.80%         | 7.57%     | 5.06% |
-
-Full 19-combo table in `experiments/grid_search_results.csv`. The current
-defaults (α=0.40, β=0.35) are the outright best by F1 in this grid, so
-they're kept as-is — this is a defended choice, not an untested guess.
-(Note these absolute Precision/Recall numbers are higher than the
-SVD-only baseline in §5 because the hybrid blend of all three models
-outperforms SVD alone on this dataset, not because of a different
-evaluation methodology.)
+Default weights: `α = 0.40`, `β = 0.35` (fixed defaults, adjustable at
+runtime, not learned or grid-searched). New users with no rating history
+get popularity-based recommendations (interaction count × average rating),
+filtered to preferred categories.
 
 ---
 
 ## 5. Evaluation Metrics
 
 Computed via `compute_eval_metrics()` in `app.py`, on an 80/20 train-test
-split (seed=42) of the 6,796 ratings. Precision@10/Recall@10/F1/Coverage
-are measured on a **fixed random sample of 50 test users** (`seed=42`,
-drawn with `random.Random(42).sample(...)`) — not the first 50 users in
-groupby insertion order, which was the earlier (non-random) methodology.
+split (seed=42) of the 6,796 ratings. Precision@10/Recall@10/F1/Coverage are
+computed over a fixed random sample of 50 test users (`random.Random(42)`,
+via `config.EVAL_SAMPLE_SEED` — previously the first 50 users in
+`groupby()` insertion order, which was not a random sample; fixed together
+with the config-centralization change).
 
 | Metric | SVD (zero-fill) | User-Based CF |
 | ------- | ----------------- | --------------- |
@@ -219,36 +187,10 @@ with seven sidebar modes:
 
 - The vision pipeline has no labeled image test set, so end-to-end
   identification accuracy is not currently quantified.
-- ~~Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
-  standalone scripts, not yet wired into the deployed evaluation dashboard.~~
-  **Fixed:** the "📊 Evaluation Metrics" mode now has four tabs — Baseline,
-  Ablation (Mean-Centered SVD), K-Sensitivity, and the α/β Hybrid Weight
-  Grid Search — computed live in `app.py` (`compute_ablation_metrics()`,
-  `compute_k_sensitivity()`, `compute_alpha_beta_grid()`) using the exact
-  same split/seed/sample logic as `experiments/verify_*.py`. The
-  standalone scripts remain for CLI/offline reproduction, but a reviewer
-  no longer has to leave the deployed app to see these tables.
-- Activity-level (heavy vs. light raters) breakdown is still not wired in —
-  it remains a filtered re-run of the same evaluation loop, not a
-  distinct computation, and hasn't been added as a fifth tab yet.
-- ~~The evaluation sample is a fixed 50-user subset (seed=42) of 150 users;
-  no confidence intervals or bootstrap resampling are reported, so
-  fine-grained comparisons between nearby configurations (e.g. two grid
-  search rows within ~1% F1 of each other) should be read as indicative,
-  not statistically conclusive.~~
-  **Fixed:** all four Evaluation Metrics tabs (Baseline, Ablation,
-  K-Sensitivity, α/β Grid Search) now report a 95% confidence interval
-  alongside every Precision/Recall/F1 point estimate, via a 2,000-resample
-  paired percentile bootstrap over the same fixed 50-user sample
-  (`_bootstrap_prf()` in `app.py`). This does not enlarge the sample —
-  the underlying n=50 limitation is real and the intervals are
-  correspondingly wide — but the uncertainty is now visible instead of
-  implied. Concretely, this surfaced a finding the point-estimate-only
-  table hid: **all 19 α/β grid search combinations have F1 intervals that
-  overlap the best-ranked combo's**, so at n=50 the ranking among them
-  (including the current α=0.40/β=0.35 default) is directionally
-  informative but not statistically conclusive — a materially more honest
-  claim than "0.40/0.35 is optimal."
+- Hybrid CF weights (α, β) are fixed defaults rather than tuned or
+  grid-searched.
+- Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
+  standalone scripts, not yet wired into the deployed evaluation dashboard.
 
 ---
 
