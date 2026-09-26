@@ -287,6 +287,7 @@ def compute_eval_metrics():
     p_at_k = float(np.mean(precisions)) if precisions else 0.0
     r_at_k = float(np.mean(recalls))    if recalls    else 0.0
     f1     = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
+    boot   = _bootstrap_prf(precisions, recalls)   # Gap #4 fix: 95% percentile bootstrap CI, paired per-user
 
     all_recommended = set()
     sampled_users_coverage = random.Random(42).sample(list(pred_train_df.index), min(50, len(pred_train_df.index)))
@@ -298,7 +299,9 @@ def compute_eval_metrics():
 
     return {'rmse_svd': rmse_svd, 'rmse_ub': rmse_ub,
             'precision_at_k': p_at_k, 'recall_at_k': r_at_k,
-            'f1': f1, 'coverage': coverage, 'K': K}
+            'f1': f1, 'coverage': coverage, 'K': K,
+            'precision_ci': boot['precision'][1:], 'recall_ci': boot['recall'][1:], 'f1_ci': boot['f1'][1:],
+            'n_users': len(precisions)}
 
 
 # ─────────────────────────────────────────────
@@ -325,6 +328,50 @@ def _svd_factorize(mat):
     k = min(20, min(mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(mat), k=k)
     return np.dot(np.dot(U, np.diag(sigma)), Vt)
+
+# ─────────────────────────────────────────────
+# GAP #4 FIX — the 50-user evaluation sample had no confidence interval or
+# bootstrap resampling attached to it, so nearby-looking metrics (e.g. two
+# grid-search rows within ~1% F1 of each other) couldn't be told apart from
+# noise. This adds a paired nonparametric (percentile) bootstrap: resample
+# the SAME 50 users with replacement B times, recompute mean precision/recall
+# per resample, derive F1 from those resampled means (so precision and recall
+# stay paired per-user, not bootstrapped independently), and report the
+# 95% percentile interval alongside the point estimate. This does not fix the
+# underlying small-sample-size limitation (a wide interval on n=50 is still
+# wide) -- it makes that uncertainty visible instead of hiding it behind a
+# single point number.
+# ─────────────────────────────────────────────
+def _bootstrap_prf(precisions, recalls, n_boot=2000, seed=42, ci=95):
+    precisions = np.asarray(precisions, dtype=float)
+    recalls    = np.asarray(recalls, dtype=float)
+    n = len(precisions)
+    if n == 0:
+        z = (0.0, 0.0, 0.0)
+        return {'precision': z, 'recall': z, 'f1': z}
+
+    rng = np.random.RandomState(seed)
+    idx = rng.randint(0, n, size=(n_boot, n))          # (n_boot, n) resample indices
+    boot_p = precisions[idx].mean(axis=1)               # (n_boot,)
+    boot_r = recalls[idx].mean(axis=1)
+    denom  = boot_p + boot_r
+    boot_f1 = np.zeros_like(boot_p)
+    nz = denom > 0
+    boot_f1[nz] = 2 * boot_p[nz] * boot_r[nz] / denom[nz]
+
+    lo_pct, hi_pct = (100 - ci) / 2, 100 - (100 - ci) / 2
+    p_point = float(precisions.mean())
+    r_point = float(recalls.mean())
+    f1_point = (2 * p_point * r_point / (p_point + r_point)) if (p_point + r_point) > 0 else 0.0
+
+    def summarize(boot_arr, point):
+        return (point, float(np.percentile(boot_arr, lo_pct)), float(np.percentile(boot_arr, hi_pct)))
+
+    return {
+        'precision': summarize(boot_p,  p_point),
+        'recall':    summarize(boot_r,  r_point),
+        'f1':        summarize(boot_f1, f1_point),
+    }
 
 def _precision_recall_f1_coverage(pred_df, train_pivot, test_pivot, test_r, K):
     cu = [u for u in test_pivot.index if u in pred_df.index]
@@ -353,6 +400,7 @@ def _precision_recall_f1_coverage(pred_df, train_pivot, test_pivot, test_r, K):
     p_at_k = float(np.mean(precisions)) if precisions else 0.0
     r_at_k = float(np.mean(recalls))    if recalls    else 0.0
     f1     = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
+    boot   = _bootstrap_prf(precisions, recalls)   # {'precision': (pt, lo, hi), 'recall': (...), 'f1': (...)}
 
     all_recommended = set()
     sampled_users_cov = random.Random(EVAL_RANDOM_STATE).sample(
@@ -363,7 +411,9 @@ def _precision_recall_f1_coverage(pred_df, train_pivot, test_pivot, test_r, K):
         all_recommended.update(top)
     coverage = float(len(all_recommended) / len(train_pivot.columns))
 
-    return {'rmse': rmse, 'precision_at_k': p_at_k, 'recall_at_k': r_at_k, 'f1': f1, 'coverage': coverage}
+    return {'rmse': rmse, 'precision_at_k': p_at_k, 'recall_at_k': r_at_k, 'f1': f1, 'coverage': coverage,
+            'precision_ci': boot['precision'][1:], 'recall_ci': boot['recall'][1:], 'f1_ci': boot['f1'][1:],
+            'n_users': len(precisions)}
 
 @st.cache_data
 def compute_ablation_metrics(ratings_hash_):
@@ -399,7 +449,8 @@ def compute_k_sensitivity(ratings_hash_, k_values=(5, 10, 20)):
     rows = []
     for K in k_values:
         m = _precision_recall_f1_coverage(pred_df, train_pivot, test_pivot, test_r, K=K)
-        rows.append({'K': K, 'precision': m['precision_at_k'], 'recall': m['recall_at_k'], 'f1': m['f1']})
+        rows.append({'K': K, 'precision': m['precision_at_k'], 'recall': m['recall_at_k'], 'f1': m['f1'],
+                      'f1_ci_lo': m['f1_ci'][0], 'f1_ci_hi': m['f1_ci'][1]})
     return pd.DataFrame(rows)
 
 @st.cache_data
@@ -479,8 +530,10 @@ def compute_alpha_beta_grid(ratings_hash_,
             p  = float(np.mean(precisions)) if precisions else 0.0
             r  = float(np.mean(recalls))    if recalls    else 0.0
             f1 = float(2*p*r/(p+r)) if (p+r) > 0 else 0.0
+            boot = _bootstrap_prf(precisions, recalls)
             results.append({'alpha': alpha, 'beta': beta, 'gamma': gamma,
-                             'precision': p, 'recall': r, 'f1': f1})
+                             'precision': p, 'recall': r, 'f1': f1,
+                             'f1_ci_lo': boot['f1'][1], 'f1_ci_hi': boot['f1'][2]})
 
     return pd.DataFrame(results).sort_values('f1', ascending=False).reset_index(drop=True)
 
@@ -1798,16 +1851,25 @@ elif mode == "📊 Evaluation Metrics":
                 metric_card(f"{metrics['rmse_ub']:.4f}", "RMSE — User-Based CF",
                             "Lower RMSE = predictions closer to actual ratings", color="#1565c0")
             st.markdown(f"### 🎯 Ranking Metrics @ K={K} (Higher is Better)")
+            p_lo, p_hi   = metrics['precision_ci']
+            r_lo, r_hi   = metrics['recall_ci']
+            f1_lo, f1_hi = metrics['f1_ci']
             c1, c2, c3 = st.columns(3)
             with c1:
                 metric_card(f"{metrics['precision_at_k']:.4f}", f"Precision@{K}",
-                            f"What % of top-{K} recommendations were relevant", color="#2e7d32")
+                            f"What % of top-{K} recommendations were relevant · 95% CI [{p_lo:.3f}, {p_hi:.3f}]", color="#2e7d32")
             with c2:
                 metric_card(f"{metrics['recall_at_k']:.4f}", f"Recall@{K}",
-                            "How many relevant items appeared in top-K", color="#e65100")
+                            f"How many relevant items appeared in top-K · 95% CI [{r_lo:.3f}, {r_hi:.3f}]", color="#e65100")
             with c3:
                 metric_card(f"{metrics['f1']:.4f}", "F1 Score",
-                            "Harmonic mean of Precision and Recall", color="#6a1b9a")
+                            f"Harmonic mean of Precision and Recall · 95% CI [{f1_lo:.3f}, {f1_hi:.3f}]", color="#6a1b9a")
+            st.markdown(f"""
+            <div style="background:rgba(99,102,241,0.08);border-radius:12px;padding:10px 18px;margin:6px 0 4px;border-left:4px solid #6366f1">
+                <span style="font-size:0.78rem;color:#94a3b8">📐 95% confidence intervals via 2,000-resample
+                paired bootstrap over the {metrics['n_users']}-user evaluation sample (percentile method,
+                seed=42) — wide intervals reflect the small sample size, not a bug. See Gap #4 fix.</span>
+            </div>""", unsafe_allow_html=True)
             st.markdown("### 🌐 Coverage (Higher is Better)")
             cov_pct = metrics['coverage'] * 100
             st.markdown(f"""
@@ -1852,13 +1914,26 @@ elif mode == "📊 Evaluation Metrics":
             </div>""", unsafe_allow_html=True)
             zf, mc = ablation['zero_fill'], ablation['mean_centered']
             abl_df = pd.DataFrame({
-                'Metric':            ['RMSE', 'Precision@10', 'Recall@10', 'F1 Score', 'Coverage'],
+                'Metric':            ['RMSE', 'Precision@10', 'Recall@10', 'F1 Score (95% CI)', 'Coverage'],
                 'Zero-Fill SVD':     [f"{zf['rmse']:.4f}", f"{zf['precision_at_k']*100:.2f}%",
-                                       f"{zf['recall_at_k']*100:.2f}%", f"{zf['f1']*100:.2f}%", f"{zf['coverage']*100:.2f}%"],
+                                       f"{zf['recall_at_k']*100:.2f}%",
+                                       f"{zf['f1']*100:.2f}% [{zf['f1_ci'][0]*100:.2f}, {zf['f1_ci'][1]*100:.2f}]",
+                                       f"{zf['coverage']*100:.2f}%"],
                 'Mean-Centered SVD': [f"{mc['rmse']:.4f}", f"{mc['precision_at_k']*100:.2f}%",
-                                       f"{mc['recall_at_k']*100:.2f}%", f"{mc['f1']*100:.2f}%", f"{mc['coverage']*100:.2f}%"],
+                                       f"{mc['recall_at_k']*100:.2f}%",
+                                       f"{mc['f1']*100:.2f}% [{mc['f1_ci'][0]*100:.2f}, {mc['f1_ci'][1]*100:.2f}]",
+                                       f"{mc['coverage']*100:.2f}%"],
             })
             st.dataframe(abl_df, use_container_width=True, hide_index=True)
+            overlap = not (zf['f1_ci'][1] < mc['f1_ci'][0] or mc['f1_ci'][1] < zf['f1_ci'][0])
+            overlap_note = ("Their 95% F1 intervals overlap, so this improvement is <b>not</b> conclusively "
+                             "significant at n=50 — read it as suggestive, not proven." if overlap else
+                             "Their 95% F1 intervals do <b>not</b> overlap, so mean-centering's F1 gain looks "
+                             "like more than sampling noise at n=50.")
+            st.markdown(f"""
+            <div style="background:rgba(99,102,241,0.06);border-radius:12px;padding:10px 18px;margin:2px 0 8px;border-left:4px solid #6366f1">
+                <span style="font-size:0.8rem;color:#94a3b8">📐 {overlap_note}</span>
+            </div>""", unsafe_allow_html=True)
             st.markdown(f"""
             <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
                 <b style="color:#34d399">✅ Takeaway:</b>
@@ -1880,8 +1955,10 @@ elif mode == "📊 Evaluation Metrics":
             ksens_disp = ksens.copy()
             ksens_disp['precision'] = (ksens_disp['precision']*100).map('{:.2f}%'.format)
             ksens_disp['recall']    = (ksens_disp['recall']*100).map('{:.2f}%'.format)
+            ksens_disp['f1_ci']     = ksens.apply(lambda row: f"[{row['f1_ci_lo']*100:.2f}, {row['f1_ci_hi']*100:.2f}]", axis=1)
             ksens_disp['f1']        = (ksens_disp['f1']*100).map('{:.2f}%'.format)
-            ksens_disp.columns = ['K', 'Precision', 'Recall', 'F1']
+            ksens_disp = ksens_disp[['K', 'precision', 'recall', 'f1', 'f1_ci']]
+            ksens_disp.columns = ['K', 'Precision', 'Recall', 'F1', 'F1 95% CI']
             st.dataframe(ksens_disp, use_container_width=True, hide_index=True)
             st.line_chart(ksens.set_index('K')[['precision', 'recall', 'f1']])
             st.markdown("""
@@ -1903,13 +1980,20 @@ elif mode == "📊 Evaluation Metrics":
             grid_disp = grid.copy()
             grid_disp['precision'] = (grid_disp['precision']*100).map('{:.2f}%'.format)
             grid_disp['recall']    = (grid_disp['recall']*100).map('{:.2f}%'.format)
+            grid_disp['f1_ci']     = grid.apply(lambda row: f"[{row['f1_ci_lo']*100:.2f}, {row['f1_ci_hi']*100:.2f}]", axis=1)
             grid_disp['f1']        = (grid_disp['f1']*100).map('{:.2f}%'.format)
-            grid_disp.columns = ['α', 'β', 'γ', 'Precision@10', 'Recall@10', 'F1']
+            grid_disp = grid_disp[['alpha', 'beta', 'gamma', 'precision', 'recall', 'f1', 'f1_ci']]
+            grid_disp.columns = ['α', 'β', 'γ', 'Precision@10', 'Recall@10', 'F1', 'F1 95% CI']
             st.dataframe(grid_disp, use_container_width=True, hide_index=True)
 
             best = grid.iloc[0]
             default_row = grid[(grid['alpha'] == 0.40) & (grid['beta'] == 0.35)]
             default_rank = (default_row.index[0] + 1) if not default_row.empty else None
+            # How many OTHER combos have an F1 CI overlapping the best combo's CI --
+            # those can't be told apart from the best by this evaluation at n=50.
+            best_lo, best_hi = best['f1_ci_lo'], best['f1_ci_hi']
+            indistinguishable = grid[(grid['f1_ci_hi'] >= best_lo) & (grid['f1_ci_lo'] <= best_hi)]
+            n_indist = len(indistinguishable) - 1  # exclude the best row itself
             st.markdown(f"""
             <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
                 <b style="color:#34d399">✅ Takeaway:</b>
@@ -1917,6 +2001,12 @@ elif mode == "📊 Evaluation Metrics":
                 γ={best['gamma']:.2f} → F1={best['f1']*100:.2f}%. The app's current default (α=0.40, β=0.35) ranks
                 #{default_rank} of {len(grid)} combinations tested by F1 — this is what empirically justifies the
                 default, not an arbitrary choice.</span>
+            </div>
+            <div style="background:rgba(99,102,241,0.06);border-radius:12px;padding:10px 18px;margin-top:6px;border-left:4px solid #6366f1">
+                <span style="font-size:0.8rem;color:#94a3b8">📐 Honesty check (Gap #4): {n_indist} other
+                combination(s) have a 95% F1 interval overlapping the best combo's — at n=50 users, the ranking
+                among those is not statistically distinguishable, even though the point estimates differ.
+                Treat the rank-#1 pick as "among the best supported by evidence," not "provably optimal."</span>
             </div>""", unsafe_allow_html=True)
     else:
         st.info("👈 Click **Compute Metrics** in the sidebar.")
