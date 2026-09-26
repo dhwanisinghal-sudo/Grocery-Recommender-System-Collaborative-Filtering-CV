@@ -8,6 +8,7 @@ Both data files are committed to this repo and require no download:
 |---|---|
 | `products_500plus.csv` | 500 products across 13 categories, with brand/name/price/rating/tags |
 | `user_ratings.csv` | 6,796 explicit ratings from 150 users on a 1.5–5.0 scale |
+| `users_new.csv` | Optional demographic metadata (name/age/gender/location/cluster) — **not read by `app.py`**, which only needs `user_ratings.csv` for recommendations. Originally covered only U051–U150 (100 of 150 users); `generate_users_missing.py` documents and reproduces the U001–U050 rows added to complete it. Every field for U001–U050 is fully synthetic — no real person behind any of them, generated only to match the observed distribution of the original 100 rows. |
 
 ## 📊 Dataset Stats
 
