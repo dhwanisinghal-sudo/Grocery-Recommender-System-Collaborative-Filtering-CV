@@ -219,8 +219,23 @@ with seven sidebar modes:
 
 - The vision pipeline has no labeled image test set, so end-to-end
   identification accuracy is not currently quantified.
-- Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
-  standalone scripts, not yet wired into the deployed evaluation dashboard.
+- ~~Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
+  standalone scripts, not yet wired into the deployed evaluation dashboard.~~
+  **Fixed:** the "📊 Evaluation Metrics" mode now has four tabs — Baseline,
+  Ablation (Mean-Centered SVD), K-Sensitivity, and the α/β Hybrid Weight
+  Grid Search — computed live in `app.py` (`compute_ablation_metrics()`,
+  `compute_k_sensitivity()`, `compute_alpha_beta_grid()`) using the exact
+  same split/seed/sample logic as `experiments/verify_*.py`. The
+  standalone scripts remain for CLI/offline reproduction, but a reviewer
+  no longer has to leave the deployed app to see these tables.
+- Activity-level (heavy vs. light raters) breakdown is still not wired in —
+  it remains a filtered re-run of the same evaluation loop, not a
+  distinct computation, and hasn't been added as a fifth tab yet.
+- The evaluation sample is a fixed 50-user subset (seed=42) of 150 users;
+  no confidence intervals or bootstrap resampling are reported, so
+  fine-grained comparisons between nearby configurations (e.g. two grid
+  search rows within ~1% F1 of each other) should be read as indicative,
+  not statistically conclusive.
 
 ---
 
