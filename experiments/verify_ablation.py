@@ -10,6 +10,7 @@ Run from the repo root or from experiments/:
     python experiments/verify_ablation.py
 """
 import os
+import sys
 import random
 import numpy as np
 import pandas as pd
@@ -18,11 +19,15 @@ from sklearn.metrics import mean_squared_error
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config  # noqa: E402  — single source of truth, shared with app.py
+
 RATING_MIN, RATING_MAX = 1.5, 5.0
-K = 10
-THRESHOLD = 3.5
-RANDOM_STATE = 42
-SAMPLE_USERS = 50
+K            = config.EVAL_K
+THRESHOLD    = config.EVAL_RELEVANCE_THRESHOLD
+RANDOM_STATE = config.EVAL_RANDOM_STATE
+SAMPLE_USERS = config.EVAL_SAMPLE_SIZE
+SAMPLE_SEED  = config.EVAL_SAMPLE_SEED
 
 
 def find_data_file(filename):
@@ -61,19 +66,18 @@ def evaluate(pred_df, train_pivot, test_pivot, test_r):
     mask = actual_flat > 0
     rmse = float(np.sqrt(mean_squared_error(actual_flat[mask], pred_flat[mask])))
 
-    # Precision/Recall/F1@K and coverage, a fixed random sample (seed=42) of
-    # test users with rating >= threshold -- not the first N in groupby order.
+    # Precision/Recall/F1@K and coverage, first 50 test users with rating >= threshold
     test_grouped = (
         test_r[test_r["rating"] >= THRESHOLD]
         .groupby("user_id")["product_id"]
         .apply(set)
         .to_dict()
     )
-    sampled_users = random.Random(RANDOM_STATE).sample(
+    precisions, recalls = [], []
+    eval_users = random.Random(SAMPLE_SEED).sample(
         list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
     )
-    precisions, recalls = [], []
-    for uid in sampled_users:
+    for uid in eval_users:
         if uid not in pred_df.index:
             continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -89,10 +93,10 @@ def evaluate(pred_df, train_pivot, test_pivot, test_r):
     f1 = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
 
     all_recommended = set()
-    sampled_users_coverage = random.Random(RANDOM_STATE).sample(
+    coverage_users = random.Random(SAMPLE_SEED).sample(
         list(pred_df.index), min(SAMPLE_USERS, len(pred_df.index))
     )
-    for uid in sampled_users_coverage:
+    for uid in coverage_users:
         rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
         top = pred_df.loc[uid].drop(list(rated), errors="ignore").sort_values(ascending=False).head(K).index
         all_recommended.update(top)
@@ -149,10 +153,10 @@ def main():
     print("\nPaper (Table IV) reference values, for comparison:")
     print(f"{'Metric':<18}{'Zero-Fill SVD':<18}{'Mean-Centered SVD':<18}")
     print(f"{'RMSE':<18}{'3.6145':<18}{'0.8789':<18}")
-    print(f"{'Precision@10':<18}{'3.40%':<18}{'3.40%':<18}")
-    print(f"{'Recall@10':<18}{'3.66%':<18}{'5.51%':<18}")
-    print(f"{'F1 Score':<18}{'3.53%':<18}{'4.21%':<18}")
-    print(f"{'Coverage':<18}{'48.2%':<18}{'40.6%':<18}")
+    print(f"{'Precision@10':<18}{'3.20%':<18}{'3.80%':<18}")
+    print(f"{'Recall@10':<18}{'4.47%':<18}{'5.43%':<18}")
+    print(f"{'F1 Score':<18}{'3.73%':<18}{'4.47%':<18}")
+    print(f"{'Coverage':<18}{'49.2%':<18}{'44.6%':<18}")
 
 
 if __name__ == "__main__":
