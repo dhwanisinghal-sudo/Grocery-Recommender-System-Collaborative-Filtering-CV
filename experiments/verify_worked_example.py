@@ -12,17 +12,21 @@ Run from the repo root or from experiments/:
     python experiments/verify_worked_example.py
 """
 import os
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config  # noqa: E402  — single source of truth, shared with app.py
+
 USER_ID = "U097"
 TOP_N = 5
-ALPHA = 0.40  # User-Based CF weight
-BETA = 0.35   # Item-Based CF weight
-# gamma (SVD weight) = 1 - ALPHA - BETA = 0.25, derived
+ALPHA = config.HYBRID_ALPHA  # User-Based CF weight
+BETA  = config.HYBRID_BETA   # Item-Based CF weight
+# gamma (SVD weight) = 1 - ALPHA - BETA, derived — see config.HYBRID_GAMMA
 
 
 def find_data_file(filename):
