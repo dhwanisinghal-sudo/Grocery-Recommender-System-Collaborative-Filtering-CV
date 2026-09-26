@@ -9,6 +9,7 @@ Run from the repo root or from experiments/:
     python experiments/verify_k_sensitivity.py
 """
 import os
+import sys
 import random
 import numpy as np
 import pandas as pd
@@ -16,9 +17,14 @@ from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
-THRESHOLD = 3.5
-RANDOM_STATE = 42
-SAMPLE_USERS = 50
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config  # noqa: E402  — single source of truth, shared with app.py
+
+THRESHOLD    = config.EVAL_RELEVANCE_THRESHOLD
+RANDOM_STATE = config.EVAL_RANDOM_STATE
+SAMPLE_USERS = config.EVAL_SAMPLE_SIZE
+SAMPLE_SEED  = config.EVAL_SAMPLE_SEED
+SVD_K        = config.SVD_K
 K_VALUES = [5, 10, 20]
 
 
@@ -41,7 +47,7 @@ def build_predictions():
     train_pivot = train_r.pivot_table(index="user_id", columns="product_id", values="rating").fillna(0)
     train_mat = train_pivot.values.astype(float)
 
-    k = min(20, min(train_mat.shape) - 1)
+    k = min(SVD_K, min(train_mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
     predicted = np.dot(np.dot(U, np.diag(sigma)), Vt)
     pred_df = pd.DataFrame(predicted, index=train_pivot.index, columns=train_pivot.columns)
@@ -56,12 +62,11 @@ def precision_recall_f1_at_k(train_pivot, pred_df, test_r, K):
         .apply(set)
         .to_dict()
     )
-    # Fixed random sample (seed=42), not the first N in groupby order.
-    sampled_users = random.Random(RANDOM_STATE).sample(
+    precisions, recalls = [], []
+    eval_users = random.Random(SAMPLE_SEED).sample(
         list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
     )
-    precisions, recalls = [], []
-    for uid in sampled_users:
+    for uid in eval_users:
         if uid not in pred_df.index:
             continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -94,9 +99,9 @@ def main():
 
     print("\nPaper (Table V) reference values, for comparison:")
     print(f"{'K':<6}{'Precision':<14}{'Recall':<14}{'F1':<14}")
-    print(f"{'5':<6}{'4.00%':<14}{'2.30%':<14}{'2.92%':<14}")
-    print(f"{'10':<6}{'3.40%':<14}{'3.66%':<14}{'3.53%':<14}")
-    print(f"{'20':<6}{'4.10%':<14}{'11.82%':<14}{'6.09%':<14}")
+    print(f"{'5':<6}{'4.00%':<14}{'3.35%':<14}{'3.65%':<14}")
+    print(f"{'10':<6}{'3.20%':<14}{'4.47%':<14}{'3.73%':<14}")
+    print(f"{'20':<6}{'3.70%':<14}{'12.54%':<14}{'5.71%':<14}")
 
 
 if __name__ == "__main__":
