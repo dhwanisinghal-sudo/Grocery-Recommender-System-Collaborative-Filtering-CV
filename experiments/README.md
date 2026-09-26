@@ -1,9 +1,27 @@
-# Experiments — Offline Exploration (Instacart)
+# experiments/ — verification scripts for the deployed system
 
-`notebooks/Smart_Grocery_Recommender_(ML,CV).ipynb` is an early offline exploration phase of this project, built on the public **Instacart Market Basket Analysis** dataset (3.4M orders, ~49,700 products, 206K users) using a stock, ImageNet-pretrained **MobileNetV2** classifier for image recognition and **scikit-surprise** (SVD/KNN/NMF) for collaborative filtering.
+This folder contains reproducible scripts that verify the metrics reported
+for the **current, deployed** hybrid CF system (`app.py`). Run any of them
+directly:
 
-**This notebook is superseded by, and architecturally unrelated to, the deployed Streamlit app** (`app.py`, at the repo root). The deployed app uses:
-- a different, curated 500-product synthetic Indian grocery catalog (not Instacart), and
-- a different, text-first, four-stage vision pipeline (OCR → Gemini Vision → HuggingFace → color heuristic), not MobileNetV2.
+```bash
+python experiments/verify_ablation.py
+python experiments/verify_k_sensitivity.py
+python experiments/verify_worked_example.py
+```
 
-It's kept for reference on the project's evolution, not as documentation of the current system's methodology or results. See the repo root `README.md` and `PROJECT_REPORT.md` for the deployed system.
+See **`VERIFICATION_README.md`** in this folder for what each script
+reproduces and how it maps to the paper's sections/tables.
+
+All three import shared hyperparameters from `config.py` at the repo
+root — the same file `app.py` imports — so these numbers cannot drift out
+of sync with the live app.
+
+## Note on the old Instacart/MobileNetV2 notebook
+
+This folder used to also document an early, unrelated exploration phase
+(Instacart dataset + MobileNetV2 + `surprise`). That material has moved to
+`notebooks/archived_phase1_instacart_mobilenet/` and is unrelated to the
+scripts in this folder or to the deployed app. See `notebooks/README.md`
+for details — it is kept only for historical reference and does not
+describe the current system.
