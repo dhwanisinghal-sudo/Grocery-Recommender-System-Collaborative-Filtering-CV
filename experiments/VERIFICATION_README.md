@@ -7,6 +7,17 @@ no hidden state. They complement, and do not replace, the baseline metrics
 already reproducible by running the deployed app directly (Section VIII-A,
 `compute_eval_metrics()` in `app.py`).
 
+**Update:** all three (ablation, K-sensitivity, grid search) are now also
+wired directly into the deployed app itself — `app.py`'s "📊 Evaluation
+Metrics" mode has four tabs (Baseline, Ablation, K-Sensitivity, α/β Grid
+Search) backed by `compute_ablation_metrics()`, `compute_k_sensitivity()`,
+and `compute_alpha_beta_grid()`, which reimplement the exact same
+split/seed/sample logic as the scripts below. These CLI scripts still
+exist and still work standalone (useful for offline/CI reproduction or
+for anyone who doesn't want to spin up Streamlit), but a reviewer can now
+see every one of these tables from inside the running app without
+touching a terminal.
+
 ## Files
 
 | Script | Paper section | Reproduces |
