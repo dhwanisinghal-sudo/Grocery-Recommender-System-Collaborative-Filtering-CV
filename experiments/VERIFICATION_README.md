@@ -94,3 +94,9 @@ approximation of it.
   reference tables (printed alongside each script's output) predate the
   fix and are kept as a historical baseline for comparison, not as the
   current expected output.
+- **Gap #4 fix:** the deployed app's Evaluation Metrics tabs now also
+  report a 95% bootstrap confidence interval next to every Precision/
+  Recall/F1 point estimate (2,000-resample paired percentile bootstrap,
+  `_bootstrap_prf()` in `app.py`, seed=42). The standalone scripts here
+  still print point estimates only; if you need the CI for a CLI run,
+  cross-reference against the app's tabs or add the same helper locally.
