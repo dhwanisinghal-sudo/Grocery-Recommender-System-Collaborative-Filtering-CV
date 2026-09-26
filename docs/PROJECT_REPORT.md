@@ -231,11 +231,24 @@ with seven sidebar modes:
 - Activity-level (heavy vs. light raters) breakdown is still not wired in —
   it remains a filtered re-run of the same evaluation loop, not a
   distinct computation, and hasn't been added as a fifth tab yet.
-- The evaluation sample is a fixed 50-user subset (seed=42) of 150 users;
+- ~~The evaluation sample is a fixed 50-user subset (seed=42) of 150 users;
   no confidence intervals or bootstrap resampling are reported, so
   fine-grained comparisons between nearby configurations (e.g. two grid
   search rows within ~1% F1 of each other) should be read as indicative,
-  not statistically conclusive.
+  not statistically conclusive.~~
+  **Fixed:** all four Evaluation Metrics tabs (Baseline, Ablation,
+  K-Sensitivity, α/β Grid Search) now report a 95% confidence interval
+  alongside every Precision/Recall/F1 point estimate, via a 2,000-resample
+  paired percentile bootstrap over the same fixed 50-user sample
+  (`_bootstrap_prf()` in `app.py`). This does not enlarge the sample —
+  the underlying n=50 limitation is real and the intervals are
+  correspondingly wide — but the uncertainty is now visible instead of
+  implied. Concretely, this surfaced a finding the point-estimate-only
+  table hid: **all 19 α/β grid search combinations have F1 intervals that
+  overlap the best-ranked combo's**, so at n=50 the ranking among them
+  (including the current α=0.40/β=0.35 default) is directionally
+  informative but not statistically conclusive — a materially more honest
+  claim than "0.40/0.35 is optimal."
 
 ---
 
