@@ -1,22 +1,24 @@
 # Ablation & Worked-Example Verification Scripts
 
-These three scripts let anyone reproduce the non-baseline numbers reported
+These four scripts let anyone reproduce the non-baseline numbers reported
 in the IEEE paper (Sections VIII-B, VIII-C, VIII-E) by running real
 computation against the repo's actual data files — no train-time secrets,
 no hidden state. They complement, and do not replace, the baseline metrics
 already reproducible by running the deployed app directly (Section VIII-A,
 `compute_eval_metrics()` in `app.py`).
 
-**Update:** all three (ablation, K-sensitivity, grid search) are now also
-wired directly into the deployed app itself — `app.py`'s "📊 Evaluation
-Metrics" mode has four tabs (Baseline, Ablation, K-Sensitivity, α/β Grid
-Search) backed by `compute_ablation_metrics()`, `compute_k_sensitivity()`,
-and `compute_alpha_beta_grid()`, which reimplement the exact same
-split/seed/sample logic as the scripts below. These CLI scripts still
-exist and still work standalone (useful for offline/CI reproduction or
-for anyone who doesn't want to spin up Streamlit), but a reviewer can now
-see every one of these tables from inside the running app without
-touching a terminal.
+**Status:** all three (ablation, K-sensitivity, grid search) are now also
+wired directly into the deployed app — `app.py`'s "📊 Evaluation Metrics"
+mode has four tabs (Baseline, Ablation, K-Sensitivity, α/β Grid Search),
+backed by `compute_ablation_metrics()`, `compute_k_sensitivity()`, and
+`compute_alpha_beta_grid()`, which reimplement the exact same
+split/seed/sample logic as the scripts below — verified to produce
+identical numbers to the standalone scripts (same RMSE, Precision/Recall/
+F1, and grid-search ranking, to the decimal place). These CLI scripts
+still exist and still work standalone (useful for offline/CI reproduction
+or anyone who doesn't want to spin up Streamlit); the app's tabs are for
+seeing the same tables without a terminal. There is still no bootstrap
+confidence interval anywhere in this codebase — only point estimates.
 
 ## Files
 
@@ -94,9 +96,5 @@ approximation of it.
   reference tables (printed alongside each script's output) predate the
   fix and are kept as a historical baseline for comparison, not as the
   current expected output.
-- **Gap #4 fix:** the deployed app's Evaluation Metrics tabs now also
-  report a 95% bootstrap confidence interval next to every Precision/
-  Recall/F1 point estimate (2,000-resample paired percentile bootstrap,
-  `_bootstrap_prf()` in `app.py`, seed=42). The standalone scripts here
-  still print point estimates only; if you need the CI for a CLI run,
-  cross-reference against the app's tabs or add the same helper locally.
+- Point estimates only — none of these scripts currently report a
+  confidence interval alongside Precision/Recall/F1.
