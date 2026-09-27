@@ -1,7 +1,8 @@
-# Ablation & Worked-Example Verification Scripts
+# Verification Scripts
 
-These four scripts let anyone reproduce the non-baseline numbers reported
-in the IEEE paper (Sections VIII-B, VIII-C, VIII-E) by running real
+These five scripts let anyone reproduce the non-baseline numbers reported
+in the IEEE paper (Sections VIII-B, VIII-C, VIII-E) and the vision-pipeline
+accuracy claim (§4.1 of `docs/PROJECT_REPORT.md`) by running real
 computation against the repo's actual data files — no train-time secrets,
 no hidden state. They complement, and do not replace, the baseline metrics
 already reproducible by running the deployed app directly (Section VIII-A,
@@ -28,6 +29,7 @@ confidence interval anywhere in this codebase — only point estimates.
 | `verify_k_sensitivity.py` | VIII-C | Table V — Precision/Recall/F1 at K ∈ {5, 10, 20} |
 | `verify_worked_example.py` | VIII-E | Table VI — top-5 recommendations per model + hybrid, for user U097 |
 | `verify_grid_search.py` | — (not in current paper) | Grid search over hybrid weights α, β — see `docs/PROJECT_REPORT.md` §4.2 |
+| `verify_vision_accuracy.py` | — (not in current paper) | Per-stage vision-pipeline accuracy on `data/vision_test_set/` (260 labeled images) — see `docs/PROJECT_REPORT.md` §4.1. Category-level accuracy, not per-SKU; writes `vision_accuracy_results.csv`. Requires `pytesseract` + Tesseract installed; hits the real Gemini/HF APIs if `GEMINI_API_KEY`/`HF_API_TOKEN` are configured (falls back to OCR/color-only otherwise — see notes below on the two runs on record). |
 
 Section VIII-D (breakdown by user activity level, Table V-D... actually
 Table labeled "heavy vs. light raters") is a straightforward re-slice of
@@ -58,17 +60,18 @@ python experiments/verify_ablation.py
 python experiments/verify_k_sensitivity.py
 python experiments/verify_worked_example.py
 python experiments/verify_grid_search.py
+python experiments/verify_vision_accuracy.py
 ```
 
-Each script reads `data/user_ratings.csv` and (where relevant)
+The first four read `data/user_ratings.csv` and (where relevant)
 `data/products_500plus.csv` directly — the same files the deployed app
-reads — and prints its own output side-by-side with the paper's reference
-values for a quick visual diff. Nothing is imported from `app.py` itself
-(that file is a Streamlit script with UI code baked in at import time);
-instead, each script reimplements only the exact model logic
-(`user_based_recommend`, `item_based_recommend`, `svd_recommend`,
-`hybrid_recommend`, and `compute_eval_metrics`) verbatim from `app.py`, so
-results are guaranteed to match the deployed app's behavior, not an
+reads — and print their own output side-by-side with the paper's reference
+values for a quick visual diff. Each of those four reimplements only the
+exact model logic (`user_based_recommend`, `item_based_recommend`,
+`svd_recommend`, `hybrid_recommend`, and `compute_eval_metrics`) verbatim
+from `app.py`, rather than importing `app.py` itself (a Streamlit script
+with UI code baked in at import time), so results are guaranteed to match
+the deployed app's behavior, not an
 approximation of it.
 
 ## Notes on reproducibility
@@ -98,3 +101,16 @@ approximation of it.
   current expected output.
 - Point estimates only — none of these scripts currently report a
   confidence interval alongside Precision/Recall/F1.
+- `verify_vision_accuracy.py` is the exception to the "reimplements rather
+  than imports" rule above: it imports `app.classify_image()` and
+  `app.find_products_from_tags()` directly, so its numbers are guaranteed
+  to reflect the actual deployed vision cascade, not a reimplementation
+  that could drift out of sync. It measures **category-level** accuracy
+  (13 categories), not per-SKU accuracy against the 500-product catalog —
+  see its own docstring and `docs/PROJECT_REPORT.md` §4.1/§8 for why.
+- Two `verify_vision_accuracy.py` runs are on record: an initial run with
+  no `GEMINI_API_KEY`/`HF_API_TOKEN` set (OCR + color-fallback only,
+  51.5% overall), and a follow-up run with real keys configured (OCR +
+  Gemini + HF, 87.7% overall, color fallback never triggered). The
+  87.7% run is the current reference value in `docs/PROJECT_REPORT.md`
+  §4.1; `vision_accuracy_results.csv` reflects that run.
