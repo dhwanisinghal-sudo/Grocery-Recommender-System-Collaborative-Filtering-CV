@@ -76,11 +76,22 @@ def main():
             image_bytes = f.read()
 
         try:
-            tags, method, _debug = app.classify_image(image_bytes)
+            tags, method, debug_msgs = app.classify_image(image_bytes)
         except Exception as ex:
             method = "ERROR"
             tags = []
+            debug_msgs = [f"raised {ex!r}"]
             print(f"  [{i}/{len(rows)}] {rel_path}: classify_image raised {ex!r}")
+
+        # Log WHY Gemini/HF failed instead of silently falling through --
+        # this is the one thing the original script threw away.
+        gemini_msgs = [m for m in debug_msgs if "Gemini" in m or "gemini" in m.lower()]
+        if method != "\u2728 Gemini Vision" and gemini_msgs:
+            print(f"  [{i}/{len(rows)}] {rel_path}: Gemini did not resolve -- {gemini_msgs}")
+
+        # Minimal quota-friendly pacing: give Gemini's free-tier RPM limit room
+        # to recover between images, instead of hammering it back-to-back.
+        time.sleep(2.5)
 
         matched = app.find_products_from_tags(tags or [], app.product_map)
         pred_category = app.product_map.get(matched[0], {}).get("category") if matched else None
