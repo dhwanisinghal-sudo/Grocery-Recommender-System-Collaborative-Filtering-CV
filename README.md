@@ -69,7 +69,7 @@ Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home Care, G
 ✅ Top 10 Personalized Recommendations
 ```
 
-The vision pipeline has **not yet been formally accuracy-evaluated** end-to-end — no labeled image test set currently exists for this catalog (see `docs/PROJECT_REPORT.md` §8, Limitations).
+The vision pipeline has been evaluated on a 260-image, category-level labeled test set (`data/vision_test_set/`) — **51.5% overall category-level accuracy**, ranging from 84.4% (OCR, when it resolves) down to 6.1% (color fallback, last resort). Per-SKU accuracy against the full 500-product catalog is not yet measured — see `docs/PROJECT_REPORT.md` §4.1 and §8 for the full per-stage breakdown and limitations.
 
 ---
 
