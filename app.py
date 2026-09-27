@@ -967,7 +967,11 @@ def classify_image_gemini(image_bytes):
         return None, "no key", debug
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
     api_ver = "v1" if gemini_key.startswith("AQ.") else "v1beta"
-    for gmodel in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]:
+    # Old model names (gemini-2.0-flash, gemini-1.5-flash, gemini-2.0-flash-lite)
+    # were retired by Google (2.0 series shut down June 1 2026; 1.5 series shut
+    # down Sept 29 2025) -- every call to them returns HTTP 404. Updated to
+    # currently-supported models per ai.google.dev/gemini-api/docs/deprecations.
+    for gmodel in ["gemini-3.6-flash", "gemini-3.1-flash-lite"]:
         url = (f"https://generativelanguage.googleapis.com/{api_ver}/models/"
                f"{gmodel}:generateContent?key={gemini_key}")
         payload = {
@@ -1011,7 +1015,7 @@ def classify_image_gemini(image_bytes):
                 err = resp.json().get("error", {}).get("message", "")
                 debug.append(f"❌ {gmodel}: bad request — {err}"); break
             else:
-                debug.append(f"❌ {gmodel}: HTTP {resp.status_code}"); break
+                debug.append(f"❌ {gmodel}: HTTP {resp.status_code}"); continue  # try next model instead of giving up entirely
         except json.JSONDecodeError as je:
             debug.append(f"⚠️ {gmodel}: JSON parse error — {je}"); continue
         except Exception as ex:
