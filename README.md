@@ -69,7 +69,7 @@ Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home Care, G
 ✅ Top 10 Personalized Recommendations
 ```
 
-The vision pipeline has been evaluated on a 260-image, category-level labeled test set (`data/vision_test_set/`) — **51.5% overall category-level accuracy**, ranging from 84.4% (OCR, when it resolves) down to 6.1% (color fallback, last resort). Per-SKU accuracy against the full 500-product catalog is not yet measured — see `docs/PROJECT_REPORT.md` §4.1 and §8 for the full per-stage breakdown and limitations.
+The vision pipeline has been evaluated on a 260-image, category-level labeled test set (`data/vision_test_set/`) — **87.7% overall category-level accuracy** with real Gemini/HF API keys configured (OCR 84.6%, Gemini 92.2%, HF 0.0% on the 2 images it handled; color fallback never triggered). Per-SKU accuracy against the full 500-product catalog is not yet measured — see `docs/PROJECT_REPORT.md` §4.1 and §8 for the full per-stage breakdown and limitations.
 
 ---
 
