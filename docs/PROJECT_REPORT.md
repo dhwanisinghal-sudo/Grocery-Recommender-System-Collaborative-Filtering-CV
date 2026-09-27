@@ -87,23 +87,31 @@ misclassification directly.
 
 The vision pipeline has been evaluated on a **260-image, category-level**
 labeled test set (`data/vision_test_set/`, 20 images per catalog category
-× 13 categories) via `experiments/verify_vision_accuracy.py`. Overall
-category-level accuracy is **51.5%** across all four stages combined, with
-accuracy varying sharply by stage:
+× 13 categories) via `experiments/verify_vision_accuracy.py`. Two runs
+exist: an initial run with no API keys configured (OCR + color-fallback
+only), and a follow-up run with real `GEMINI_API_KEY` / `HF_API_TOKEN`
+keys, which is the current reference result:
 
 | Stage | Images resolved | Accuracy |
 | ------- | ------------------ | ---------- |
-| OCR Text Detection | 128/260 (49%) | 84.4% |
-| Hugging Face Vision | 99/260 (38%) | 24.2% |
-| Color Fallback | 33/260 (13%) | 6.1% |
+| OCR Text Detection | 130/260 (50%) | 84.6% |
+| Gemini Vision | 128/260 (49%) | 92.2% |
+| Hugging Face Vision | 2/260 (1%) | 0.0% |
+| **Overall** | 260/260 | **87.7%** |
 
-Gemini Vision did not fire in this run (no `GEMINI_API_KEY` configured in
-the evaluation environment), so its accuracy is not yet measured — see
-`experiments/verify_vision_accuracy.py` to re-run with a key configured.
-This is **category-level** accuracy (does the matched product belong to
-the correct one of 13 categories), not per-SKU accuracy against the exact
-500-product catalog — no per-product ground truth currently exists, so
-per-SKU accuracy remains an open question (see §8, Limitations).
+Overall accuracy rose from 51.5% (no-key run) to 87.7% once Gemini was
+available — Gemini resolves nearly half the images that OCR can't, at a
+strong 92.2% accuracy, and Hugging Face is now only reached for the 2
+images neither OCR nor Gemini could resolve. The color fallback stage
+never triggered in this run — OCR, Gemini, and HF together resolved all
+260 images between them. Per-category accuracy ranges from 70% (Condiments,
+Health, Spices) to 100% (Beverages, Dairy); see
+`experiments/vision_accuracy_results.csv` for the full per-image results.
+
+This is still **category-level** accuracy (does the matched product
+belong to the correct one of 13 categories), not per-SKU accuracy against
+the exact 500-product catalog — no per-product ground truth currently
+exists, so per-SKU accuracy remains explicit future work (see §8).
 
 ### 4.2 Collaborative Filtering Models
 
@@ -201,18 +209,27 @@ with seven sidebar modes:
 
 **Known gaps:**
 
-- The vision pipeline has a 260-image, category-level labeled test set
-  (§4.1), but no per-SKU ground truth against the exact 500-product
-  catalog, so per-product identification accuracy is still not quantified.
-  Gemini Vision's accuracy specifically is also unmeasured pending an API
-  key in the evaluation environment.
 - Hybrid CF weights (α, β) are grid-searched (§4.2,
   `experiments/verify_grid_search.py`) over a fixed, coarse grid
   (0.05-increment steps), not a continuous or exhaustive search — the
   current defaults are the best of the grid tested, not a proven global
   optimum.
-- Mean-centered SVD, K-sensitivity, and activity-level ablations exist as
-  standalone scripts, not yet wired into the deployed evaluation dashboard.
+- Activity-level ablation (breaking Precision/Recall/F1 down by heavy vs.
+  light raters) exists only as a described-but-unbuilt re-slice (see
+  `experiments/VERIFICATION_README.md`), not an actual script or dashboard
+  tab.
+
+**Future work (explicitly out of scope for this pass):**
+
+- **Per-SKU vision accuracy.** §4.1's 87.7% figure is *category-level*
+  (does the matched product belong to the right one of 13 categories),
+  not per-product. Measuring true per-SKU accuracy against the exact
+  500-product catalog would require photographing or sourcing images of
+  the actual individual products (not just representative category
+  photos) and labeling each with its exact `product_id` — a substantially
+  larger data-collection effort than the current 260-image category set,
+  and reasonably scoped as future work rather than part of this project's
+  current evaluation.
 
 ---
 
