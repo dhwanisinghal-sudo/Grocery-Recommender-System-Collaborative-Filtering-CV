@@ -301,6 +301,189 @@ def compute_eval_metrics():
             'f1': f1, 'coverage': coverage, 'K': K}
 
 
+def compute_ablation_metrics():
+    """Zero-fill vs. mean-centered SVD, same split/sample as compute_eval_metrics().
+    Ported verbatim from experiments/verify_ablation.py so the app and the
+    standalone script cannot silently disagree."""
+    RATING_MIN, RATING_MAX = 1.5, 5.0
+    K, THRESHOLD, SAMPLE_USERS = 10, 3.5, 50
+
+    ratings = pd.read_csv(find_file("user_ratings.csv"))
+    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
+    test_pivot = test_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
+    train_mat = train_pivot.values.astype(float)
+
+    def factorize(mat):
+        k = min(20, min(mat.shape) - 1)
+        U, sigma, Vt = svds(csr_matrix(mat), k=k)
+        return np.dot(np.dot(U, np.diag(sigma)), Vt)
+
+    def evaluate(pred_df):
+        cu = [u for u in test_pivot.index if u in pred_df.index]
+        cp = [p for p in test_pivot.columns if p in pred_df.columns]
+        actual_flat = test_pivot.loc[cu, cp].values.flatten()
+        pred_flat = pred_df.loc[cu, cp].values.flatten()
+        mask = actual_flat > 0
+        rmse = float(np.sqrt(mean_squared_error(actual_flat[mask], pred_flat[mask])))
+
+        test_grouped = test_r[test_r['rating'] >= THRESHOLD].groupby('user_id')['product_id'].apply(set).to_dict()
+        precisions, recalls = [], []
+        eval_users = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+        for uid in eval_users:
+            if uid not in pred_df.index: continue
+            rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
+            preds_uid = pred_df.loc[uid].drop(list(rated_train), errors='ignore')
+            top_k = set(preds_uid.sort_values(ascending=False).head(K).index)
+            relevant = test_grouped.get(uid, set())
+            hits = top_k & relevant
+            precisions.append(len(hits) / K)
+            recalls.append(len(hits) / len(relevant) if relevant else 0)
+        p = float(np.mean(precisions)) if precisions else 0.0
+        r = float(np.mean(recalls)) if recalls else 0.0
+        f1 = float(2 * p * r / (p + r)) if (p + r) > 0 else 0.0
+
+        all_recommended = set()
+        coverage_users = random.Random(42).sample(list(pred_df.index), min(SAMPLE_USERS, len(pred_df.index)))
+        for uid in coverage_users:
+            rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
+            top = pred_df.loc[uid].drop(list(rated), errors='ignore').sort_values(ascending=False).head(K).index
+            all_recommended.update(top)
+        coverage = float(len(all_recommended) / len(train_pivot.columns))
+        return {'rmse': rmse, 'precision_at_k': p, 'recall_at_k': r, 'f1': f1, 'coverage': coverage}
+
+    zero_fill_pred = pd.DataFrame(factorize(train_mat), index=train_pivot.index, columns=train_pivot.columns)
+    zero_fill = evaluate(zero_fill_pred)
+
+    rated_mask = train_mat > 0
+    row_sums = (train_mat * rated_mask).sum(axis=1)
+    row_counts = rated_mask.sum(axis=1)
+    row_means = np.divide(row_sums, row_counts, out=np.zeros_like(row_sums), where=row_counts > 0)
+    centered = train_mat.copy()
+    centered[rated_mask] = train_mat[rated_mask] - np.repeat(row_means, row_counts)
+    predicted = factorize(centered) + row_means[:, None]
+    predicted = np.clip(predicted, RATING_MIN, RATING_MAX)
+    mean_centered_pred = pd.DataFrame(predicted, index=train_pivot.index, columns=train_pivot.columns)
+    mean_centered = evaluate(mean_centered_pred)
+
+    return {'zero_fill': zero_fill, 'mean_centered': mean_centered}
+
+
+def compute_k_sensitivity():
+    """Precision/Recall/F1 at K in {5, 10, 20}, zero-fill SVD, same 50-user
+    sample. Ported verbatim from experiments/verify_k_sensitivity.py."""
+    THRESHOLD, SAMPLE_USERS = 3.5, 50
+    ratings = pd.read_csv(find_file("user_ratings.csv"))
+    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
+    train_mat = train_pivot.values.astype(float)
+    k = min(20, min(train_mat.shape) - 1)
+    U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
+    pred_df = pd.DataFrame(np.dot(np.dot(U, np.diag(sigma)), Vt), index=train_pivot.index, columns=train_pivot.columns)
+
+    test_grouped = test_r[test_r['rating'] >= THRESHOLD].groupby('user_id')['product_id'].apply(set).to_dict()
+
+    results = {}
+    for K in [5, 10, 20]:
+        precisions, recalls = [], []
+        eval_users = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+        for uid in eval_users:
+            if uid not in pred_df.index: continue
+            rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
+            preds_uid = pred_df.loc[uid].drop(list(rated_train), errors='ignore')
+            top_k = set(preds_uid.sort_values(ascending=False).head(K).index)
+            relevant = test_grouped.get(uid, set())
+            hits = top_k & relevant
+            precisions.append(len(hits) / K)
+            recalls.append(len(hits) / len(relevant) if relevant else 0)
+        p = float(np.mean(precisions)) if precisions else 0.0
+        r = float(np.mean(recalls)) if recalls else 0.0
+        f1 = float(2 * p * r / (p + r)) if (p + r) > 0 else 0.0
+        results[K] = {'precision': p, 'recall': r, 'f1': f1}
+    return results
+
+
+def compute_alpha_beta_grid():
+    """Grid search over hybrid weights alpha x beta, same 50-user sample.
+    Ported verbatim from experiments/verify_grid_search.py."""
+    THRESHOLD, SAMPLE_USERS, TOP_N, N_NEIGHBORS = 3.5, 50, 10, 15
+    ALPHA_GRID = [0.20, 0.30, 0.40, 0.50, 0.60]
+    BETA_GRID = [0.15, 0.25, 0.35, 0.45]
+
+    ratings = pd.read_csv(find_file("user_ratings.csv"))
+    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
+    train_mat = train_pivot.values.astype(float)
+
+    user_sim_df_g = pd.DataFrame(cosine_similarity(csr_matrix(train_mat)), index=train_pivot.index, columns=train_pivot.index)
+    item_sim_df_g = pd.DataFrame(cosine_similarity(csr_matrix(train_mat.T)), index=train_pivot.columns, columns=train_pivot.columns)
+    k = min(20, min(train_mat.shape) - 1)
+    U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
+    pred_df_g = pd.DataFrame(np.dot(np.dot(U, np.diag(sigma)), Vt), index=train_pivot.index, columns=train_pivot.columns)
+
+    def ub_rec(uid, top_n):
+        if uid not in user_sim_df_g.index: return []
+        sim_scores = user_sim_df_g[uid].drop(uid).sort_values(ascending=False).head(N_NEIGHBORS)
+        rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
+        scores = {}
+        for nb in sim_scores.index:
+            w = sim_scores[nb]
+            for pid, r in train_pivot.loc[nb].items():
+                if r > 0 and pid not in rated:
+                    scores[pid] = scores.get(pid, 0) + w * r
+        return sorted(scores, key=scores.get, reverse=True)[:top_n]
+
+    def ib_rec(uid, top_n):
+        if uid not in train_pivot.index: return []
+        rated = train_pivot.loc[uid][train_pivot.loc[uid] > 0]
+        if rated.empty: return []
+        scores = {}
+        for pid, r in rated.items():
+            if pid not in item_sim_df_g.index: continue
+            for other, sim in item_sim_df_g[pid].drop(pid).items():
+                if other not in rated.index:
+                    scores[other] = scores.get(other, 0) + sim * r
+        return sorted(scores, key=scores.get, reverse=True)[:top_n]
+
+    def svd_rec(uid, top_n):
+        if uid not in pred_df_g.index: return []
+        rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
+        preds = pred_df_g.loc[uid].drop(list(rated), errors='ignore')
+        return preds.sort_values(ascending=False).head(top_n).index.tolist()
+
+    def hybrid_rec(uid, alpha, beta):
+        ub, ib, svd = ub_rec(uid, TOP_N * 3), ib_rec(uid, TOP_N * 3), svd_rec(uid, TOP_N * 3)
+        gamma = 1 - alpha - beta
+        scores = {}
+        for rank, pid in enumerate(ub): scores[pid] = scores.get(pid, 0) + alpha * (1 / (rank + 1))
+        for rank, pid in enumerate(ib): scores[pid] = scores.get(pid, 0) + beta * (1 / (rank + 1))
+        for rank, pid in enumerate(svd): scores[pid] = scores.get(pid, 0) + gamma * (1 / (rank + 1))
+        return sorted(scores, key=scores.get, reverse=True)[:TOP_N]
+
+    test_grouped = test_r[test_r['rating'] >= THRESHOLD].groupby('user_id')['product_id'].apply(set).to_dict()
+    sample_uids = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+
+    results = []
+    for alpha in ALPHA_GRID:
+        for beta in BETA_GRID:
+            if alpha + beta > 0.95: continue
+            gamma = 1 - alpha - beta
+            precisions, recalls = [], []
+            for uid in sample_uids:
+                if uid not in train_pivot.index: continue
+                top_k = set(hybrid_rec(uid, alpha, beta))
+                relevant = test_grouped.get(uid, set())
+                hits = top_k & relevant
+                precisions.append(len(hits) / TOP_N)
+                recalls.append(len(hits) / len(relevant) if relevant else 0)
+            p = float(np.mean(precisions)) if precisions else 0.0
+            r = float(np.mean(recalls)) if recalls else 0.0
+            f1 = float(2 * p * r / (p + r)) if (p + r) > 0 else 0.0
+            results.append({'alpha': alpha, 'beta': beta, 'gamma': gamma, 'precision': p, 'recall': r, 'f1': f1})
+
+    return pd.DataFrame(results).sort_values('f1', ascending=False).reset_index(drop=True)
+
+
 products_df, ratings = load_data()
 ratings_hash = len(ratings)
 pivot, user_sim_df, item_sim_df, pred_df, pop_df = build_all_models(ratings_hash)
@@ -1265,7 +1448,7 @@ with st.sidebar:
 
     elif mode == "📊 Evaluation Metrics":
         eval_btn = st.button("📊 Compute Metrics", use_container_width=True)
-        st.markdown("<span style='color:#ffffff !important;font-size:0.75rem;display:block'>80/20 train-test split. May take a few seconds.</span>", unsafe_allow_html=True)
+        st.markdown("<span style='color:#ffffff !important;font-size:0.75rem;display:block'>80/20 train-test split. Computes Baseline, Ablation, K-Sensitivity & Grid Search together — may take 15-30s.</span>", unsafe_allow_html=True)
 
     elif mode == "🔎 Search":
         search_type = st.radio("Search for", ["Products", "Users"])
@@ -1604,64 +1787,133 @@ elif mode == "📊 Evaluation Metrics":
         <span style="font-size:0.85rem;color:#94a3b8"> Ratings split into 80% train / 20% test.
         Models trained on train set, evaluated on test set. Threshold ≥ 3.5 = relevant item.</span>
     </div>""", unsafe_allow_html=True)
+
+    tab_baseline, tab_ablation, tab_ksens, tab_grid = st.tabs(
+        ["📉 Baseline", "🧪 Ablation", "🎚️ K-Sensitivity", "⚖️ α/β Grid Search"]
+    )
+
     if eval_btn:
         with st.spinner("⏳ Computing metrics... (thoda time lagega)"):
             metrics = compute_eval_metrics()
-        K = metrics['K']
-        st.markdown("### 📉 Error Metrics (Lower is Better)")
-        c1, c2 = st.columns(2)
-        with c1:
-            metric_card(f"{metrics['rmse_svd']:.4f}", "RMSE — SVD Matrix Factorization",
-                        "Root Mean Squared Error between predicted & actual ratings", color="#7b1fa2")
-        with c2:
-            metric_card(f"{metrics['rmse_ub']:.4f}", "RMSE — User-Based CF",
-                        "Lower RMSE = predictions closer to actual ratings", color="#1565c0")
-        st.markdown(f"### 🎯 Ranking Metrics @ K={K} (Higher is Better)")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            metric_card(f"{metrics['precision_at_k']:.4f}", f"Precision@{K}",
-                        f"What % of top-{K} recommendations were relevant", color="#2e7d32")
-        with c2:
-            metric_card(f"{metrics['recall_at_k']:.4f}", f"Recall@{K}",
-                        "How many relevant items appeared in top-K", color="#e65100")
-        with c3:
-            metric_card(f"{metrics['f1']:.4f}", "F1 Score",
-                        "Harmonic mean of Precision and Recall", color="#6a1b9a")
-        st.markdown("### 🌐 Coverage (Higher is Better)")
-        cov_pct = metrics['coverage'] * 100
-        st.markdown(f"""
-        <div class="eval-card">
-            <div class="eval-val" style="color:#34d399">{cov_pct:.1f}%</div>
-            <div class="eval-lbl">Catalog Coverage</div>
-            <div class="eval-hint" style="color:#ffffff">% of catalog covered by recommendations (50-user sample)</div>
-            <div class="prog-wrap" style="margin-top:10px">
-                <div class="prog-fill" style="width:{min(cov_pct,100)}%"></div>
-            </div>
-        </div>""", unsafe_allow_html=True)
-        st.markdown("### 📋 Metrics Summary Table")
-        summary = pd.DataFrame({
-            'Metric':    [f'RMSE (SVD)', f'RMSE (User-CF)', f'Precision@{K}', f'Recall@{K}', 'F1 Score', 'Catalog Coverage'],
-            'Value':     [f"{metrics['rmse_svd']:.4f}", f"{metrics['rmse_ub']:.4f}",
-                          f"{metrics['precision_at_k']:.4f}", f"{metrics['recall_at_k']:.4f}",
-                          f"{metrics['f1']:.4f}", f"{cov_pct:.1f}%"],
-            'Direction': ['Lower ↓','Lower ↓','Higher ↑','Higher ↑','Higher ↑','Higher ↑'],
-            'Description': [
-                'SVD predicted vs actual rating error',
-                'User-CF predicted vs actual rating error',
-                f'Relevant items in top {K} recommendations',
-                f'Relevant items retrieved in top {K}',
-                'Balance of Precision & Recall',
-                'Products covered by recommendations'
-            ]
-        })
-        st.dataframe(summary, use_container_width=True, hide_index=True)
-        st.markdown("""
-        <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
-            <b style="color:#34d399">✅ Note:</b>
-            <span style="font-size:0.85rem;color:#94a3b8"> RMSE reflects the 90.9% sparsity of this real ratings matrix — Precision@K and Coverage are the more informative metrics for a sparse, real-world dataset like this one.</span>
-        </div>""", unsafe_allow_html=True)
-    else:
-        st.info("👈 Click **Compute Metrics** in the sidebar.")
+            ablation = compute_ablation_metrics()
+            ksens = compute_k_sensitivity()
+            grid_df = compute_alpha_beta_grid()
+        st.session_state["_eval_metrics"] = metrics
+        st.session_state["_eval_ablation"] = ablation
+        st.session_state["_eval_ksens"] = ksens
+        st.session_state["_eval_grid"] = grid_df
+
+    metrics = st.session_state.get("_eval_metrics")
+    ablation = st.session_state.get("_eval_ablation")
+    ksens = st.session_state.get("_eval_ksens")
+    grid_df = st.session_state.get("_eval_grid")
+
+    with tab_baseline:
+        if metrics is None:
+            st.info("👈 Click **Compute Metrics** in the sidebar.")
+        else:
+            K = metrics['K']
+            st.markdown("### 📉 Error Metrics (Lower is Better)")
+            c1, c2 = st.columns(2)
+            with c1:
+                metric_card(f"{metrics['rmse_svd']:.4f}", "RMSE — SVD Matrix Factorization",
+                            "Root Mean Squared Error between predicted & actual ratings", color="#7b1fa2")
+            with c2:
+                metric_card(f"{metrics['rmse_ub']:.4f}", "RMSE — User-Based CF",
+                            "Lower RMSE = predictions closer to actual ratings", color="#1565c0")
+            st.markdown(f"### 🎯 Ranking Metrics @ K={K} (Higher is Better)")
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                metric_card(f"{metrics['precision_at_k']:.4f}", f"Precision@{K}",
+                            f"What % of top-{K} recommendations were relevant", color="#2e7d32")
+            with c2:
+                metric_card(f"{metrics['recall_at_k']:.4f}", f"Recall@{K}",
+                            "How many relevant items appeared in top-K", color="#e65100")
+            with c3:
+                metric_card(f"{metrics['f1']:.4f}", "F1 Score",
+                            "Harmonic mean of Precision and Recall", color="#6a1b9a")
+            st.markdown("### 🌐 Coverage (Higher is Better)")
+            cov_pct = metrics['coverage'] * 100
+            st.markdown(f"""
+            <div class="eval-card">
+                <div class="eval-val" style="color:#34d399">{cov_pct:.1f}%</div>
+                <div class="eval-lbl">Catalog Coverage</div>
+                <div class="eval-hint" style="color:#ffffff">% of catalog covered by recommendations (50-user sample)</div>
+                <div class="prog-wrap" style="margin-top:10px">
+                    <div class="prog-fill" style="width:{min(cov_pct,100)}%"></div>
+                </div>
+            </div>""", unsafe_allow_html=True)
+            st.markdown("### 📋 Metrics Summary Table")
+            summary = pd.DataFrame({
+                'Metric':    [f'RMSE (SVD)', f'RMSE (User-CF)', f'Precision@{K}', f'Recall@{K}', 'F1 Score', 'Catalog Coverage'],
+                'Value':     [f"{metrics['rmse_svd']:.4f}", f"{metrics['rmse_ub']:.4f}",
+                              f"{metrics['precision_at_k']:.4f}", f"{metrics['recall_at_k']:.4f}",
+                              f"{metrics['f1']:.4f}", f"{cov_pct:.1f}%"],
+                'Direction': ['Lower ↓','Lower ↓','Higher ↑','Higher ↑','Higher ↑','Higher ↑'],
+                'Description': [
+                    'SVD predicted vs actual rating error',
+                    'User-CF predicted vs actual rating error',
+                    f'Relevant items in top {K} recommendations',
+                    f'Relevant items retrieved in top {K}',
+                    'Balance of Precision & Recall',
+                    'Products covered by recommendations'
+                ]
+            })
+            st.dataframe(summary, use_container_width=True, hide_index=True)
+            st.markdown("""
+            <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
+                <b style="color:#34d399">✅ Note:</b>
+                <span style="font-size:0.85rem;color:#94a3b8"> RMSE reflects the 90.9% sparsity of this real ratings matrix — Precision@K and Coverage are the more informative metrics for a sparse, real-world dataset like this one.</span>
+            </div>""", unsafe_allow_html=True)
+
+    with tab_ablation:
+        st.markdown("<span style='font-size:0.85rem;color:#94a3b8'>Zero-fill SVD (no imputation) vs. mean-centered SVD (each user's mean added back after factorization). Same train/test split and 50-user sample as Baseline.</span>", unsafe_allow_html=True)
+        if ablation is None:
+            st.info("👈 Click **Compute Metrics** in the sidebar.")
+        else:
+            zf, mc = ablation['zero_fill'], ablation['mean_centered']
+            abl_df = pd.DataFrame({
+                'Metric': ['RMSE', 'Precision@10', 'Recall@10', 'F1 Score', 'Coverage'],
+                'Zero-Fill SVD': [f"{zf['rmse']:.4f}", f"{zf['precision_at_k']*100:.2f}%",
+                                   f"{zf['recall_at_k']*100:.2f}%", f"{zf['f1']*100:.2f}%", f"{zf['coverage']*100:.1f}%"],
+                'Mean-Centered SVD': [f"{mc['rmse']:.4f}", f"{mc['precision_at_k']*100:.2f}%",
+                                       f"{mc['recall_at_k']*100:.2f}%", f"{mc['f1']*100:.2f}%", f"{mc['coverage']*100:.1f}%"],
+            })
+            st.dataframe(abl_df, use_container_width=True, hide_index=True)
+            st.caption("Matches `experiments/verify_ablation.py` — Table IV.")
+
+    with tab_ksens:
+        st.markdown("<span style='font-size:0.85rem;color:#94a3b8'>Precision/Recall/F1 at K ∈ {5, 10, 20}, zero-fill SVD, same 50-user sample as Baseline.</span>", unsafe_allow_html=True)
+        if ksens is None:
+            st.info("👈 Click **Compute Metrics** in the sidebar.")
+        else:
+            ks_df = pd.DataFrame({
+                'K': list(ksens.keys()),
+                'Precision': [f"{v['precision']*100:.2f}%" for v in ksens.values()],
+                'Recall': [f"{v['recall']*100:.2f}%" for v in ksens.values()],
+                'F1': [f"{v['f1']*100:.2f}%" for v in ksens.values()],
+            })
+            st.dataframe(ks_df, use_container_width=True, hide_index=True)
+            st.caption("Matches `experiments/verify_k_sensitivity.py` — Table V.")
+
+    with tab_grid:
+        st.markdown("<span style='font-size:0.85rem;color:#94a3b8'>Grid search over hybrid weights α (user-CF) × β (item-CF), γ = 1-α-β (SVD). Same 50-user sample as Baseline.</span>", unsafe_allow_html=True)
+        if grid_df is None:
+            st.info("👈 Click **Compute Metrics** in the sidebar.")
+        else:
+            display_df = grid_df.copy()
+            display_df['precision'] = (display_df['precision'] * 100).map('{:.2f}%'.format)
+            display_df['recall'] = (display_df['recall'] * 100).map('{:.2f}%'.format)
+            display_df['f1'] = (display_df['f1'] * 100).map('{:.2f}%'.format)
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
+            best = grid_df.iloc[0]
+            default_row = grid_df[(grid_df['alpha'] == 0.40) & (grid_df['beta'] == 0.35)]
+            st.markdown(f"**Best by F1:** α={best['alpha']:.2f}, β={best['beta']:.2f}, γ={best['gamma']:.2f} → F1={best['f1']*100:.2f}%")
+            if not default_row.empty:
+                d = default_row.iloc[0]
+                rank = default_row.index[0] + 1
+                st.markdown(f"**Current default (α=0.40, β=0.35):** F1={d['f1']*100:.2f}% (rank {rank} of {len(grid_df)})")
+            st.caption("Matches `experiments/verify_grid_search.py`.")
 
 
 # ═══════════════════════════════════════════════
