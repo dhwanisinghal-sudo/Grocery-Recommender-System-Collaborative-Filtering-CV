@@ -9,6 +9,7 @@ import json
 import io
 import warnings
 import random
+import config  # single source of truth for hyperparameters — shared with experiments/*.py
 warnings.filterwarnings("ignore")
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -205,14 +206,14 @@ def find_file(filename):
 
 @st.cache_data
 def load_data():
-    products = pd.read_csv(find_file("products_500plus.csv"))
-    ratings  = pd.read_csv(find_file("user_ratings.csv"))
+    products = pd.read_csv(find_file(os.path.basename(config.PRODUCTS_PATH)))
+    ratings  = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
     return products, ratings
 
 @st.cache_data
 def build_all_models(ratings_hash):
-    ratings  = pd.read_csv(find_file("user_ratings.csv"))
-    products = pd.read_csv(find_file("products_500plus.csv"))
+    ratings  = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
+    products = pd.read_csv(find_file(os.path.basename(config.PRODUCTS_PATH)))
     pivot    = ratings.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     mat      = pivot.values.astype(float)
 
@@ -221,7 +222,7 @@ def build_all_models(ratings_hash):
     user_sim_df  = pd.DataFrame(user_sim_mat, index=pivot.index, columns=pivot.index)
     item_sim_df  = pd.DataFrame(item_sim_mat, index=pivot.columns, columns=pivot.columns)
 
-    k = min(20, min(mat.shape) - 1)
+    k = min(config.SVD_K, min(mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(mat), k=k)
     predicted    = np.dot(np.dot(U, np.diag(sigma)), Vt)
     pred_df      = pd.DataFrame(predicted, index=pivot.index, columns=pivot.columns)
@@ -236,12 +237,12 @@ def build_all_models(ratings_hash):
 
 @st.cache_data
 def compute_eval_metrics():
-    ratings  = pd.read_csv(find_file("user_ratings.csv"))
-    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    ratings  = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
+    train_r, test_r = train_test_split(ratings, test_size=config.EVAL_TEST_SIZE, random_state=config.EVAL_RANDOM_STATE)
     train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     train_mat   = train_pivot.values.astype(float)
 
-    k = min(20, min(train_mat.shape) - 1)
+    k = min(config.SVD_K, min(train_mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
     pred_mat      = np.dot(np.dot(U, np.diag(sigma)), Vt)
     pred_train_df = pd.DataFrame(pred_mat, index=train_pivot.index, columns=train_pivot.columns)
@@ -260,7 +261,7 @@ def compute_eval_metrics():
     for _, row in test_r.iterrows():
         uid, pid, actual = row['user_id'], row['product_id'], row['rating']
         if uid not in user_sim_df2.index or pid not in train_pivot.columns: continue
-        sim_scores = user_sim_df2[uid].drop(uid).sort_values(ascending=False).head(15)
+        sim_scores = user_sim_df2[uid].drop(uid).sort_values(ascending=False).head(config.USER_CF_N_NEIGHBORS)
         numer = sum(sim_scores.get(n, 0) * train_pivot.loc[n, pid] for n in sim_scores.index if train_pivot.loc[n, pid] > 0)
         denom = sum(abs(sim_scores.get(n, 0)) for n in sim_scores.index if train_pivot.loc[n, pid] > 0)
         if denom > 0:
@@ -268,12 +269,12 @@ def compute_eval_metrics():
             ub_actuals.append(actual)
     rmse_ub = float(np.sqrt(mean_squared_error(ub_actuals, ub_preds))) if ub_preds else 0.0
 
-    K = 10
+    K = config.EVAL_K
     precisions, recalls = [], []
-    threshold   = 3.5
+    threshold   = config.EVAL_RELEVANCE_THRESHOLD
     test_grouped = test_r[test_r['rating'] >= threshold].groupby('user_id')['product_id'].apply(set).to_dict()
     # Fixed random draw (seed=42), not the first 50 in groupby insertion order.
-    sampled_users = random.Random(42).sample(list(test_grouped.keys()), min(50, len(test_grouped)))
+    sampled_users = random.Random(config.EVAL_SAMPLE_SEED).sample(list(test_grouped.keys()), min(config.EVAL_SAMPLE_SIZE, len(test_grouped)))
     for uid in sampled_users:
         if uid not in pred_train_df.index: continue
         rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -289,7 +290,7 @@ def compute_eval_metrics():
     f1     = float(2 * p_at_k * r_at_k / (p_at_k + r_at_k)) if (p_at_k + r_at_k) > 0 else 0.0
 
     all_recommended = set()
-    sampled_users_coverage = random.Random(42).sample(list(pred_train_df.index), min(50, len(pred_train_df.index)))
+    sampled_users_coverage = random.Random(config.EVAL_SAMPLE_SEED).sample(list(pred_train_df.index), min(config.EVAL_SAMPLE_SIZE, len(pred_train_df.index)))
     for uid in sampled_users_coverage:
         rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
         top   = pred_train_df.loc[uid].drop(list(rated), errors='ignore').sort_values(ascending=False).head(K).index
@@ -306,16 +307,16 @@ def compute_ablation_metrics():
     Ported verbatim from experiments/verify_ablation.py so the app and the
     standalone script cannot silently disagree."""
     RATING_MIN, RATING_MAX = 1.5, 5.0
-    K, THRESHOLD, SAMPLE_USERS = 10, 3.5, 50
+    K, THRESHOLD, SAMPLE_USERS = config.EVAL_K, config.EVAL_RELEVANCE_THRESHOLD, config.EVAL_SAMPLE_SIZE
 
-    ratings = pd.read_csv(find_file("user_ratings.csv"))
-    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    ratings = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
+    train_r, test_r = train_test_split(ratings, test_size=config.EVAL_TEST_SIZE, random_state=config.EVAL_RANDOM_STATE)
     train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     test_pivot = test_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     train_mat = train_pivot.values.astype(float)
 
     def factorize(mat):
-        k = min(20, min(mat.shape) - 1)
+        k = min(config.SVD_K, min(mat.shape) - 1)
         U, sigma, Vt = svds(csr_matrix(mat), k=k)
         return np.dot(np.dot(U, np.diag(sigma)), Vt)
 
@@ -329,7 +330,7 @@ def compute_ablation_metrics():
 
         test_grouped = test_r[test_r['rating'] >= THRESHOLD].groupby('user_id')['product_id'].apply(set).to_dict()
         precisions, recalls = [], []
-        eval_users = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+        eval_users = random.Random(config.EVAL_SAMPLE_SEED).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
         for uid in eval_users:
             if uid not in pred_df.index: continue
             rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -344,7 +345,7 @@ def compute_ablation_metrics():
         f1 = float(2 * p * r / (p + r)) if (p + r) > 0 else 0.0
 
         all_recommended = set()
-        coverage_users = random.Random(42).sample(list(pred_df.index), min(SAMPLE_USERS, len(pred_df.index)))
+        coverage_users = random.Random(config.EVAL_SAMPLE_SEED).sample(list(pred_df.index), min(SAMPLE_USERS, len(pred_df.index)))
         for uid in coverage_users:
             rated = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
             top = pred_df.loc[uid].drop(list(rated), errors='ignore').sort_values(ascending=False).head(K).index
@@ -372,12 +373,12 @@ def compute_ablation_metrics():
 def compute_k_sensitivity():
     """Precision/Recall/F1 at K in {5, 10, 20}, zero-fill SVD, same 50-user
     sample. Ported verbatim from experiments/verify_k_sensitivity.py."""
-    THRESHOLD, SAMPLE_USERS = 3.5, 50
-    ratings = pd.read_csv(find_file("user_ratings.csv"))
-    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    THRESHOLD, SAMPLE_USERS = config.EVAL_RELEVANCE_THRESHOLD, config.EVAL_SAMPLE_SIZE
+    ratings = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
+    train_r, test_r = train_test_split(ratings, test_size=config.EVAL_TEST_SIZE, random_state=config.EVAL_RANDOM_STATE)
     train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     train_mat = train_pivot.values.astype(float)
-    k = min(20, min(train_mat.shape) - 1)
+    k = min(config.SVD_K, min(train_mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
     pred_df = pd.DataFrame(np.dot(np.dot(U, np.diag(sigma)), Vt), index=train_pivot.index, columns=train_pivot.columns)
 
@@ -386,7 +387,7 @@ def compute_k_sensitivity():
     results = {}
     for K in [5, 10, 20]:
         precisions, recalls = [], []
-        eval_users = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+        eval_users = random.Random(config.EVAL_SAMPLE_SEED).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
         for uid in eval_users:
             if uid not in pred_df.index: continue
             rated_train = set(train_pivot.loc[uid][train_pivot.loc[uid] > 0].index)
@@ -406,18 +407,18 @@ def compute_k_sensitivity():
 def compute_alpha_beta_grid():
     """Grid search over hybrid weights alpha x beta, same 50-user sample.
     Ported verbatim from experiments/verify_grid_search.py."""
-    THRESHOLD, SAMPLE_USERS, TOP_N, N_NEIGHBORS = 3.5, 50, 10, 15
+    THRESHOLD, SAMPLE_USERS, TOP_N, N_NEIGHBORS = config.EVAL_RELEVANCE_THRESHOLD, config.EVAL_SAMPLE_SIZE, config.DEFAULT_TOP_N, config.USER_CF_N_NEIGHBORS
     ALPHA_GRID = [0.20, 0.30, 0.40, 0.50, 0.60]
     BETA_GRID = [0.15, 0.25, 0.35, 0.45]
 
-    ratings = pd.read_csv(find_file("user_ratings.csv"))
-    train_r, test_r = train_test_split(ratings, test_size=0.2, random_state=42)
+    ratings = pd.read_csv(find_file(os.path.basename(config.RATINGS_PATH)))
+    train_r, test_r = train_test_split(ratings, test_size=config.EVAL_TEST_SIZE, random_state=config.EVAL_RANDOM_STATE)
     train_pivot = train_r.pivot_table(index='user_id', columns='product_id', values='rating').fillna(0)
     train_mat = train_pivot.values.astype(float)
 
     user_sim_df_g = pd.DataFrame(cosine_similarity(csr_matrix(train_mat)), index=train_pivot.index, columns=train_pivot.index)
     item_sim_df_g = pd.DataFrame(cosine_similarity(csr_matrix(train_mat.T)), index=train_pivot.columns, columns=train_pivot.columns)
-    k = min(20, min(train_mat.shape) - 1)
+    k = min(config.SVD_K, min(train_mat.shape) - 1)
     U, sigma, Vt = svds(csr_matrix(train_mat), k=k)
     pred_df_g = pd.DataFrame(np.dot(np.dot(U, np.diag(sigma)), Vt), index=train_pivot.index, columns=train_pivot.columns)
 
@@ -461,7 +462,7 @@ def compute_alpha_beta_grid():
         return sorted(scores, key=scores.get, reverse=True)[:TOP_N]
 
     test_grouped = test_r[test_r['rating'] >= THRESHOLD].groupby('user_id')['product_id'].apply(set).to_dict()
-    sample_uids = random.Random(42).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
+    sample_uids = random.Random(config.EVAL_SAMPLE_SEED).sample(list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped)))
 
     results = []
     for alpha in ALPHA_GRID:
@@ -496,7 +497,7 @@ categories   = sorted(products_df['category'].unique().tolist())
 # ─────────────────────────────────────────────
 # CF RECOMMENDER FUNCTIONS
 # ─────────────────────────────────────────────
-def user_based_recommend(user_id, top_n=10, n_neighbors=15, cat_filter=None):
+def user_based_recommend(user_id, top_n=config.DEFAULT_TOP_N, n_neighbors=config.USER_CF_N_NEIGHBORS, cat_filter=None):
     if user_id not in user_sim_df.index: return []
     sim_scores = user_sim_df[user_id].drop(user_id).sort_values(ascending=False).head(n_neighbors)
     rated      = set(pivot.loc[user_id][pivot.loc[user_id] > 0].index)
@@ -509,7 +510,7 @@ def user_based_recommend(user_id, top_n=10, n_neighbors=15, cat_filter=None):
                 scores[pid] = scores.get(pid, 0) + w * r
     return sorted(scores, key=scores.get, reverse=True)[:top_n]
 
-def item_based_recommend(user_id, top_n=10, cat_filter=None):
+def item_based_recommend(user_id, top_n=config.DEFAULT_TOP_N, cat_filter=None):
     if user_id not in pivot.index: return []
     user_ratings = pivot.loc[user_id]
     rated = user_ratings[user_ratings > 0]
@@ -523,7 +524,7 @@ def item_based_recommend(user_id, top_n=10, cat_filter=None):
                 scores[other] = scores.get(other, 0) + sim * r
     return sorted(scores, key=scores.get, reverse=True)[:top_n]
 
-def svd_recommend(user_id, top_n=10, cat_filter=None):
+def svd_recommend(user_id, top_n=config.DEFAULT_TOP_N, cat_filter=None):
     if user_id not in pred_df.index: return []
     rated = set(pivot.loc[user_id][pivot.loc[user_id] > 0].index)
     preds = pred_df.loc[user_id].drop(list(rated), errors='ignore')
@@ -533,17 +534,18 @@ def svd_recommend(user_id, top_n=10, cat_filter=None):
 
 # ─────────────────────────────────────────────
 # HYBRID MODEL CONFIG
-# (previously lived in config.py as SVD_WEIGHT/ITEM_ITEM_WEIGHT, which didn't
-#  match these real values and was never imported anywhere — removed in favor
-#  of documenting the actual defaults here, next to where they're used.)
+# Defaults come from config.py (HYBRID_ALPHA / HYBRID_BETA / HYBRID_GAMMA),
+# imported by app.py AND every script in experiments/, so these numbers
+# cannot silently drift apart between the live app and the verification/
+# grid-search scripts. Do not hardcode alpha/beta literals anywhere else.
 #
-#   alpha (User-Based CF weight) = 0.40  -- default, adjustable via sidebar slider
-#   beta  (Item-Based CF weight) = 0.35  -- default, adjustable via sidebar slider
-#   gamma (SVD weight)           = 1 - alpha - beta = 0.25  -- derived, not independently set
+#   alpha (User-Based CF weight) -- default from config, adjustable via sidebar slider
+#   beta  (Item-Based CF weight) -- default from config, adjustable via sidebar slider
+#   gamma (SVD weight)           = 1 - alpha - beta -- derived, not independently set
 #
 # Combined via rank-reciprocal fusion: score(item) += weight * 1/(rank + 1)
 # ─────────────────────────────────────────────
-def hybrid_recommend(user_id, top_n=10, alpha=0.4, beta=0.35, cat_filter=None):
+def hybrid_recommend(user_id, top_n=config.DEFAULT_TOP_N, alpha=config.HYBRID_ALPHA, beta=config.HYBRID_BETA, cat_filter=None):
     ub  = user_based_recommend(user_id, top_n=top_n*3, cat_filter=cat_filter)
     ib  = item_based_recommend(user_id, top_n=top_n*3, cat_filter=cat_filter)
     svd = svd_recommend(user_id,        top_n=top_n*3, cat_filter=cat_filter)
@@ -1407,18 +1409,18 @@ with st.sidebar:
     if mode == "🎯 User Recommendations":
         user_id    = st.selectbox("👤 Select User", all_users)
         algo       = st.selectbox("🤖 Algorithm", ["Hybrid (All 3)", "User-Based CF", "Item-Based CF", "SVD Matrix Factorization", "Popularity Based"])
-        top_n      = st.slider("📦 Recommendations", 5, 20, 10)
+        top_n      = st.slider("📦 Recommendations", 5, 20, config.DEFAULT_TOP_N)
         st.markdown("**🗂️ Category Filter** *(optional)*")
         cat_filter = st.multiselect("Filter categories", categories, default=[])
         cat_filter = cat_filter if cat_filter else None
         if algo == "Hybrid (All 3)":
             st.markdown("**⚖️ Algorithm Weights**")
-            alpha = st.slider("User-Based weight", 0.1, 0.8, 0.4, 0.05)
-            beta  = st.slider("Item-Based weight", 0.1, 0.8, 0.35, 0.05)
+            alpha = st.slider("User-Based weight", 0.1, 0.8, config.HYBRID_ALPHA, 0.05)
+            beta  = st.slider("Item-Based weight", 0.1, 0.8, config.HYBRID_BETA, 0.05)
             if alpha + beta > 0.95:
                 st.warning("Weights too high! SVD weight will be near 0.")
         else:
-            alpha, beta = 0.4, 0.35
+            alpha, beta = config.HYBRID_ALPHA, config.HYBRID_BETA
         run_btn = st.button("🚀 Get Recommendations", use_container_width=True)
 
     elif mode == "🔍 Similar Products":
@@ -1436,7 +1438,7 @@ with st.sidebar:
     elif mode == "🆕 Cold Start (New User)":
         st.markdown("<p style='color:#8892b0;font-size:0.82rem'>Select categories → get popularity-based recommendations!</p>", unsafe_allow_html=True)
         cs_cats  = st.multiselect("🗂️ Preferred Categories", categories, default=["Snacks", "Dairy"])
-        cs_top_n = st.slider("Recommendations", 5, 20, 10)
+        cs_top_n = st.slider("Recommendations", 5, 20, config.DEFAULT_TOP_N)
         cs_btn   = st.button("✨ Get Recommendations", use_container_width=True)
 
     elif mode == "📊 Evaluation Metrics":
