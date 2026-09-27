@@ -129,8 +129,11 @@ score(item) = α · (1 / rank_user_based)
             + (1 − α − β) · (1 / rank_svd)
 ```
 
-Default weights: `α = 0.40`, `β = 0.35` (fixed defaults, adjustable at
-runtime, not learned or grid-searched). New users with no rating history
+Default weights: `α = 0.40`, `β = 0.35` — selected via a coarse grid
+search over 0.05-increment steps (`experiments/verify_grid_search.py`,
+`experiments/grid_search_results.csv`; see §8 for the grid's limitations),
+not hand-picked. They remain fixed defaults, adjustable at runtime. New
+users with no rating history
 get popularity-based recommendations (interaction count × average rating),
 filtered to preferred categories.
 
