@@ -1863,7 +1863,7 @@ elif mode == "📊 Evaluation Metrics":
             st.markdown("""
             <div style="background:rgba(52,211,153,0.06);border-radius:12px;padding:14px 18px;margin-top:8px;border-left:4px solid #34d399">
                 <b style="color:#34d399">✅ Note:</b>
-                <span style="font-size:0.85rem;color:#94a3b8"> RMSE reflects the 90.9% sparsity of this real ratings matrix — Precision@K and Coverage are the more informative metrics for a sparse, real-world dataset like this one.</span>
+                <span style="font-size:0.85rem;color:#94a3b8"> Zero-fill SVD's high RMSE comes from treating the 90.9% of unrated entries as zeros — the Ablation tab shows mean-centered SVD closes that gap. Precision@K and Coverage are the more informative metrics here. Ratings in this project are synthetic (see data/README.md), so these numbers describe pipeline behavior on this dataset, not real-world accuracy.</span>
             </div>""", unsafe_allow_html=True)
 
     with tab_ablation:
