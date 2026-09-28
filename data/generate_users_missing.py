@@ -1,11 +1,11 @@
 """
-Generates the missing U001-U050 rows for data/users_new.csv (Gap #7).
+Generates the missing U001-U050 rows for data/users_new.csv.
 
 users_new.csv, as it existed before this script, only covered U051-U150
 (100 rows) -- U001-U050 appear as rated users in user_ratings.csv but had
 no demographic profile anywhere in the repo. app.py does not read this
 file at all (it only reads user_ratings.csv for recommendations), so this
-gap was cosmetic/documentation-only, not a functional bug -- but the file
+was cosmetic/documentation-only, not a functional bug -- but the file
 claimed to be user metadata while covering only 2/3 of the user base.
 
 This script is, like data/generate_ratings.py, FULLY SYNTHETIC: there is
