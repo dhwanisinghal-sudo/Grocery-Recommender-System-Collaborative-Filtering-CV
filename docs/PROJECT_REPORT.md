@@ -123,12 +123,33 @@ Hugging Face and the color fallback resolved a meaningful number of images:
 
 Its per-image results are in git history (commit `84131e0`).
 
-The two runs don't let me judge the fallback stages fairly. In the reference
-run Hugging Face resolved only 2 images and the color heuristic none. In the
-first run their 24.2% and 6.1% are measured only on the images OCR could not
-resolve, which are harder than average. I have not run Hugging Face or the
-color heuristic on their own over all 260 images, so their standalone accuracy
-is unmeasured.
+**Each stage run on its own.** In the cascade a stage only sees the images the
+earlier stages gave up on, so the two runs above can't compare the stages
+fairly. I therefore ran each stage alone over all 260 images
+(`experiments/verify_vision_stages_isolated.py`, Colab notebook
+`experiments/vision_stages_isolated_colab.ipynb`, per-image results in
+`experiments/vision_isolated_<stage>.csv`). "Resolved" means the stage returned
+any tags. Unresolved images count as wrong in the last column.
+
+| Stage | Resolved | Accuracy when resolved | Correct over all 260 |
+| ------- | ---------- | ------------------------ | ---------------------- |
+| OCR | 130/260 | 84.6% | 110/260 (42.3%) |
+| Gemini | 260/260 | 91.2% | 237/260 (91.2%) |
+| Hugging Face | 195/260 | 24.1% | 47/260 (18.1%) |
+| Color heuristic | 260/260 | 4.6% | 12/260 (4.6%) |
+
+- Gemini alone (237/260) scores higher than the cascade (228/260, the 87.7%
+  reference run). On the 130 images OCR resolves, OCR gets 110 right and Gemini
+  gets 118. So putting OCR first, which is free and works offline, costs some
+  accuracy. The gap is 9 images in single runs, and I haven't tested whether it
+  is larger than run-to-run variation. As a rough sense of that variation,
+  combining the isolated files in cascade order gives 229/260, one image away
+  from the recorded 228.
+- Hugging Face is weak: 24.1% on 13 categories, against 7.7% for random guessing.
+- The color heuristic (4.6%) is no better than guessing, which fits its role as
+  a last resort.
+- Gemini's weakest categories are Health and Spices (15/20 each), then
+  Condiments (16/20).
 
 **Error analysis of the reference run (32 wrong of 260).** 21 of the 32 errors
 are predicted as *Dairy*. Re-running the OCR stage locally on those 21 images
@@ -149,10 +170,23 @@ and they would need a fresh run with API keys. Tightening the substring test
 to a word-boundary match, and not applying the dairy boost when a more
 specific non-dairy tag is present, is the obvious next step.
 
-Both runs measure category-level accuracy: whether the matched product is in
-the right one of 13 categories. They don't measure per-SKU accuracy against
-the exact 500-product catalog, because I don't have per-product ground truth.
-That is future work (see §8).
+These runs measure category-level accuracy: whether the matched product is in
+the right one of 13 categories.
+
+**Per-SKU subset.** For exact-product accuracy I hand-labeled the 24 test images
+that show a product that actually exists in the catalog
+(`data/vision_test_set/labels_sku.csv`; each row lists the acceptable
+`product_id`s, because some products appear twice in the catalog).
+`experiments/verify_vision_sku.py` runs the same `classify_image()` ->
+`find_products_from_tags()` path as the app and reports top-1, top-3 and top-6
+(the app shows up to 6 products). So far I have run it only offline, with OCR
+and the color heuristic and no Gemini or Hugging Face keys. The 6 images OCR
+could read got the exact product first in 3 cases (50%) and within the six
+results in all 6. The other 18 fell to the color heuristic, which cannot
+identify a product. That offline run is a lower bound, not the pipeline's
+per-SKU accuracy. **The run with API keys has not been done.** Only 6 of the 24
+images are real hand-held photos, and 17 are clean catalog images, so the
+subset is small and easier than real use.
 
 ### 4.2 Collaborative Filtering Models
 
@@ -301,15 +335,25 @@ with seven sidebar modes:
 - The 50-user metrics in the app dashboard are point estimates. Confidence
   intervals for the full population are in §5.1 (`verify_full_user_ci.py`),
   but the vision accuracy in §4.1 has no interval.
+- Many of the 260 vision test images are clean product-listing or
+  packaging-design images saved from the web, some of them design mockups. Real
+  hand-held photos are the minority in the categories I looked through, so the
+  87.7% probably overstates accuracy on real camera photos. I didn't count the
+  hand-held photos across all 13 categories.
+- 39 of the 500 catalog rows repeat a product name under a second `product_id`
+  with a different price (for example Frooti P063/P249, Limca P065/P254, Catch
+  Turmeric P043/P226), so the catalog has about 461 distinct products. The
+  recommender treats the two ids as separate items. I haven't deduplicated it
+  because the ratings are linked to the ids.
 
 **Future work (not done in this project):**
 
-- **Per-SKU vision accuracy.** The 87.7% in §4.1 is category-level: whether the
-  matched product is in the right one of 13 categories. Measuring per-SKU
-  accuracy against the exact 500-product catalog would need photos of the
-  actual individual products (not representative category photos), each
-  labeled with its exact `product_id`. That is a much bigger data-collection
-  job than the current 260-image category set, so I left it as future work.
+- **Per-SKU vision accuracy at full scale.** The 87.7% in §4.1 is category-level.
+  I built a 24-image per-SKU subset (§4.1) but haven't run it with API keys, and
+  most catalog products have no photo in it at all. Covering the whole catalog
+  would need photos of the individual products, each labeled with its exact
+  `product_id`. That is a much bigger data-collection job, so it stays future
+  work.
 
 ---
 
