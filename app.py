@@ -533,9 +533,10 @@ def svd_recommend(user_id, top_n=10, cat_filter=None):
 
 # ─────────────────────────────────────────────
 # HYBRID MODEL CONFIG
-# (previously lived in config.py as SVD_WEIGHT/ITEM_ITEM_WEIGHT, which didn't
-#  match these real values and was never imported anywhere — removed in favor
-#  of documenting the actual defaults here, next to where they're used.)
+# (An older config.py had SVD_WEIGHT/ITEM_ITEM_WEIGHT values that didn't match
+#  these and nothing imported it, so I deleted it. There is a newer config.py
+#  with the same numbers as a reference copy; app.py doesn't import it and keeps
+#  these literals.)
 #
 #   alpha (User-Based CF weight) = 0.40  -- default, adjustable via sidebar slider
 #   beta  (Item-Based CF weight) = 0.35  -- default, adjustable via sidebar slider
