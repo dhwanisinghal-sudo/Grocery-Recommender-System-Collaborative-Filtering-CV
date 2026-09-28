@@ -4,9 +4,11 @@
 **Application:** Image-based product identification followed by hybrid collaborative-filtering recommendations
 **Status:** Deployed as a Streamlit app
 
-> This report covers the current system (`app.py`). The paper I wrote for the
-> project has the full methodology and results, and [`README.md`](../README.md)
-> has a short summary for users. My first attempt, with the Instacart dataset
+> This report covers the current system (`app.py`). A paper draft accompanies
+> the project but is **not included in this repository**; the scripts in
+> `experiments/` reproduce its tables (see
+> [`experiments/VERIFICATION_README.md`](../experiments/VERIFICATION_README.md)),
+> and [`README.md`](../README.md) has a short summary for users. My first attempt, with the Instacart dataset
 > and a MobileNetV2 classifier, is described in **§9** for reference only. I
 > replaced it.
 
@@ -121,6 +123,32 @@ Hugging Face and the color fallback resolved a meaningful number of images:
 
 Its per-image results are in git history (commit `84131e0`).
 
+The two runs don't let me judge the fallback stages fairly. In the reference
+run Hugging Face resolved only 2 images and the color heuristic none. In the
+first run their 24.2% and 6.1% are measured only on the images OCR could not
+resolve, which are harder than average. I have not run Hugging Face or the
+color heuristic on their own over all 260 images, so their standalone accuracy
+is unmeasured.
+
+**Error analysis of the reference run (32 wrong of 260).** 21 of the 32 errors
+are predicted as *Dairy*. Re-running the OCR stage locally on those 21 images
+shows why:
+
+- 15 were resolved at the OCR stage, and all 15 have a dairy word among the
+  extracted tags. `detect_dairy_type()` (in `app.py`) gives the matching dairy
+  products a +200 score boost, and that outweighs any other tag. Three of them
+  are salt images: the check `tag in kt` treats the tag `salt` as a match for
+  the dairy keyword `salted butter`, because `salt` is a substring of `salted`,
+  so Sea Salt and Salt-pouch images land on Amul Butter. Others are
+  ingredient-word cases: peanut butter → butter, a health drink that
+  mentions milk, Kurkure (cheese flavour), a paneer masala, paneer momos.
+- The other 6 were resolved by Gemini and predicted Dairy directly.
+
+I have **not** fixed this in `app.py`, because a fix changes the numbers above
+and they would need a fresh run with API keys. Tightening the substring test
+to a word-boundary match, and not applying the dairy boost when a more
+specific non-dairy tag is present, is the obvious next step.
+
 Both runs measure category-level accuracy: whether the matched product is in
 the right one of 13 categories. They don't measure per-SKU accuracy against
 the exact 500-product catalog, because I don't have per-product ground truth.
@@ -142,10 +170,19 @@ score(item) = α · (1 / rank_user_based)
             + (1 − α − β) · (1 / rank_svd)
 ```
 
-The default weights are `α = 0.40` and `β = 0.35`. I picked them with a coarse
-grid search in 0.05 steps (`experiments/verify_grid_search.py`, results in
-`experiments/grid_search_results.csv`; §8 covers the limits of that grid), not
-by hand. They stay fixed by default and can be changed in the app. New users
+The default weights are `α = 0.40` and `β = 0.35`. They were set by hand: they
+first appear in the git history on 19 June (commit `331b2e0`), three months
+before any tuning. The grid search (`experiments/verify_grid_search.py`, added
+25 September, results in `experiments/grid_search_results.csv`) came afterwards
+as a check. Its grid is 5 × 4 in steps of 0.10 (19 valid combinations with
+γ ≥ 0.05), not 0.05 steps. The defaults rank first by F1 on the original
+50-user sample, and still rank first on all 149 evaluable users
+(`experiments/verify_grid_full_users.py`). But their margin over the runner-up
+is 0.02 percentage points, and the whole grid spans only 0.91 pp of F1
+(3.45%–4.36%), much less than the width of the confidence intervals in §5. The
+data therefore do not single out a best weighting: the defaults are reasonable,
+not shown to be optimal. They stay fixed by default and can be changed in the
+app. New users
 with no rating history get popularity-based recommendations (interaction count
 × average rating), filtered to their preferred categories.
 
@@ -169,6 +206,29 @@ which wasn't a random sample, and I fixed that.
 | Recall@10                       | 4.5%           |
 | F1                                    | 3.7%           |
 | Catalog Coverage                          | 49.2%          |
+
+### 5.1 Full-population evaluation with confidence intervals
+
+The 50-user sample above is a point estimate. `experiments/verify_full_user_ci.py`
+evaluates all 149 users who have at least one relevant (rating ≥ 3.5) item in
+the test split, with the same split, threshold and K, for all four rankers.
+Confidence intervals are 95% bootstrap intervals over users (5,000 draws).
+
+| Model | 50-user F1 | All 149 users: P@10 | R@10 | F1 [95% CI] |
+| ------- | ------------ | --------------------- | ------ | -------------- |
+| User-based CF | 3.85% | 2.68% | 4.79% | 3.44% [2.26, 4.65] |
+| Item-based CF | 3.50% | 3.36% | 4.64% | 3.89% [2.85, 5.02] |
+| SVD (zero-fill) | 3.73% | 3.09% | 4.25% | 3.57% [2.49, 4.77] |
+| **Hybrid (0.40 / 0.35)** | 5.81% | 3.56% | 5.64% | 4.36% [3.09, 5.68] |
+
+- The hybrid's 5.81% F1 on the 50-user sample was optimistic. On all 149 users
+  it is 4.36%.
+- Paired bootstrap on per-user Precision@10, hybrid minus baseline: vs User-CF
+  +0.87 pp [+0.27, +1.54] (excludes 0); vs Item-CF +0.20 pp [−0.54, +0.94];
+  vs SVD +0.47 pp [−0.34, +1.34]. So the hybrid beats User-CF, but it is not
+  distinguishable from Item-CF or SVD on this data.
+- One 80/20 split is itself a single draw. Over 10 different split seeds the
+  hybrid gets P@10 3.51 ± 0.44%, R@10 5.25 ± 0.45%, F1 4.20 ± 0.46% (mean ± std).
 
 Precision@10 is low. My explanation is that the dataset is small and 90.9%
 sparse, but I haven't tested that directly. Mean-centered SVD, K-sensitivity
@@ -227,15 +287,20 @@ with seven sidebar modes:
   metrics therefore show how the pipeline behaves on this dataset and how the
   variants compare with each other. They don't show real-world recommendation
   accuracy. I haven't collected any real-user ratings.
-- The α, β weights were grid-searched (§4.2, `experiments/verify_grid_search.py`)
-  over a fixed, coarse grid (0.05 steps), not a continuous or exhaustive
-  search. The defaults are the best of the grid I tried, and I haven't shown
-  they are a global optimum.
+- The α, β defaults were set before any tuning. The later grid search (§4.2)
+  covers 19 combinations in steps of 0.10. The defaults rank first, but the
+  grid is nearly flat (0.91 pp of F1 across all 19), so this is not evidence
+  that they are optimal.
+- The hybrid is not shown to beat Item-based CF or SVD (§5.1). Only its
+  advantage over User-based CF is statistically clear.
+- 21 of the 32 vision errors are predicted as Dairy, mostly from
+  `detect_dairy_type()` (§4.1). Documented, not fixed.
 - The activity-level ablation (Precision/Recall/F1 for heavy vs. light raters)
   is only described. I haven't built it as a script or a dashboard tab (see
   `experiments/VERIFICATION_README.md`).
-- All the metrics are point estimates. I haven't computed confidence
-  intervals.
+- The 50-user metrics in the app dashboard are point estimates. Confidence
+  intervals for the full population are in §5.1 (`verify_full_user_ci.py`),
+  but the vision accuracy in §4.1 has no interval.
 
 **Future work (not done in this project):**
 
