@@ -1,10 +1,10 @@
 """
-config.py — Reference configuration for the Smart Grocery Recommender System.
+config.py: reference values for the Smart Grocery Recommender System.
 
-This replaces the config.py deleted on 2026-07-09. That version described the
-retired Instacart / MobileNetV2 phase (orders.csv, MAX_USERS=5000, k-NN weights
-SVD_WEIGHT=0.7 / ITEM_ITEM_WEIGHT=0.3) and was never imported anywhere in the
-codebase, so it drifted out of sync silently.
+I deleted an earlier config.py on 2026-07-09. It described the old Instacart /
+MobileNetV2 phase (orders.csv, MAX_USERS=5000, SVD_WEIGHT=0.7 /
+ITEM_ITEM_WEIGHT=0.3) and nothing imported it, so it drifted out of sync
+without anything breaking. This file is its replacement.
 
 What actually depends on this file today:
   - Imported by: experiments/verify_ablation.py,
