@@ -1,5 +1,6 @@
 """
-Verifies Gap #1: the vision pipeline has never had a measured accuracy number.
+Measures how accurate the vision pipeline is. Before I wrote this script I had no
+accuracy number for it.
 
 Runs the real classify_image() cascade from app.py (OCR -> Gemini -> HF ->
 color fallback) on data/vision_test_set/ -- 260 labeled images, 20 per
@@ -14,8 +15,8 @@ IMPORTANT — what "correct" means here:
   so this script measures **category-level** accuracy: does the top
   matched product (via find_products_from_tags()) belong to the same
   catalog category as the test image's folder? This is a coarser, honest
-  substitute for per-product accuracy -- report it as such, not as
-  per-SKU accuracy.
+  substitute for per-product accuracy, and I report it as category-level
+  accuracy, not per-SKU accuracy.
 
 IMPORTANT — Gemini / HuggingFace stages:
   These call external APIs and require GEMINI_API_KEY / HF_API_TOKEN in
@@ -23,10 +24,10 @@ IMPORTANT — Gemini / HuggingFace stages:
   through OCR -> (Gemini: no key) -> (HF: no key) -> color fallback, so
   this run's numbers describe the OCR and color-fallback stages only.
   Add real keys and re-run to also get Gemini/HF accuracy.
-  (Building this script surfaced a real bug: classify_image_gemini() /
+  (While writing this script I found a bug: classify_image_gemini() /
   classify_image_hf() read st.secrets without a try/except, which raises
   -- not "no key" -- when .streamlit/secrets.toml doesn't exist at all,
-  crashing the whole pipeline instead of falling back. Fixed in app.py by
+  crashing the whole pipeline instead of falling back. I fixed it in app.py by
   wrapping those two reads in try/except.)
 
 Run from the repo root:
