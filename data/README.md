@@ -10,11 +10,22 @@ Both data files are committed to this repo and require no download:
 | `user_ratings.csv` | 6,796 explicit ratings from 150 users on a 1.5–5.0 scale |
 | `users_new.csv` | Optional demographic metadata (name/age/gender/location/cluster) — **not read by `app.py`**, which only needs `user_ratings.csv` for recommendations. Originally covered only U051–U150 (100 of 150 users); `generate_users_missing.py` documents and reproduces the U001–U050 rows added to complete it. Every field for U001–U050 is fully synthetic — no real person behind any of them, generated only to match the observed distribution of the original 100 rows. |
 
+The vision test images live in `vision_test_set/`:
+
+| File | Description |
+|---|---|
+| `vision_test_set/labels.csv` | 260 images (20 per category, 13 categories) with category-level labels, used by `experiments/verify_vision_accuracy.py` |
+| `vision_test_set/labels_sku.csv` | 24 of those images that show a product that exists in the catalog, hand-labeled with the acceptable `product_id`(s), used by `experiments/verify_vision_sku.py` |
+
+Most of these images are product-listing or packaging-design images saved from
+the web, not photos taken for this project. A few are real hand-held photos and
+one is a design mockup.
+
 ## 📊 Dataset Stats
 
 | Metric | Value |
 |---|---|
-| Products | 500 |
+| Products | 500 rows (39 product names appear twice under different ids, so about 461 distinct products) |
 | Categories | 13 |
 | Users | 150 |
 | Ratings | 6,796 |
