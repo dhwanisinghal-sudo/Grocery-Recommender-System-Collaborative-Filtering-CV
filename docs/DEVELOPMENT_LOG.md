@@ -132,8 +132,8 @@ I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
   deleted `verify_vision_accuracy.py` and re-added it as
   `verify_vision_accuracy_patched.py`, and replaced
   `vision_accuracy_results.csv` with the run that used a Gemini key (87.7%
-  overall). I also added the Colab notebook I ran it from,
-  `experiments/vision_accuracy_gap2_final.ipynb`.
+  overall). I also added the Colab notebook I ran it from (I later renamed it
+  `experiments/vision_accuracy_colab.ipynb`).
 - **Sep 28, 11:28:** renamed the script back to `verify_vision_accuracy.py`.
 - **Sep 28, 11:36–11:41:** wording fixes. I added the synthetic-data
   limitation to `data/README.md` and `docs/PROJECT_REPORT.md`, changed the
