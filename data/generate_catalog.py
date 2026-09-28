@@ -1,5 +1,5 @@
 """
-Documents and reproduces the synthetic parts of products_500plus.csv (Gap #4).
+Documents and reproduces the synthetic parts of products_500plus.csv.
 
 products_500plus.csv is a CURATED catalog: the 500 product names, their
 category/subcategory taxonomy, tags, and emoji were chosen by hand to look
