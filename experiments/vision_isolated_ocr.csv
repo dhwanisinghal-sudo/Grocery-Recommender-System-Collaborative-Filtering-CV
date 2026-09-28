@@ -1,0 +1,261 @@
+filename,true_category,resolved,predicted_category,correct
+Bakery/01_404_Not_Found.jpg,Bakery,False,,False
+Bakery/02_Amazon_in_Under_500_Home_Kitchen.jpg,Bakery,False,,False
+Bakery/03_Bread_wrapper.jpg,Bakery,True,Bakery,True
+Bakery/04_Britannia_Toastea_Milk_Rusk_280g_Crisp_T.jpg,Bakery,True,Dairy,False
+Bakery/05_Brown_Bread_Design.jpg,Bakery,True,Bakery,True
+Bakery/06_Buy_Parle_Happy_Happy_Choco_Chip_Cookies.jpg,Bakery,False,,False
+Bakery/07_Happy_Happy_chocolate_sandwich_biscuits_.jpg,Bakery,False,,False
+Bakery/08_PANIFICIO_MILK_BREAD_PACKAGING_DESIGN.jpg,Bakery,False,,False
+Bakery/09_Package_Design_for_Freshnest.jpg,Bakery,True,Bakery,True
+Bakery/10_Redirect_Notice.jpg,Bakery,True,Bakery,True
+Bakery/11_Renatees_Bread_Wrapper.jpg,Bakery,True,Bakery,True
+Bakery/12_Rusk.jpg,Bakery,True,Bakery,True
+Bakery/13_Toast.jpg,Bakery,False,,False
+Bakery/14_britannia_nutri_choice_digestive_high_fi.jpg,Bakery,True,Bakery,True
+Bakery/15_download_3.jpg,Bakery,False,,False
+Bakery/16_download_4.jpg,Bakery,True,Bakery,True
+Bakery/17_download_5.jpg,Bakery,True,Bakery,True
+Bakery/18_mcvitie_s_digestive_biscuits_200_gm.jpg,Bakery,False,,False
+Bakery/19_sunfeast_farmlite_digestive_high_fibre_b.jpg,Bakery,True,Bakery,True
+Bakery/20_sunfeast_farmlite_veda_digestive_high_fi.jpg,Bakery,True,Bakery,True
+Beverages/01_Bru_Classic_Cold_Coffee_220_ml.jpg,Beverages,True,Beverages,True
+Beverages/02_Bru_Instant_Coffee_100g_Poly_Aromatic_Co.jpg,Beverages,True,Beverages,True
+Beverages/03_Bru_Instant_Aromatic_Coffee_From_South_I.jpg,Beverages,False,,False
+Beverages/04_Green_tea.jpg,Beverages,False,,False
+Beverages/05_Instant_Coffee.jpg,Beverages,True,Beverages,True
+Beverages/06_Natural_Green_Tea_With_String_Tag.jpg,Beverages,True,Beverages,True
+Beverages/07_Nescafe_Gold_Rich_Smooth_Instant_Coffee_.jpg,Beverages,True,Beverages,True
+Beverages/08_Nescaf_koffie_ijstcappuccino.jpg,Beverages,True,Beverages,True
+Beverages/09_OUR_GREEN_TEAS.jpg,Beverages,True,Beverages,True
+Beverages/10_Tata_Agni_Tea_Dust_250g.jpg,Beverages,False,,False
+Beverages/11_Tea_Packaging_Design_Premium_tea_box_ide.jpg,Beverages,False,,False
+Beverages/12_Tea_Packaging.jpg,Beverages,False,,False
+Beverages/13_What_if_Nescafe_had_new_packaging_nescaf.jpg,Beverages,True,Beverages,True
+Beverages/14_download_3.jpg,Beverages,True,Beverages,True
+Beverages/15_download_4.jpg,Beverages,True,Beverages,True
+Beverages/16_download_5.jpg,Beverages,True,Beverages,True
+Beverages/17_download_6.jpg,Beverages,True,Beverages,True
+Beverages/18_download_7.jpg,Beverages,True,Beverages,True
+Beverages/19_download_8.jpg,Beverages,True,Beverages,True
+Beverages/20_golden_tea_chef_reat.jpg,Beverages,False,,False
+Condiments/01_Amazon_com_Amazon_Fresh_Raw_Wildflower_H.jpg,Condiments,True,Condiments,True
+Condiments/02_Amazon_com_Amazon_Grocery_Golden_Pure_Ho.jpg,Condiments,True,Condiments,True
+Condiments/03_Dabur_Honey_500g_100_Pure_World_s_No_1_H.jpg,Condiments,True,Condiments,True
+Condiments/04_Kissan_Mixed_Fruit_Jam_MN_Photography.jpg,Condiments,True,Condiments,True
+Condiments/05_Kissan_Mixed_Fruit_Jam_Tub_100g.jpg,Condiments,True,Condiments,True
+Condiments/06_Kroger_Original_Tomato_Ketchup_24_oz.jpg,Condiments,True,Condiments,True
+Condiments/07_Peanut_Butter_Co_Peanut_Butter_Spread_Th.jpg,Condiments,True,Dairy,False
+Condiments/08_SUNDIP_Mayonnaise_500ml_Pouch.jpg,Condiments,False,,False
+Condiments/09_download_10.jpg,Condiments,False,,False
+Condiments/10_download_11.jpg,Condiments,True,Dairy,False
+Condiments/11_download_3.jpg,Condiments,True,Condiments,True
+Condiments/12_download_4.jpg,Condiments,False,,False
+Condiments/13_download_5.jpg,Condiments,True,Condiments,True
+Condiments/14_download_6.jpg,Condiments,False,,False
+Condiments/15_download_7.jpg,Condiments,True,Condiments,True
+Condiments/16_download_8.jpg,Condiments,True,Condiments,True
+Condiments/17_download_9.jpg,Condiments,False,,False
+Condiments/18_eCare_Product_Packaging_Product_Packagin.jpg,Condiments,False,,False
+Condiments/19_kissan_mixed_fruit_jam_200_gm.jpg,Condiments,False,,False
+Condiments/20_30.jpg,Condiments,True,Dairy,False
+Dairy/01_Best_Butter_box_Packaging_Design.jpg,Dairy,True,Dairy,True
+Dairy/02_Buy_Britannia_Cheese_Slices_200_Gm_Pouch.jpg,Dairy,True,Dairy,True
+Dairy/03_Buy_Table_butter_and_Cooking_Butter_Onli.jpg,Dairy,True,Dairy,True
+Dairy/04_Gold_Milky_Milk.jpg,Dairy,True,Dairy,True
+Dairy/05_Heritage_Soft_Creamy_Paneer_200g_Tasty_N.jpg,Dairy,False,,False
+Dairy/06_Kroger_Kroger_Unsalted_Butter_Sticks_4_s.jpg,Dairy,True,Dairy,True
+Dairy/07_Malai_Paneer_by_Govind_Milk_Milk_Product.jpg,Dairy,False,,False
+Dairy/08_Maple_Magic_Homemade_Maple_Glaze_Vintage.jpg,Dairy,True,Dairy,True
+Dairy/09_Mother_Dairy_Milk_Packaging_Sulekha_Rajk.jpg,Dairy,False,,False
+Dairy/10_Pure_untouched_organic_milk_from_cows_ra.jpg,Dairy,True,Dairy,True
+Dairy/11_Standardized_Milk_Govind_Milk.jpg,Dairy,False,,False
+Dairy/12_bay_now.jpg,Dairy,True,Dairy,True
+Dairy/13_download_3.jpg,Dairy,True,Dairy,True
+Dairy/14_download_4.jpg,Dairy,True,Dairy,True
+Dairy/15_download_5.jpg,Dairy,True,Dairy,True
+Dairy/16_download_6.jpg,Dairy,True,Dairy,True
+Dairy/17_download_7.jpg,Dairy,True,Dairy,True
+Dairy/18_download_8.jpg,Dairy,False,,False
+Dairy/19_download_9.jpg,Dairy,False,,False
+Dairy/20_Package_Design_Portfolio_Update_Excited_.jpg,Dairy,False,,False
+Drinks/01_Amazon_com_Tropicana_Juice_Fruit_Medley_.jpg,Drinks,True,Health,False
+Drinks/02_Frooti.jpg,Drinks,False,,False
+Drinks/03_Frooti.jpg,Drinks,False,,False
+Drinks/04_Great_for_drinking_at_any_time_of_the_da.jpg,Drinks,True,Drinks,True
+Drinks/05_Indian_Soda_lime.jpg,Drinks,False,,False
+Drinks/06_Limca.jpg,Drinks,False,,False
+Drinks/07_Tropicana_juice_blends_redesign_by_Hauga.jpg,Drinks,True,Drinks,True
+Drinks/08_Water_Bottle_Shape_Design_68_Unique_Pack.jpg,Drinks,True,Drinks,True
+Drinks/09_download_10.jpg,Drinks,True,Drinks,True
+Drinks/10_download_3.jpg,Drinks,False,,False
+Drinks/11_download_4.jpg,Drinks,False,,False
+Drinks/12_download_5.jpg,Drinks,False,,False
+Drinks/13_download_6.jpg,Drinks,False,,False
+Drinks/14_download_7.jpg,Drinks,False,,False
+Drinks/15_download_8.jpg,Drinks,False,,False
+Drinks/16_download_9.jpg,Drinks,False,,False
+Drinks/17_frooti_40_pcs_125_ml_tetra_pack.jpg,Drinks,False,,False
+Drinks/18_mango.jpg,Drinks,False,,False
+Drinks/19_mineral_water_bottle_sticker_design_Pin_.jpg,Drinks,False,,False
+Drinks/20_tropicana_orange_1_89l_Google_Search.jpg,Drinks,True,Drinks,True
+Frozen/01_10_10.jpg,Frozen,True,Frozen,True
+Frozen/02_1_Alpha_Foods_Chikn_Nuggets_Provided_by_.jpg,Frozen,False,,False
+Frozen/03_Crispy_French_Fries_McCain_UK.jpg,Frozen,False,,False
+Frozen/04_Frozen_Paneer_Momo_475g_Nepali_Cheese_Du.jpg,Frozen,True,Dairy,False
+Frozen/05_Haldiram_s_Samosa_200g_Traditional_India.jpg,Frozen,True,Frozen,True
+Frozen/06_I_have_so_many_memories_of_Chocolate_Sam.jpg,Frozen,False,,False
+Frozen/07_Item_Review_bettergoods_Plant_Based_Chic.jpg,Frozen,True,Frozen,True
+Frozen/08_Kirkwood_Family_Size_Chicken_Nuggets_5_9.jpg,Frozen,False,,False
+Frozen/09_McCain_Cheese_Corn_Samosa_240_g.jpg,Frozen,True,Frozen,True
+Frozen/10_McCain_Classic_Cut_Fries_are_designed_fo.jpg,Frozen,False,,False
+Frozen/11_McCain_Superfries_Straight_Cut_900g_Wool.jpg,Frozen,False,,False
+Frozen/12_Momo_Packaging_Design_Concepts_Bhutanese.jpg,Frozen,False,,False
+Frozen/13_Momo_Pouch_Packaging_design.jpg,Frozen,True,Frozen,True
+Frozen/14_Online_Food_Shopping_Iceland_Groceries.jpg,Frozen,True,Frozen,True
+Frozen/15_Packaging_Design_List_2.jpg,Frozen,True,Frozen,True
+Frozen/16_Season_and_Bake_Fries_Salt_Pepper_McCain.jpg,Frozen,False,,False
+Frozen/17_Top_Frozen_Momos_Pack_Designs_for_Maximu.jpg,Frozen,False,,False
+Frozen/18_Wow_Corn_Cheese_Momos_10pcs.jpg,Frozen,False,,False
+Frozen/19_download_3.jpg,Frozen,True,Frozen,True
+Frozen/20_download_4.jpg,Frozen,True,Frozen,True
+Grains/01_Aashirvaad_Sugar_Release_Control_Atta_1k.jpg,Grains,True,Grains,True
+Grains/02_All_About_Protein_Rich_Toor_Dal.jpg,Grains,True,Health,False
+Grains/03_Anjali_Gold_Premium_Unpolished_Toor_Dal_.jpg,Grains,False,,False
+Grains/04_Autarky_Salmon_Mature_Lite_Dog_Food_2_5k.jpg,Grains,True,Grains,True
+Grains/05_DHEERAJ_BHATI_VRD_POHA.jpg,Grains,False,,False
+Grains/06_DHEERAJ_BHATI_1.jpg,Grains,True,Grains,True
+Grains/07_DHEERAJ_BHATI.jpg,Grains,True,Grains,True
+Grains/08_Dawat_Basmati_Rice_5_kg.jpg,Grains,True,Grains,True
+Grains/09_Dheeraj_Bhati_Tasteride_Poha_Pouch_Packa.jpg,Grains,False,,False
+Grains/10_Explore_Indian_Flours_and_Rice_Ingredien.jpg,Grains,False,,False
+Grains/11_TRS_Toor_Dal.jpg,Grains,False,,False
+Grains/12_The_Art_and_Science_of_Atta_Packaging_De.jpg,Grains,True,Grains,True
+Grains/13_Tur_Dal_Arhar_500g.jpg,Grains,True,Grains,True
+Grains/14_Udhaiyam_Toor_Dal_2_kg.jpg,Grains,False,,False
+Grains/15_Ujjaini_Poha_400g_Pillow_Pouch.jpg,Grains,True,Grains,True
+Grains/16_Wheat_Flour_Atta.jpg,Grains,False,,False
+Grains/17_download_3.jpg,Grains,True,Grains,True
+Grains/18_download_4.jpg,Grains,True,Grains,True
+Grains/19_download_5.jpg,Grains,True,Grains,True
+Grains/20_download_6.jpg,Grains,True,Grains,True
+Health/01_Amazon_in_Health_Drinks_for_Kids_2_15_ye.jpg,Health,False,,False
+Health/02_Complan_Drink_For_Growth_Chocolate_Flavo.jpg,Health,False,,False
+Health/03_Complan_Original_Nutritional_Drink_425G.jpg,Health,False,,False
+Health/04_For_your_Li_l_Champ_get_some_Bournvita_f.jpg,Health,False,,False
+Health/05_HORLICKS_Nutrition_Drink_Jar_1_kg.jpg,Health,False,,False
+Health/06_Horlicks_Growth_Plus_Health_and_Nutritio.jpg,Health,False,,False
+Health/07_Horlicks_Malt_Drink_Powder_400g_Woolwort.jpg,Health,False,,False
+Health/08_Mypro_Sport_Nutrition_Plant_Protein_Powd.jpg,Health,True,Health,True
+Health/09_Origin_Nutrition_100_Natural_Vegan_Prote.jpg,Health,False,,False
+Health/10_Origin_Nutrition_Senior_Care_Plant_Prote.jpg,Health,True,Health,True
+Health/11_Vegan_Protein_99designs.jpg,Health,True,Health,True
+Health/12_cadbury_bourn_vita_750_gm_pouch.jpg,Health,False,,False
+Health/13_download_3.jpg,Health,False,,False
+Health/14_download_4.jpg,Health,False,,False
+Health/15_download_5.jpg,Health,True,Dairy,False
+Health/16_download_6.jpg,Health,True,Health,True
+Health/17_download_7.jpg,Health,False,,False
+Health/18_download_8.jpg,Health,True,Health,True
+Health/19_healthy_drinks.jpg,Health,False,,False
+Health/20_REBO.jpg,Health,False,,False
+Home Care/01_10_Toilet_Cleaning_Tricks_That_Make_a_Di.jpg,Home Care,False,,False
+Home Care/02_Deal_Ustaad.jpg,Home Care,False,,False
+Home Care/03_Harpic_Bathroom_Cleaner_Lemon_1_L.jpg,Home Care,False,,False
+Home Care/04_Harpic_White_and_Shine_Bleach_500_ml.jpg,Home Care,False,,False
+Home Care/05_Lizol_Disinfectant_Surface_Floor_Cleaner.jpg,Home Care,False,,False
+Home Care/06_Now_available_on_everyday_low_price_Harp.jpg,Home Care,False,,False
+Home Care/07_Softouch_2X_French_Perfume_Fabric_Condit.jpg,Home Care,False,,False
+Home Care/08_Surf_Excel_Easy_Wash_Detergent_Powder_5_.jpg,Home Care,True,Home Care,True
+Home Care/09_Surf_Excel_Easy_Wash_Detergent_Powder_4_.jpg,Home Care,False,,False
+Home Care/10_Surf_Excel_Matic_Comfort_Fresh.jpg,Home Care,False,,False
+Home Care/11_Surf_Excel_Quick_Wash_Detergent_powder.jpg,Home Care,False,,False
+Home Care/12_Toilet_Bowl_Cleaner_with_Bleach_Twin_Pac.jpg,Home Care,False,,False
+Home Care/13_Toilet_Bowl_Cleaner_with_Bleach_Twin_Pac.jpg,Home Care,False,,False
+Home Care/14_Vim_Dishwash_Anti_Smell_Bar_Pudina_250_g.jpg,Home Care,False,,False
+Home Care/15_Vim_Dishwash_Bar_300_Grams_10_58_Oz_Indi.jpg,Home Care,False,,False
+Home Care/16_Vim_Dishwash_Liquid.jpg,Home Care,False,,False
+Home Care/17_download_9.jpg,Home Care,False,,False
+Home Care/18_harpic_active_fresh_mountain_pine_toilet.jpg,Home Care,False,,False
+Home Care/19_lizol_neem_disinfectant_surface_cleaner_.jpg,Home Care,False,,False
+Home Care/20_surf_excel_matic_top_load_liquid_deterge.jpg,Home Care,False,,False
+Noodles/01_3_10.jpg,Noodles,False,,False
+Noodles/02_Buy_Knorr_Mixed_Veg_Soup_40_Gm_Kabul_Mar.jpg,Noodles,True,Noodles,True
+Noodles/03_I_just_added_a_new_item_to_eBay_Knorr_Su.jpg,Noodles,True,Noodles,True
+Noodles/04_Indian_Grocery_Store_Online_Asian_Superm.jpg,Noodles,False,,False
+Noodles/05_Is_Atta_Maggi_Healthy_A_Detailed_Look_in.jpg,Noodles,True,Noodles,True
+Noodles/06_Knorr_Hong_Kong_Manchow_Soup_with_Real_V.jpg,Noodles,False,,False
+Noodles/07_Noodles_500g_Pouch.jpg,Noodles,False,,False
+Noodles/08_Nouveau_produit_Pastabox_Gorgonzola_sode.jpg,Noodles,False,,False
+Noodles/09_Pasta_Pouch_Packaging_Design.jpg,Noodles,False,,False
+Noodles/10_Pouch_Packaging_Design_Makhana_Noodles_S.jpg,Noodles,True,Noodles,True
+Noodles/11_Sunfeast_Yippee_Noodles_Magic_Masala.jpg,Noodles,True,Noodles,True
+Noodles/12_Sunfeast_Yippee_Power_Up_Atta_Noodles_In.jpg,Noodles,True,Noodles,True
+Noodles/13_The_Pasta_Box_50_Recipes_for_Quick_and_E.jpg,Noodles,False,,False
+Noodles/14_Yippee_1.jpg,Noodles,True,Noodles,True
+Noodles/15_Yippee.jpg,Noodles,True,Noodles,True
+Noodles/16_aajao_Maggie_Khalo_mitroo.jpg,Noodles,True,Noodles,True
+Noodles/17_download_3.jpg,Noodles,True,Spices,False
+Noodles/18_download_4.jpg,Noodles,True,Noodles,True
+Noodles/19_download_5.jpg,Noodles,False,,False
+Noodles/20_download_6.jpg,Noodles,True,Noodles,True
+Personal Care/01_10_4.jpg,Personal Care,False,,False
+Personal Care/02_Beauty_Health_Skincare_Perfume.jpg,Personal Care,False,,False
+Personal Care/03_Colgate_Cavity_Protection_Toothpaste_wit.jpg,Personal Care,True,Personal Care,True
+Personal Care/04_Colgate_Toothbrush_Slim_Soft_Advanced.jpg,Personal Care,False,,False
+Personal Care/05_Dalan_D_Olive_Shampoo_400_ml_x_12.jpg,Personal Care,True,Spices,False
+Personal Care/06_Dove_Cool_Moisture_Bar_Soap_For_Softer_S.jpg,Personal Care,True,Beverages,False
+Personal Care/07_Dove_Men_Care_Extra_Fresh_Antiperspirant.jpg,Personal Care,False,,False
+Personal Care/08_Download_Colgate_tooth_paste_on_transpar.jpg,Personal Care,True,Personal Care,True
+Personal Care/09_Fa_Dodorant_Gel_douche_Antisudorifique_C.jpg,Personal Care,True,Personal Care,True
+Personal Care/10_Fogg_Body_Spray_premium_freshness_now_at.jpg,Personal Care,False,,False
+Personal Care/11_Rexona_Men_Workout_Advanced_Protection_D.jpg,Personal Care,False,,False
+Personal Care/12_The_Best_Toothpaste_for_Bad_Breath_Accor.jpg,Personal Care,True,Personal Care,True
+Personal Care/13_These_Plaque_Fighting_Toothpastes_Will_M.jpg,Personal Care,True,Personal Care,True
+Personal Care/14_download_3.jpg,Personal Care,False,,False
+Personal Care/15_download_4.jpg,Personal Care,True,Personal Care,True
+Personal Care/16_download_5.jpg,Personal Care,True,Personal Care,True
+Personal Care/17_download_6.jpg,Personal Care,True,Dairy,False
+Personal Care/18_download_7.jpg,Personal Care,True,Dairy,False
+Personal Care/19_download_8.jpg,Personal Care,False,,False
+Personal Care/20_Menthol_200.jpg,Personal Care,False,,False
+Snacks/01_40_pack_of_BBQ_Chips_as_low_as_10_amzn_t.jpg,Snacks,True,Snacks,True
+Snacks/02_Bingo_Mad_Angles_Achaari_Masti_Mango_Pic.jpg,Snacks,False,,False
+Snacks/03_Dheeraj_Bhati.jpg,Snacks,True,Snacks,True
+Snacks/04_Kurkure_PNG_Images_Transparent_HD_Photo_.jpg,Snacks,False,,False
+Snacks/05_Kurkure.jpg,Snacks,True,Dairy,False
+Snacks/06_LAJ_JI_Namkeen_Packaging_200g.jpg,Snacks,False,,False
+Snacks/07_LAL_JI_Namkeen_Packaging.jpg,Snacks,False,,False
+Snacks/08_MyBigBag.jpg,Snacks,False,,False
+Snacks/09_Packaging_Design_Namkeen_Snacks.jpg,Snacks,False,,False
+Snacks/10_Take_me_back.jpg,Snacks,False,,False
+Snacks/11_bingo_mad_angles_mmmmm_masala_triangle_c.jpg,Snacks,False,,False
+Snacks/12_download_10.jpg,Snacks,True,Snacks,True
+Snacks/13_download_11.jpg,Snacks,True,Snacks,True
+Snacks/14_download_12.jpg,Snacks,True,Snacks,True
+Snacks/15_download_13.jpg,Snacks,True,Dairy,False
+Snacks/16_download_14.jpg,Snacks,False,,False
+Snacks/17_download_15.jpg,Snacks,False,,False
+Snacks/18_download_16.jpg,Snacks,False,,False
+Snacks/19_download_17.jpg,Snacks,False,,False
+Snacks/20_eat_to_Lay_s.jpg,Snacks,False,,False
+Spices/01_Authentic_Indian_Garam_Masala_Spice_Blen.jpg,Spices,True,Dairy,False
+Spices/02_Buy_Spices_Online_at_Best_Price_Upto_70_.jpg,Spices,False,,False
+Spices/03_Cooking_Sea_Salt_Bulk_Olsson_s_Salt.jpg,Spices,True,Dairy,False
+Spices/04_DHEERAJ_BHATI.jpg,Spices,False,,False
+Spices/05_Everest_Egg_Curry_Masala_Indian_Spices_E.jpg,Spices,False,,False
+Spices/06_Everest_Sabji_Masala_Powder_100G_Vegetab.jpg,Spices,True,Spices,True
+Spices/07_Everest_Shahi_Paneer_Masala_100g.jpg,Spices,True,Dairy,False
+Spices/08_Greek_Flaky_Sea_Salt_Hand_Harvested_in_G.jpg,Spices,True,Dairy,False
+Spices/09_Instant_Pot_Spiced_Red_Lentil_Sweet_Pota.jpg,Spices,False,,False
+Spices/10_Masala_Spice_pouch_packaging_design_FMCG.jpg,Spices,True,Spices,True
+Spices/11_Ponam_Garam_Masala_Packaging.jpg,Spices,True,Spices,True
+Spices/12_Salt_pouch_food_Packaging.jpg,Spices,False,,False
+Spices/13_Saras.jpg,Spices,True,Spices,True
+Spices/14_Slow_Cooker_Lamb_Curry_Recipes_Perfect_f.jpg,Spices,False,,False
+Spices/15_Tata_Sampann_Turmeric_Powder_With_Natura.jpg,Spices,True,Spices,True
+Spices/16_download_3.jpg,Spices,False,,False
+Spices/17_download_4.jpg,Spices,True,Spices,True
+Spices/18_download_5.jpg,Spices,True,Spices,True
+Spices/19_download_6.jpg,Spices,True,Dairy,False
+Spices/20_download_7.jpg,Spices,False,,False
