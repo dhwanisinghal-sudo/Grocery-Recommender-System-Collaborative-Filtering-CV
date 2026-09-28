@@ -82,7 +82,7 @@ The vision pipeline has been evaluated on a 260-image, category-level labeled te
 | SVD                              | Truncated SVD, k=20 latent factors (`scipy.sparse.linalg.svds`)                  |
 | **Hybrid (default)**                 | Rank-reciprocal blend: `α·CF_user + β·CF_item + (1−α−β)·SVD`, α=0.40, β=0.35 |
 
-`α`/`β` defaults are grid-searched, not guesswork — `experiments/verify_grid_search.py` sweeps a 19-combo grid and the current defaults come out best by F1 on this dataset. Full detail in `docs/PROJECT_REPORT.md` §4.2.
+`α`/`β` defaults (0.40 / 0.35) were set by hand and checked afterwards: `experiments/verify_grid_search.py` sweeps a 19-combo grid and they rank first by F1, but the grid is nearly flat (0.91 pp of F1 across all 19), so they are reasonable rather than shown optimal. Full detail in `docs/PROJECT_REPORT.md` §4.2.
 
 ---
 
@@ -137,9 +137,9 @@ Precision@10 stays low mainly because the dataset is small and 90.9% sparse — 
 
 | Metric                | Value                        |
 | ------------------------ | ------------------------------- |
-| Best CF setup               | Hybrid (User-CF + Item-CF + SVD)  |
+| Best CF setup               | Hybrid (User-CF + Item-CF + SVD); clearly better than User-CF only, not distinguishable from Item-CF / SVD (see report §5.1)  |
 | Best RMSE                       | 0.88 (User-Based CF)                 |
-| Hybrid weights (α, β)               | 0.40, 0.35 — grid-search validated        |
+| Hybrid weights (α, β)               | 0.40, 0.35 — hand-set defaults, top of a flat grid        |
 | Catalog Coverage@10                     | 49.2%                                        |
 | Cold Start                                  | ✅ Handled                                       |
 
