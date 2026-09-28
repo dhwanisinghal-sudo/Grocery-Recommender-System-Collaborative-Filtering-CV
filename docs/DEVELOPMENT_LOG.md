@@ -143,12 +143,22 @@ I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
 
 ---
 
-## Totals
+## Phase 11: Wording cleanup (Sep 28, 11:55–12:20)
 
-256 commits on 26 different days between Jun 5 and Sep 28, 2026. By month:
-June 106, July 25, August 0, September 125. Of the September commits, 120 are
-from Sep 25–28 (Phases 8–10), and about 50 of those are just the test images
-going up through the web UI.
+I went back through the docs and comments and reworded them. The scripts only
+changed in their docstrings and comments.
 
-This log doesn't explain why individual lines changed inside a given `app.py`
-commit, and it doesn't account for the Jul 22 – Sep 11 gap.
+- **11:55–11:57:** reworded `docs/DEVELOPMENT_LOG.md`,
+  `docs/PROJECT_REPORT.md` and `experiments/VERIFICATION_README.md`.
+- **12:11–12:13:** `README.md` (the tech stack now lists only what
+  `requirements.txt` has), a comment in `app.py`, and the `config.py`
+  docstring. Then `docs/DEVELOPMENT_LOG.md` and `docs/PROJECT_REPORT.md` again.
+- **12:14–12:20:** `experiments/README.md`,
+  `experiments/VERIFICATION_README.md`, `experiments/verify_grid_search.py`,
+  `experiments/verify_vision_accuracy.py`, `data/README.md`,
+  `data/generate_catalog.py`, `data/generate_ratings.py`,
+  `data/generate_users_missing.py` and `notebooks/README.md`. At 12:18 I added
+  `experiments/vision_accuracy_colab.ipynb`, the renamed copy of the Colab
+  notebook from Phase 10.
+
+---
