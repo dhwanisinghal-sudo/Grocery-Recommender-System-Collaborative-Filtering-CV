@@ -1,6 +1,6 @@
 # Verification Scripts
 
-These five scripts reproduce the numbers in my IEEE-format paper (Sections
+These scripts reproduce the numbers in my IEEE-format paper (Sections
 VIII-B, VIII-C, VIII-E) and the vision-pipeline accuracy claim (§4.1 of
 `docs/PROJECT_REPORT.md`). They run on the repo's actual data files. The
 baseline metrics (Section VIII-A) come from running the deployed app itself,
@@ -25,6 +25,8 @@ anywhere in this codebase, only point estimates.
 | `verify_k_sensitivity.py` | VIII-C | Table V: Precision/Recall/F1 at K ∈ {5, 10, 20} |
 | `verify_worked_example.py` | VIII-E | Table VI: top-5 recommendations per model and for the hybrid, for user U097 |
 | `verify_grid_search.py` | not in the current paper | Grid search over the hybrid weights α, β (see `docs/PROJECT_REPORT.md` §4.2) |
+| `verify_full_user_ci.py` | not in the current paper | All 149 evaluable users instead of the 50-user sample: P/R/F1 for User-CF, Item-CF, SVD and Hybrid with 95% bootstrap CIs, paired hybrid-vs-baseline comparison, and Hybrid variance over 10 split seeds (see `docs/PROJECT_REPORT.md` §5.1). Imports functions from `verify_grid_search.py`. |
+| `verify_grid_full_users.py` | not in the current paper | The α/β grid re-run on all 149 users; shows the default still ranks first but the grid is nearly flat. |
 | `verify_vision_accuracy.py` | not in the current paper | Per-stage vision-pipeline accuracy on the 260 labeled images in `data/vision_test_set/` (see `docs/PROJECT_REPORT.md` §4.1). Category-level accuracy, not per-SKU. Writes `vision_accuracy_results.csv`. Needs `pytesseract` and Tesseract installed. It calls the real Gemini/HF APIs if `GEMINI_API_KEY` / `HF_API_TOKEN` are set. Without a Gemini key it falls through to HF and then the color heuristic; without an HF token it skips HF. See the notes below for the two runs I have on record. |
 
 Section VIII-D (Precision/Recall/F1 for heavy vs. light raters) isn't a
@@ -103,3 +105,10 @@ code at import time.
   the reference value in `docs/PROJECT_REPORT.md` §4.1, and
   `vision_accuracy_results.csv` is from that run. The CSV from the first run is
   in git history (commit `84131e0`).
+
+## About the paper
+
+The "Paper section" labels above refer to a manuscript draft that is **not
+included in this repository**. The reference values from it are hard-coded in
+the comparison block at the end of each script, so the tables can be checked
+without the paper.
