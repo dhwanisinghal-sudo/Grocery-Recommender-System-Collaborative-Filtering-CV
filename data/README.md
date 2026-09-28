@@ -37,3 +37,13 @@ from the repo root, with these two CSVs present in `data/`.
 ---
 
 > The Instacart-based setup previously documented here (orders.csv, order_products__prior.csv, products.csv, ~1.3GB total) belonged to the earlier offline exploration notebook only, and does not apply to the deployed app. See `experiments/README.md`.
+
+## ⚠️ Limitation: synthetic data
+
+`user_ratings.csv` is fully synthetic (see `generate_ratings.py`) — no real
+user or purchase history is behind it. Metrics computed on it (RMSE,
+Precision/Recall/F1@K, coverage) describe how the pipeline behaves on this
+dataset and support *relative* comparisons between variants (ablation,
+K-sensitivity, α/β grid search). They should not be read as estimates of
+real-world recommendation accuracy. The generator also builds in per-user
+category preferences, so some learnable structure exists by construction.
