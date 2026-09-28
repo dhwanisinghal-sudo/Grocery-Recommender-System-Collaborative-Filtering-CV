@@ -1,8 +1,8 @@
 """
 Verifies Section VIII-E: Sensitivity to Hybrid Weights (alpha, beta).
 
-app.py's hybrid_recommend(alpha=0.4, beta=0.35, ...) defaults were never
-grid-searched -- this script closes that gap.
+I had never grid-searched the defaults in app.py's
+hybrid_recommend(alpha=0.4, beta=0.35, ...). This script does that.
 
 It reconstructs the SAME three ranked lists the deployed app blends
 (user-based CF, item-based CF, zero-fill SVD), built on the SAME 80/20
@@ -136,7 +136,7 @@ def evaluate_combo(alpha, beta, train_pivot, user_sim_df, item_sim_df, pred_df, 
         .to_dict()
     )
     # Fixed random sample (seed=42), matching app.py's compute_eval_metrics()
-    # and the other verify_*.py scripts (Gap #3 fix).
+    # and the other verify_*.py scripts.
     sample_uids = random.Random(RANDOM_STATE).sample(
         list(test_grouped.keys()), min(SAMPLE_USERS, len(test_grouped))
     )
