@@ -1,24 +1,19 @@
-# notebooks/ — archived material only
+# notebooks/
 
-Everything in this folder is historical. It does **not** represent the
-currently deployed system.
+This folder only holds my first attempt at the project. It is not the system
+I deployed.
 
-- `archived_phase1_instacart_mobilenet/` — the project's first exploration
-  phase: Instacart Market Basket Analysis dataset + SVD (via `surprise`) +
-  MobileNetV2 image classification, run in Google Colab with no UI. This
-  approach was evaluated and then replaced.
+`Smart_Grocery_Recommender_(ML,CV)_ARCHIVED.ipynb` is a Google Colab notebook
+with no UI. It used the Instacart Market Basket Analysis dataset, SVD via
+`surprise`, and MobileNetV2 for image classification. I tried that approach,
+looked at the results, and replaced it.
 
-## Where the real thing is
+The deployed system is in the repo root:
 
-The deployed system is the Streamlit app in the repo root:
-
-| Component | Location |
+| What | Where |
 |---|---|
-| Live application | `app.py` |
-| Model hyperparameters (single source of truth) | `config.py` |
-| Data (500-product catalog, 150-user/6,796-rating set) | `data/` |
-| Architecture, evaluation methodology, known limitations | `docs/PROJECT_REPORT.md` |
-| Reproducible verification scripts for reported metrics | `experiments/` |
-
-If you're reviewing this project, start with `docs/PROJECT_REPORT.md`, not
-the notebook.
+| The Streamlit app | `app.py` |
+| Reference copy of the hyperparameters (`app.py` doesn't import it) | `config.py` |
+| Data (500-product catalog, 150 users, 6,796 ratings) | `data/` |
+| Architecture, evaluation and limitations | `docs/PROJECT_REPORT.md` |
+| Scripts that reproduce the reported numbers | `experiments/` |
