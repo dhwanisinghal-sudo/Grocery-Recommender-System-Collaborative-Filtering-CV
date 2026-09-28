@@ -1,8 +1,7 @@
-# experiments/ — verification scripts for the deployed system
+# experiments/
 
-This folder contains reproducible scripts that verify the metrics reported
-for the **current, deployed** hybrid CF system (`app.py`). Run any of them
-directly:
+These scripts reproduce the metrics I report for the deployed system
+(`app.py`). Run any of them from the repo root:
 
 ```bash
 python experiments/verify_ablation.py
@@ -12,20 +11,18 @@ python experiments/verify_grid_search.py
 python experiments/verify_vision_accuracy.py
 ```
 
-See **`VERIFICATION_README.md`** in this folder for what each script
-reproduces and how it maps to the paper's sections/tables.
+`VERIFICATION_README.md` in this folder says what each script reproduces and
+which table or section of the paper it matches.
 
-`verify_ablation.py`, `verify_k_sensitivity.py`, and
-`verify_worked_example.py` import shared hyperparameters from `config.py`
-at the repo root. `app.py`, `verify_grid_search.py`, and
-`verify_vision_accuracy.py` do not — they use inline copies of the same
-values, kept in sync by hand (see the `config.py` docstring).
+`verify_ablation.py`, `verify_k_sensitivity.py` and `verify_worked_example.py`
+import their hyperparameters from `config.py` in the repo root. `app.py`,
+`verify_grid_search.py` and `verify_vision_accuracy.py` don't. They use their
+own copies of the same values, which I keep in sync by hand (the `config.py`
+docstring explains this).
 
-## Note on the old Instacart/MobileNetV2 notebook
+`vision_accuracy_colab.ipynb` is the Colab notebook I used for the second
+vision run, the one with real Gemini and Hugging Face keys.
 
-This folder used to also document an early, unrelated exploration phase
-(Instacart dataset + MobileNetV2 + `surprise`). That material has moved to
-`notebooks/` (archived notebook) and is unrelated to the
-scripts in this folder or to the deployed app. See `notebooks/README.md`
-for details — it is kept only for historical reference and does not
-describe the current system.
+My first attempt (Instacart data, MobileNetV2, `surprise`) is not in this
+folder. It is archived in `notebooks/` and has nothing to do with these
+scripts or with the deployed app. See `notebooks/README.md`.
