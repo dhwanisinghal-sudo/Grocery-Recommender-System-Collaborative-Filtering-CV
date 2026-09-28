@@ -127,9 +127,8 @@ Precision@10 stays low mainly because the dataset is small and 90.9% sparse — 
 | Language                    | Python 3.x                                                    |
 | Frontend                        | Streamlit                                                          |
 | Collaborative Filtering             | scikit-learn, Pandas, NumPy, SciPy                                     |
-| Computer Vision & OCR                   | OpenCV, Tesseract OCR, Pillow (PIL)                                        |
-| AI Models                                   | Google Gemini API, Hugging Face Transformers                                  |
-| Visualization                                   | Matplotlib, Plotly                                                                |
+| Vision & OCR                   | Tesseract (via `pytesseract`), Pillow                                        |
+| External APIs                                   | Google Gemini API, Hugging Face Inference API (called with `requests`)                                  |
 | Version Control                                     | Git, GitHub                                                                          |
 
 ---
@@ -160,7 +159,7 @@ Reads `data/products_500plus.csv` and `data/user_ratings.csv` directly — no se
 ## 📚 Further Reading
 
 - [`docs/PROJECT_REPORT.md`](docs/PROJECT_REPORT.md) — full architecture, models, evaluation, and known limitations
-- [`docs/DEVELOPMENT_LOG.md`](docs/DEVELOPMENT_LOG.md) — project timeline reconstructed from commit history
+- [`docs/DEVELOPMENT_LOG.md`](docs/DEVELOPMENT_LOG.md) — my development timeline, rebuilt from the commit history
 - [`data/README.md`](data/README.md) — dataset details and generation scripts
 - [`experiments/`](experiments) — ablation, K-sensitivity, and grid-search verification scripts
 
