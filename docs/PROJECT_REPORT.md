@@ -203,15 +203,21 @@ with seven sidebar modes:
 - The vision pipeline resolves a product photo to a catalog item through
   up to four fallback stages, favoring precision (OCR / constrained-tag
   matching) over the more permissive final heuristic stage.
-- User-Based CF substantially outperforms zero-fill SVD on this dataset
-  (RMSE 0.88 vs 3.61), reflecting the benefit of neighborhood-based
-  methods on small, sparse rating matrices.
+- User-Based CF substantially outperforms *zero-fill* SVD on this dataset
+  (RMSE 0.88 vs 3.61), but the ablation (`experiments/verify_ablation.py`)
+  shows most of that gap comes from zero-filling missing ratings, not from
+  neighborhood methods being inherently better: mean-centered SVD reaches
+  an RMSE of 0.88 as well.
 - Data loading and all three CF models are cached (`@st.cache_data`, keyed
   on ratings-table length), so models are computed once per data version
   rather than recomputed on every interaction.
 
 **Known gaps:**
 
+- All ratings are synthetic (`data/README.md`, `data/generate_ratings.py`),
+  so reported metrics reflect pipeline behavior on this dataset and
+  *relative* comparisons between variants, not real-world recommendation
+  accuracy. No real-user rating data has been collected.
 - Hybrid CF weights (α, β) are grid-searched (§4.2,
   `experiments/verify_grid_search.py`) over a fixed, coarse grid
   (0.05-increment steps), not a continuous or exhaustive search — the
