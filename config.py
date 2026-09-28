@@ -1,21 +1,26 @@
 """
-config.py — Central configuration for the Smart Grocery Recommender System.
+config.py — Reference configuration for the Smart Grocery Recommender System.
 
 This replaces the config.py deleted on 2026-07-09. That version described the
 retired Instacart / MobileNetV2 phase (orders.csv, MAX_USERS=5000, k-NN weights
 SVD_WEIGHT=0.7 / ITEM_ITEM_WEIGHT=0.3) and was never imported anywhere in the
-codebase — it drifted out of sync with the actual hybrid CF + vision-cascade
-system silently, because nothing depended on it, so nothing broke when it went
-stale. It was correctly deleted as dead weight.
+codebase, so it drifted out of sync silently.
 
-This file exists so that CANNOT happen again: every hyperparameter here is
-imported by BOTH app.py (the live app) and every script in experiments/ (the
-verification/ablation/paper-table scripts). There is exactly one place these
-numbers live. If you change a weight, both the app and the verification
-scripts pick it up automatically — they cannot silently disagree.
+What actually depends on this file today:
+  - Imported by: experiments/verify_ablation.py,
+    experiments/verify_k_sensitivity.py, experiments/verify_worked_example.py.
+  - NOT imported by: app.py, experiments/verify_grid_search.py,
+    experiments/verify_vision_accuracy.py, or data/generate_*.py. Those keep
+    their own inline copies of the same values (app.py hardcodes them,
+    including the evaluation-tab functions ported from the scripts).
 
-Do not hardcode any of these numbers directly in app.py or experiments/*.py.
-Import them from here instead.
+Every value below currently matches the value hardcoded in app.py and in
+those scripts. That is maintained by hand, not enforced by code: if you change
+a number here you must also change it in app.py and in the scripts that do not
+import this file, or they will silently disagree. Wiring app.py (and the
+remaining scripts) to import from here is not done yet.
+
+New code should import from this file rather than hardcode these numbers.
 """
 
 import os
