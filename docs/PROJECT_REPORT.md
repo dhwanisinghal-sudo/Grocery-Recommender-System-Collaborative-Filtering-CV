@@ -5,7 +5,7 @@
 **Status:** Deployed as a Streamlit app
 
 > This report covers the current system (`app.py`). The paper I wrote for the
-> project has the full methodology and results, and [`README.md`](README.md)
+> project has the full methodology and results, and [`README.md`](../README.md)
 > has a short summary for users. My first attempt, with the Instacart dataset
 > and a MobileNetV2 classifier, is described in **§9** for reference only. I
 > replaced it.
