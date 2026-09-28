@@ -42,8 +42,10 @@ want to know what it is. I built a system that:
 The catalog covers Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home
 Care, Grains, Bakery, Frozen, Condiments, Beverages and Noodles, and includes
 branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali and others).
-I curated the product names and categories by hand. The ratings are synthetic
-(see `data/README.md` and `data/generate_ratings.py`).
+I curated the product names and categories by hand. The ratings are fully
+synthetic: 150 simulated users and 6,796 ratings produced by a seeded script
+(`data/generate_ratings.py`, see `data/README.md`), not collected from real
+shoppers. Every metric in this report is therefore measured on synthetic data.
 
 Data files are in `data/`:
 
