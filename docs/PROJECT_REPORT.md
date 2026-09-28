@@ -1,26 +1,26 @@
-# 📋 Smart Grocery Recommender System — Project Report
+# 📋 Smart Grocery Recommender System: Project Report
 
 **Domain:** Machine Learning + Computer Vision
-**Application:** Multi-stage image-based product identification + hybrid collaborative-filtering recommendations
-**Status:** ✅ Deployed — Streamlit application
+**Application:** Image-based product identification followed by hybrid collaborative-filtering recommendations
+**Status:** Deployed as a Streamlit app
 
-> This report describes the **current, deployed system** (`app.py`). Full
-> methodology and evaluation results also live in
-> `Smart_Grocery_Recommender_Paper_Corrected.docx`; a user-facing summary is
-> in [`README.md`](README.md). An earlier, superseded exploratory phase
-> (Instacart dataset + MobileNetV2 classifier) is documented separately in
-> **§9 — Earlier Exploratory Phase (Superseded)** below, for historical
-> reference only.
+> This report covers the current system (`app.py`). The paper I wrote for the
+> project has the full methodology and results, and [`README.md`](README.md)
+> has a short summary for users. My first attempt, with the Instacart dataset
+> and a MobileNetV2 classifier, is described in **§9** for reference only. I
+> replaced it.
 
 ---
 
 ## 1. Problem Statement
 
-Traditional grocery apps recommend the same popular products to everyone — ignoring individual purchase history and the practical difficulty of identifying an item from a photo of its packaging. This project builds a **Smart Grocery Recommendation System** that:
+Most grocery apps show everyone the same popular products. They ignore what a
+person has bought before, and they don't help when you're holding a packet and
+want to know what it is. I built a system that:
 
-- Identifies grocery products from real-world photos through a multi-stage computer-vision pipeline
-- Recommends personalized products using a hybrid collaborative-filtering engine
-- Combines both into an end-to-end scan → identify → recommend workflow, deployed as an interactive Streamlit app
+- identifies a grocery product from a photo using a four-stage vision pipeline,
+- recommends products using a hybrid of user-based CF, item-based CF and SVD,
+- ties the two together as scan → identify → recommend, in a Streamlit app.
 
 ---
 
@@ -37,11 +37,13 @@ Traditional grocery apps recommend the same popular products to everyone — ign
 | Matrix sparsity                          | 90.9%      |
 | Avg. ratings / user                          | 45.3       |
 
-Catalog spans Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home
-Care, Grains, Bakery, Frozen, Condiments, Beverages, and Noodles, including
-branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali, etc.).
+The catalog covers Personal Care, Dairy, Snacks, Spices, Drinks, Health, Home
+Care, Grains, Bakery, Frozen, Condiments, Beverages and Noodles, and includes
+branded items (Amul, Parle, Britannia, MDH, Haldiram's, Patanjali and others).
+I curated the product names and categories by hand. The ratings are synthetic
+(see `data/README.md` and `data/generate_ratings.py`).
 
-Data files, under `data/`:
+Data files are in `data/`:
 
 - `products_500plus.csv`
 - `user_ratings.csv`
@@ -54,10 +56,10 @@ Data files, under `data/`:
 📷 Image Upload
       ↓
 🔎 4-Stage Vision Pipeline
-   1. OCR (Tesseract) — match on-package text to GROCERY_KEYWORDS
-   2. Gemini Vision fallback — constrained tag vocabulary + confidence
-   3. Hugging Face Inference fallback — ImageNet-style labels, normalized
-   4. Color-heuristic fallback — hue/brightness/texture rule-based guess
+   1. OCR (Tesseract): match on-package text to GROCERY_KEYWORDS
+   2. Gemini Vision fallback: constrained tag vocabulary + confidence
+   3. Hugging Face Inference fallback: ImageNet-style labels, normalized
+   4. Color-heuristic fallback: hue/brightness/texture rule-based guess
       ↓
 🗂️ Catalog Match (500-product Indian grocery catalog)
       ↓
@@ -67,10 +69,10 @@ Data files, under `data/`:
 ✅ Personalized Recommendations
 ```
 
-A `DAIRY_SPECIFIC` priority-ordered, mutually-exclusive tag structure
-disambiguates visually similar dairy products (butter, ghee, paneer, curd,
-cheese, cream, milk). A manual text-search override lets a user correct a
-misclassification directly.
+Some dairy products look almost the same in a photo, so I added a
+`DAIRY_SPECIFIC` structure: a priority-ordered set of mutually exclusive tags
+for butter, ghee, paneer, curd, cheese, cream and milk. There is also a manual
+text-search override, so a user can correct a wrong classification directly.
 
 ---
 
@@ -80,17 +82,17 @@ misclassification directly.
 
 | Stage                 | Method                                                             | Role                                             |
 | ---------------------- | -------------------------------------------------------------------- | -------------------------------------------------- |
-| 1 — OCR                    | Tesseract, matched against 150+ keyword dictionary                       | Highest priority, tried first                          |
-| 2 — Gemini Vision              | Google Gemini API, constrained tag + confidence output                       | Fallback if OCR is inconclusive                            |
-| 3 — Hugging Face                    | General-purpose vision classifier, normalized onto product-tag vocabulary        | Fallback if Gemini is unavailable/inconclusive                  |
-| 4 — Color heuristic                       | Rule-based hue/brightness/texture classifier                                         | Final fallback if both API stages are unavailable                     |
+| 1: OCR                    | Tesseract, matched against a 200+ entry keyword dictionary                | Tried first                                            |
+| 2: Gemini Vision              | Google Gemini API, constrained tag + confidence output                       | Fallback if OCR finds nothing                              |
+| 3: Hugging Face                    | General-purpose vision classifier, normalized onto the product-tag vocabulary        | Fallback if Gemini is unavailable or finds nothing                  |
+| 4: Color heuristic                       | Rule-based hue/brightness/texture classifier                                         | Last resort if both API stages are unavailable                     |
 
-The vision pipeline has been evaluated on a **260-image, category-level**
-labeled test set (`data/vision_test_set/`, 20 images per catalog category
-× 13 categories) via `experiments/verify_vision_accuracy.py`. Two runs
-exist: an initial run with no API keys configured (OCR + color-fallback
-only), and a follow-up run with real `GEMINI_API_KEY` / `HF_API_TOKEN`
-keys, which is the current reference result:
+I evaluated the pipeline on a labeled test set of 260 images
+(`data/vision_test_set/`, 20 images for each of the 13 categories), using
+`experiments/verify_vision_accuracy.py`. The labels are at category level.
+There are two runs. In the first I had no `GEMINI_API_KEY` (an `HF_API_TOKEN`
+was set), so OCR, Hugging Face and the color fallback all ran. The second run
+had both keys and is the current reference result:
 
 | Stage | Images resolved | Accuracy |
 | ------- | ------------------ | ---------- |
@@ -99,29 +101,40 @@ keys, which is the current reference result:
 | Hugging Face Vision | 2/260 (1%) | 0.0% |
 | **Overall** | 260/260 | **87.7%** |
 
-Overall accuracy rose from 51.5% (no-key run) to 87.7% once Gemini was
-available — Gemini resolves nearly half the images that OCR can't, at a
-strong 92.2% accuracy, and Hugging Face is now only reached for the 2
-images neither OCR nor Gemini could resolve. The color fallback stage
-never triggered in this run — OCR, Gemini, and HF together resolved all
-260 images between them. Per-category accuracy ranges from 70% (Condiments,
-Health, Spices) to 100% (Beverages, Dairy); see
-`experiments/vision_accuracy_results.csv` for the full per-image results.
+Overall accuracy went from 51.5% (first run, no Gemini key) to 87.7% once
+Gemini was available. Gemini resolved nearly half the images, the ones OCR
+couldn't, at 92.2%. Hugging Face was only reached for 2 images, which is too
+few to say anything about it. The color fallback never triggered: OCR, Gemini
+and HF between them resolved all 260 images. Per-category accuracy runs from
+70% (Condiments, Health, Spices) to 100% (Beverages, Dairy). The per-image
+results are in `experiments/vision_accuracy_results.csv`.
 
-This is still **category-level** accuracy (does the matched product
-belong to the correct one of 13 categories), not per-SKU accuracy against
-the exact 500-product catalog — no per-product ground truth currently
-exists, so per-SKU accuracy remains explicit future work (see §8).
+For comparison, this is the first run (no Gemini key). It's the only run where
+Hugging Face and the color fallback resolved a meaningful number of images:
+
+| Stage | Images resolved | Accuracy |
+| ------- | ------------------ | ---------- |
+| OCR Text Detection | 128/260 (49%) | 84.4% |
+| Hugging Face Vision | 99/260 (38%) | 24.2% |
+| Color Fallback | 33/260 (13%) | 6.1% |
+| **Overall** | 260/260 | **51.5%** |
+
+Its per-image results are in git history (commit `84131e0`).
+
+Both runs measure category-level accuracy: whether the matched product is in
+the right one of 13 categories. They don't measure per-SKU accuracy against
+the exact 500-product catalog, because I don't have per-product ground truth.
+That is future work (see §8).
 
 ### 4.2 Collaborative Filtering Models
 
 | Model                     | Method                                                                                                                |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| User-based CF                  | Cosine similarity between user rating vectors; 15 nearest neighbors aggregated over unrated items                            |
+| User-based CF                  | Cosine similarity between user rating vectors; the 15 nearest neighbors are aggregated over unrated items                            |
 | Item-based CF                       | Cosine similarity between item vectors; restricted to `RELATED_CATEGORIES` for post-scan suggestions                             |
-| SVD                                       | Truncated SVD, k=20 latent factors, via `scipy.sparse.linalg.svds`, reconstructed to a dense predicted-rating matrix                  |
+| SVD                                       | Truncated SVD with k=20 latent factors (`scipy.sparse.linalg.svds`), reconstructed into a dense predicted-rating matrix                  |
 
-The three ranked lists are combined via a rank-reciprocal hybrid score:
+The three ranked lists are combined with a rank-reciprocal hybrid score:
 
 ```
 score(item) = α · (1 / rank_user_based)
@@ -129,24 +142,22 @@ score(item) = α · (1 / rank_user_based)
             + (1 − α − β) · (1 / rank_svd)
 ```
 
-Default weights: `α = 0.40`, `β = 0.35` — selected via a coarse grid
-search over 0.05-increment steps (`experiments/verify_grid_search.py`,
-`experiments/grid_search_results.csv`; see §8 for the grid's limitations),
-not hand-picked. They remain fixed defaults, adjustable at runtime. New
-users with no rating history
-get popularity-based recommendations (interaction count × average rating),
-filtered to preferred categories.
+The default weights are `α = 0.40` and `β = 0.35`. I picked them with a coarse
+grid search in 0.05 steps (`experiments/verify_grid_search.py`, results in
+`experiments/grid_search_results.csv`; §8 covers the limits of that grid), not
+by hand. They stay fixed by default and can be changed in the app. New users
+with no rating history get popularity-based recommendations (interaction count
+× average rating), filtered to their preferred categories.
 
 ---
 
 ## 5. Evaluation Metrics
 
-Computed via `compute_eval_metrics()` in `app.py`, on an 80/20 train-test
-split (seed=42) of the 6,796 ratings. Precision@10/Recall@10/F1/Coverage are
-computed over a fixed random sample of 50 test users (`random.Random(42)`,
-via `config.EVAL_SAMPLE_SEED` — previously the first 50 users in
-`groupby()` insertion order, which was not a random sample; fixed together
-with the config-centralization change).
+These come from `compute_eval_metrics()` in `app.py`, on an 80/20 train-test
+split (seed 42) of the 6,796 ratings. Precision@10, Recall@10, F1 and Coverage
+are computed over a fixed random sample of 50 test users
+(`random.Random(42)`). Earlier I took the first 50 users in `groupby()` order,
+which wasn't a random sample, and I fixed that.
 
 | Metric | SVD (zero-fill) | User-Based CF |
 | ------- | ----------------- | --------------- |
@@ -159,17 +170,17 @@ with the config-centralization change).
 | F1                                    | 3.7%           |
 | Catalog Coverage                          | 49.2%          |
 
-Precision@10 stays low mainly because the dataset is small and 90.9%
-sparse — not because the underlying models are broken. Additional
-ablations (mean-centered SVD, K-sensitivity, activity-level breakdown) are
-reported in the paper but currently live in standalone analysis scripts,
-not the deployed evaluation dashboard.
+Precision@10 is low. My explanation is that the dataset is small and 90.9%
+sparse, but I haven't tested that directly. Mean-centered SVD, K-sensitivity
+and the α/β grid search are in `experiments/` as scripts, and also in the
+app's Evaluation Metrics mode, which has four tabs: Baseline, Ablation,
+K-Sensitivity and α/β Grid Search.
 
 ---
 
 ## 6. App Modes
 
-The app is a single-page Streamlit application (`app.py`, ~1,700 lines)
+The app is a single-page Streamlit application (`app.py`, around 2,000 lines)
 with seven sidebar modes:
 
 - User recommendations (hybrid CF)
@@ -178,7 +189,7 @@ with seven sidebar modes:
 - Cold-start recommendations for new users
 - Evaluation-metrics dashboard
 - Catalog / user search
-- Raw data explorer (Products, Ratings, Insights tabs)
+- Raw data explorer (Products, Ratings and Insights tabs)
 
 ---
 
@@ -188,10 +199,9 @@ with seven sidebar modes:
 | ------------------------------ | -------------------------------------------------------------------------- |
 | Language                          | Python 3.x                                                                     |
 | Frontend                              | Streamlit                                                                          |
-| Collaborative Filtering                   | Surprise (User-Based CF, Item-Based CF, SVD), scikit-learn, Pandas, NumPy               |
-| Computer Vision & OCR                         | OpenCV, Tesseract OCR, Pillow (PIL)                                                         |
-| AI Models                                         | Google Gemini API, Hugging Face Transformers                                                    |
-| Visualization                                         | Matplotlib, Plotly                                                                                  |
+| Collaborative Filtering                   | scikit-learn (cosine similarity), SciPy (`svds`), Pandas, NumPy               |
+| Vision & OCR                         | Tesseract via `pytesseract`, Pillow                                                         |
+| External APIs                                         | Google Gemini API, Hugging Face Inference API (both called with `requests`)                                                    |
 | Version Control                                           | Git, GitHub                                                                                             |
 
 ---
@@ -200,59 +210,54 @@ with seven sidebar modes:
 
 **Results:**
 
-- The vision pipeline resolves a product photo to a catalog item through
-  up to four fallback stages, favoring precision (OCR / constrained-tag
-  matching) over the more permissive final heuristic stage.
-- User-Based CF substantially outperforms *zero-fill* SVD on this dataset
-  (RMSE 0.88 vs 3.61), but the ablation (`experiments/verify_ablation.py`)
-  shows most of that gap comes from zero-filling missing ratings, not from
-  neighborhood methods being inherently better: mean-centered SVD reaches
-  an RMSE of 0.88 as well.
-- Data loading and all three CF models are cached (`@st.cache_data`, keyed
-  on ratings-table length), so models are computed once per data version
-  rather than recomputed on every interaction.
+- The vision pipeline tries up to four stages to turn a product photo into a
+  catalog item. It prefers the more precise stages (OCR, then the
+  constrained-tag Gemini stage) over the last-resort color heuristic.
+- User-based CF beats zero-fill SVD on this dataset (RMSE 0.88 vs 3.61). The
+  ablation (`experiments/verify_ablation.py`) shows that most of that gap comes
+  from zero-filling missing ratings, not from neighborhood methods being better
+  in themselves: mean-centered SVD also reaches an RMSE of 0.88.
+- Data loading and all three CF models are cached (`@st.cache_data`, keyed on
+  the length of the ratings table), so the models are computed once per data
+  version and not on every interaction.
 
 **Known gaps:**
 
-- All ratings are synthetic (`data/README.md`, `data/generate_ratings.py`),
-  so reported metrics reflect pipeline behavior on this dataset and
-  *relative* comparisons between variants, not real-world recommendation
-  accuracy. No real-user rating data has been collected.
-- Hybrid CF weights (α, β) are grid-searched (§4.2,
-  `experiments/verify_grid_search.py`) over a fixed, coarse grid
-  (0.05-increment steps), not a continuous or exhaustive search — the
-  current defaults are the best of the grid tested, not a proven global
-  optimum.
-- Activity-level ablation (breaking Precision/Recall/F1 down by heavy vs.
-  light raters) exists only as a described-but-unbuilt re-slice (see
-  `experiments/VERIFICATION_README.md`), not an actual script or dashboard
-  tab.
+- All ratings are synthetic (`data/README.md`, `data/generate_ratings.py`). The
+  metrics therefore show how the pipeline behaves on this dataset and how the
+  variants compare with each other. They don't show real-world recommendation
+  accuracy. I haven't collected any real-user ratings.
+- The α, β weights were grid-searched (§4.2, `experiments/verify_grid_search.py`)
+  over a fixed, coarse grid (0.05 steps), not a continuous or exhaustive
+  search. The defaults are the best of the grid I tried, and I haven't shown
+  they are a global optimum.
+- The activity-level ablation (Precision/Recall/F1 for heavy vs. light raters)
+  is only described. I haven't built it as a script or a dashboard tab (see
+  `experiments/VERIFICATION_README.md`).
+- All the metrics are point estimates. I haven't computed confidence
+  intervals.
 
-**Future work (explicitly out of scope for this pass):**
+**Future work (not done in this project):**
 
-- **Per-SKU vision accuracy.** §4.1's 87.7% figure is *category-level*
-  (does the matched product belong to the right one of 13 categories),
-  not per-product. Measuring true per-SKU accuracy against the exact
-  500-product catalog would require photographing or sourcing images of
-  the actual individual products (not just representative category
-  photos) and labeling each with its exact `product_id` — a substantially
-  larger data-collection effort than the current 260-image category set,
-  and reasonably scoped as future work rather than part of this project's
-  current evaluation.
+- **Per-SKU vision accuracy.** The 87.7% in §4.1 is category-level: whether the
+  matched product is in the right one of 13 categories. Measuring per-SKU
+  accuracy against the exact 500-product catalog would need photos of the
+  actual individual products (not representative category photos), each
+  labeled with its exact `product_id`. That is a much bigger data-collection
+  job than the current 260-image category set, so I left it as future work.
 
 ---
 
 ## 9. Earlier Exploratory Phase (Superseded)
 
-> ⚠️ **Historical only.** Everything in this section describes a retired,
-> architecturally unrelated notebook (`Smart_Grocery_Recommender_CV.ipynb`),
-> not the deployed app described in §1–8 above. It predates and was
-> superseded by that system.
+> ⚠️ **Historical only.** This section describes a retired notebook that has
+> nothing to do with the deployed app in §1–8. It came first, and I replaced
+> it with the system described above.
 
-The project's first exploratory phase used the public **Instacart Market
-Basket Analysis** dataset with a generic **MobileNetV2** ImageNet
-classifier, run as a Google Colab notebook, before moving to a curated,
-deployable catalog and a purpose-built vision pipeline.
+My first version used the public **Instacart Market Basket Analysis** dataset
+and a generic **MobileNetV2** ImageNet classifier, run as a Google Colab
+notebook. After that I moved to a curated catalog I could deploy, and to a
+vision pipeline built for grocery packaging.
 
 **Dataset (notebook phase):**
 
@@ -274,13 +279,12 @@ deployable catalog and a purpose-built vision pipeline.
 | Hybrid (SVD + KNN)                                 | RMSE 1.6800                          | Best overall CF model                                   |
 | MobileNetV2 (ImageNet)                                 | 92.34% accuracy                          | Grocery image classification                                |
 
-**Why the project moved on:** this notebook validated the CV + CF concept
-at scale, but relied on a large third-party dataset not tied to a specific
-deployable catalog, and a generic ImageNet classifier not tuned to any
-particular product set or packaging. The project then moved to the curated
-500-product catalog and multi-stage OCR/Gemini/Hugging Face vision
-pipeline described in §1–8, which is better suited to real product-package
-recognition and to deployment as an interactive app.
+**Why I moved on:** the notebook showed that the CV + CF idea works at scale,
+but it depended on a large third-party dataset that wasn't tied to a catalog I
+could deploy, and on a generic ImageNet classifier that wasn't tuned to any
+particular products or packaging. So I built the 500-product catalog and the
+OCR/Gemini/Hugging Face pipeline in §1–8, which suits real product packaging
+and works as an interactive app.
 
-The notebook is retained in the repository for reference only and is not
-maintained or evaluated against current app data.
+The notebook is still in the repo (under `notebooks/`) for reference. I don't
+maintain it or evaluate it against the current app data.
