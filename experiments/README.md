@@ -9,6 +9,9 @@ python experiments/verify_k_sensitivity.py
 python experiments/verify_worked_example.py
 python experiments/verify_grid_search.py
 python experiments/verify_vision_accuracy.py
+python experiments/verify_vision_stages_isolated.py --stages ocr,color
+python experiments/verify_vision_stages_isolated.py --stages gemini,hf   # needs API keys
+python experiments/verify_vision_sku.py
 ```
 
 `VERIFICATION_README.md` in this folder says what each script reproduces and
@@ -22,6 +25,8 @@ docstring explains this).
 
 `vision_accuracy_colab.ipynb` is the Colab notebook I used for the second
 vision run, the one with real Gemini and Hugging Face keys.
+`vision_stages_isolated_colab.ipynb` is the Colab notebook for the isolated
+per-stage run (`verify_vision_stages_isolated.py`).
 
 My first attempt (Instacart data, MobileNetV2, `surprise`) is not in this
 folder. It is archived in `notebooks/` and has nothing to do with these
