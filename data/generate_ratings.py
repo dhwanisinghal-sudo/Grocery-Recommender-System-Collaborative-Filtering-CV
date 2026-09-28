@@ -1,6 +1,6 @@
 """
-Documents and reproduces user_ratings.csv from a seeded synthetic process
-(Gap #4). Unlike the product catalog (see generate_catalog.py), this file
+Documents and reproduces user_ratings.csv from a seeded synthetic process.
+Unlike the product catalog (see generate_catalog.py), this file
 is fully synthetic end to end -- there are no real users behind it -- so
 this script regenerates the whole thing, not just a subset of columns.
 
