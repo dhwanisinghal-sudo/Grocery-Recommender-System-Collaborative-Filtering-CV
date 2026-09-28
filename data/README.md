@@ -1,6 +1,6 @@
 # 📦 Dataset Setup
 
-This project uses a **curated, synthetic Indian grocery catalog** — not the Instacart Market Basket Analysis dataset referenced in the earlier exploratory notebook (`notebooks/Smart_Grocery_Recommender_(ML,CV).ipynb`).
+This project uses a **curated, synthetic Indian grocery catalog** — not the Instacart Market Basket Analysis dataset referenced in the earlier exploratory notebook (`notebooks/Smart_Grocery_Recommender_(ML,CV)_ARCHIVED.ipynb`).
 
 Both data files are committed to this repo and require no download:
 
@@ -36,7 +36,7 @@ from the repo root, with these two CSVs present in `data/`.
 
 ---
 
-> The Instacart-based setup previously documented here (orders.csv, order_products__prior.csv, products.csv, ~1.3GB total) belonged to the earlier offline exploration notebook only, and does not apply to the deployed app. See `experiments/README.md`.
+> The Instacart-based setup previously documented here (orders.csv, order_products__prior.csv, products.csv, ~1.3GB total) belonged to the earlier offline exploration notebook only, and does not apply to the deployed app. See `notebooks/README.md`.
 
 ## ⚠️ Limitation: synthetic data
 
