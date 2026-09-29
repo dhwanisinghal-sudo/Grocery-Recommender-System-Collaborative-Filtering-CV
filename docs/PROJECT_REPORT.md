@@ -332,8 +332,8 @@ with seven sidebar modes:
 - 21 of the 32 vision errors are predicted as Dairy, mostly from
   `detect_dairy_type()` (§4.1). Documented, not fixed.
 - The activity-level ablation (Precision/Recall/F1 for heavy vs. light raters)
-  is only described. I haven't built it as a script or a dashboard tab (see
-  `experiments/VERIFICATION_README.md`).
+  is reproduced by `experiments/verify_activity_level.py`, but is not yet a
+  dashboard tab (see `experiments/VERIFICATION_README.md`).
 - The 50-user metrics in the app dashboard are point estimates. Confidence
   intervals for the full population are in §5.1 (`verify_full_user_ci.py`),
   but the vision accuracy in §4.1 has no interval.
