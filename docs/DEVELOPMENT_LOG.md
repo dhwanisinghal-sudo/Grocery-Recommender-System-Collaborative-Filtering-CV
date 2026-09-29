@@ -16,21 +16,22 @@ git log --reverse --format="%ad|%s" --date=format:"%Y-%m-%d" --name-only
 ```
 
 ---
+## Phase 1: Pre-Development (May 20 - Early June): Literature review on hybrid recommender systems, architecture planning, and deciding on the multi-stage vision approach.
 
-## Phase 1: Setting up the repo (Jun 5, 2026)
+## Phase 2: Setting up the repo (Jun 5, 2026)
 
 I created the repo with `README.md`, `requirements.txt`, `data/README.md` and
 an early `PROJECT_REPORT.md`. The same day I uploaded my exploratory notebook,
 `Smart_Grocery_Recommender_CV.ipynb` (the Instacart + MobileNetV2 phase, which
 `PROJECT_REPORT.md` §9 describes as superseded).
 
-## Phase 2: First version of the app (Jun 6–7, 2026)
+## Phase 3: First version of the app (Jun 6–7, 2026)
 
 I added `app.py` and `config.py`, and updated `.python-version` and
 `requirements.txt` a few times while I sorted out dependencies. This is the
 first time the Streamlit app exists separately from the notebook.
 
-## Phase 3: Dataset and app iteration (Jun 9–19, 2026)
+## Phase 4: Dataset and app iteration (Jun 9–19, 2026)
 
 - **Jun 9:** I uploaded my first custom dataset (`data/products.csv`,
   `data/ratings.csv`, `data/users_new.csv`), which replaced the notebook's
@@ -43,11 +44,11 @@ first time the Streamlit app exists separately from the notebook.
   `data/user_ratings.csv`. These are the 500-product catalog and 6,796 ratings
   the app still uses (see `data/README.md`).
 
-## Phase 4: More app work (Jun 28–29, 2026)
+## Phase 5: More app work (Jun 28–29, 2026)
 
 More `app.py` commits. No new files.
 
-## Phase 5: Cleanup (Jul 9, 2026)
+## Phase 6: Cleanup (Jul 9, 2026)
 
 I deleted `config.py`. Its `SVD_WEIGHT` / `ITEM_ITEM_WEIGHT` values no longer
 matched what `app.py` used and nothing imported it. I also removed the notebook
@@ -56,7 +57,7 @@ from the repo root and added `.gitignore`, `packages.txt` and
 needs without committing real keys). `README.md` and `PROJECT_REPORT.md` were
 updated to match.
 
-## Phase 6: Verification scripts (Jul 10–22, 2026)
+## Phase 7: Verification scripts (Jul 10–22, 2026)
 
 - **Jul 10:** `app.py` updates.
 - **Jul 15–18:** `README.md` / `PROJECT_REPORT.md` updates.
@@ -71,13 +72,13 @@ updated to match.
 
 There are no commits in this window, about seven weeks.
 
-## Phase 7: Restructuring (Sep 11–15, 2026)
+## Phase 8: Restructuring (Sep 11–15, 2026)
 
 I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
 (I renamed it again on Sep 27, see Phase 9) and moved `PROJECT_REPORT.md` into
 `docs/`.
 
-## Phase 8: Verification and documentation pass (Sep 25–26, 2026)
+## Phase 9: Verification and documentation pass (Sep 25–26, 2026)
 
 - **Sep 25, 23:36–23:44:** added `experiments/verify_grid_search.py` and
   `experiments/grid_search_results.csv` (the α/β hybrid-weight grid search),
@@ -95,7 +96,7 @@ I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
   `data/users_new.csv` (`data/README.md` notes that the file originally only
   covered U051–U150).
 
-## Phase 9: Shared config, notebook archive, vision test set (Sep 27, 2026)
+## Phase 10: Shared config, notebook archive, vision test set (Sep 27, 2026)
 
 - **01:13–01:23:** documentation updates and two `app.py` edits.
 - **01:38–01:42:** added `config.py` again and made `verify_ablation.py`,
@@ -117,7 +118,7 @@ I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
   `compute_ablation_metrics()`, `compute_k_sensitivity()` and
   `compute_alpha_beta_grid()`, and updated `VERIFICATION_README.md` to match.
 
-## Phase 10: Regression, recovery and the Gemini run (Sep 27 23:59 – Sep 28, 2026)
+## Phase 11: Regression, recovery and the Gemini run (Sep 27 23:59 – Sep 28, 2026)
 
 - **Sep 27, 23:59 and Sep 28, 00:34:** two `app.py` commits. The first added an
   `import config`. After the second (338 lines removed), the evaluation-tab
@@ -143,7 +144,7 @@ I updated `README.md`. On Sep 15 I put the notebook back under `notebooks/`
 
 ---
 
-## Phase 11: Wording cleanup (Sep 28, 11:55–12:20)
+## Phase 12: Wording cleanup (Sep 28, 11:55–12:20)
 
 I went back through the docs and comments and reworded them. The scripts only
 changed in their docstrings and comments.
