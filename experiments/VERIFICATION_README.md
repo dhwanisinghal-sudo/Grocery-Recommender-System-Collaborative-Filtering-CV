@@ -24,6 +24,7 @@ anywhere in this codebase, only point estimates.
 | `verify_ablation.py` | VIII-B | Table IV: zero-fill vs. mean-centered SVD (RMSE, Precision/Recall/F1@10, coverage) |
 | `verify_k_sensitivity.py` | VIII-C | Table V: Precision/Recall/F1 at K ∈ {5, 10, 20} |
 | `verify_worked_example.py` | VIII-E | Table VI: top-5 recommendations per model and for the hybrid, for user U097 |
+| `verify_activity_level.py` | VIII-D (see note below on numbering) | Table: Precision/Recall/F1 for heavy vs. light raters, split at the median rating count (77/73 users). Reproduces the paper's heavy-rater numbers exactly and the light-rater numbers to within ~0.04 points. |
 | `verify_grid_search.py` | not in the current paper | Grid search over the hybrid weights α, β (see `docs/PROJECT_REPORT.md` §4.2) |
 | `verify_full_user_ci.py` | not in the current paper | All 149 evaluable users instead of the 50-user sample: P/R/F1 for User-CF, Item-CF, SVD and Hybrid with 95% bootstrap CIs, paired hybrid-vs-baseline comparison, and Hybrid variance over 10 split seeds (see `docs/PROJECT_REPORT.md` §5.1). Imports functions from `verify_grid_search.py`. |
 | `verify_grid_full_users.py` | not in the current paper | The α/β grid re-run on all 149 users; shows the default still ranks first but the grid is nearly flat. |
@@ -31,9 +32,19 @@ anywhere in this codebase, only point estimates.
 | `verify_vision_stages_isolated.py` | not in the current paper | Each vision stage (OCR, Gemini, Hugging Face, color heuristic) run alone over all 260 images instead of as a cascade. Writes `vision_isolated_<stage>.csv`. OCR and color run offline; Gemini and Hugging Face need the keys. Results are in `docs/PROJECT_REPORT.md` §4.1. |
 | `verify_vision_sku.py` | not in the current paper | Per-SKU (exact `product_id`) accuracy on the 24 hand-labeled images in `data/vision_test_set/labels_sku.csv`: top-1, top-3, top-6. Writes `vision_sku_results.csv`. Only an offline run (OCR + color heuristic) exists so far. The run with API keys is pending. |
 
-Section VIII-D (Precision/Recall/F1 for heavy vs. light raters) isn't a
-separate script. It's the same evaluation loop as `verify_k_sensitivity.py`,
-filtered by median rating count, and I haven't built it as a script.
+Section VIII-D (Precision/Recall/F1 for heavy vs. light raters) is now
+`verify_activity_level.py` — the same evaluation loop as
+`verify_k_sensitivity.py`, filtered by median rating count (>= 45
+ratings/user = heavy, n=77; < 45 = light, n=73). It is not yet a dashboard
+tab.
+
+**Note on section numbering:** the paper's own text (e.g. "Sections VII-B
+and VII-C", "Section VII-D") now uses VII, not VIII, for the Results
+subsections — the paper appears to have been renumbered since this table's
+"Paper section" column was last updated. I have not re-derived the exact
+current letter for every script below (Word's live section numbers aren't
+recoverable from the extracted text I can read), so treat the VIII-x labels
+in the table as approximate until checked against the open document.
 
 ## Requirements
 
