@@ -84,7 +84,7 @@ The vision pipeline has been evaluated on a 260-image, category-level labeled te
 | SVD                              | Truncated SVD, k=20 latent factors (`scipy.sparse.linalg.svds`)                  |
 | **Hybrid (default)**                 | Rank-reciprocal blend: `α·CF_user + β·CF_item + (1−α−β)·SVD`, α=0.40, β=0.35 |
 
-`α`/`β` defaults (0.40 / 0.35) were set by hand and checked afterwards: `experiments/verify_grid_search.py` sweeps a 19-combo grid and they rank first by F1, but the grid is nearly flat (0.91 pp of F1 across all 19), so they are reasonable rather than shown optimal. Full detail in `docs/PROJECT_REPORT.md` §4.2.
+`α`/`β` defaults (0.40 / 0.35) were set by hand and checked afterwards: `experiments/verify_grid_search.py` sweeps a 19-combo grid and they rank first by F1, but the grid is nearly flat (0.91 pp of F1 across all 19 on the all-149-user run, 1.46 pp on the 50-user sample), so they are reasonable rather than shown optimal. Full detail in `docs/PROJECT_REPORT.md` §4.2.
 
 ---
 
