@@ -214,8 +214,9 @@ as a check. Its grid is 5 × 4 in steps of 0.10 (19 valid combinations with
 γ ≥ 0.05), not 0.05 steps. The defaults rank first by F1 on the original
 50-user sample, and still rank first on all 149 evaluable users
 (`experiments/verify_grid_full_users.py`). But their margin over the runner-up
-is 0.02 percentage points, and the whole grid spans only 0.91 pp of F1
-(3.45%–4.36%), much less than the width of the confidence intervals in §5. The
+is 0.02 percentage points, and on that run the whole grid spans only 0.91 pp of F1
+(3.45%–4.36%; on the 50-user sample in `grid_search_results.csv` it is 1.46 pp,
+4.34%–5.81%), much less than the width of the confidence intervals in §5. The
 data therefore do not single out a best weighting: the defaults are reasonable,
 not shown to be optimal. They stay fixed by default and can be changed in the
 app. New users
@@ -325,7 +326,8 @@ with seven sidebar modes:
   accuracy. I haven't collected any real-user ratings.
 - The α, β defaults were set before any tuning. The later grid search (§4.2)
   covers 19 combinations in steps of 0.10. The defaults rank first, but the
-  grid is nearly flat (0.91 pp of F1 across all 19), so this is not evidence
+  grid is nearly flat (0.91 pp of F1 across all 19 on the 149-user run, 1.46 pp on
+  the 50-user sample), so this is not evidence
   that they are optimal.
 - The hybrid is not shown to beat Item-based CF or SVD (§5.1). Only its
   advantage over User-based CF is statistically clear.
